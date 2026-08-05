@@ -39,7 +39,7 @@ class TestTranscriptEngine:
         """Test when all tiers fail."""
         with patch.object(engine, '_fetch_youtube_api', new_callable=AsyncMock) as mock1, \
              patch.object(engine, '_fetch_supadata', new_callable=AsyncMock) as mock2, \
-             patch.object(engine, '_transcribe_whisper', new_callable=AsyncMock) as mock3:
+             patch.object(engine, '_fetch_openai_whisper', new_callable=AsyncMock) as mock3:
             
             mock1.return_value = None
             mock2.return_value = None
