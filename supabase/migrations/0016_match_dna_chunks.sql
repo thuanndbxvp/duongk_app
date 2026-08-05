@@ -23,8 +23,7 @@ DECLARE
     v_result JSONB;
 BEGIN
     -- Greedy MMR selection
-    WITH RECURSIVE mmr_selection AS (
-        -- Base case: select highest similarity chunk
+    WITH RECURSIVE base_case AS (
         SELECT
             dc.id AS chunk_id,
             dc.text_content as text,
@@ -41,6 +40,10 @@ BEGIN
             AND (p_section_filter IS NULL OR dc.section = p_section_filter)
         ORDER BY (dc.embedding <=> p_query_embedding) ASC
         LIMIT 1
+    ),
+    mmr_selection AS (
+        -- Base case: select highest similarity chunk
+        SELECT * FROM base_case
         
         UNION ALL
         
