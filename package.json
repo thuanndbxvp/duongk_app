@@ -1,0 +1,9 @@
+{
+  "name": "youtube-ai-saas",
+  "version": "1.0.0",
+  "private": true,
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  }
+}
