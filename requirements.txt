@@ -14,3 +14,7 @@ openai>=1.0.0
 google-api-python-client>=2.118.0
 scipy>=1.11.0
 pandas>=2.1.0
+torch
+transformers
+underthesea
+textstat
