@@ -93,6 +93,73 @@ Mục tiêu: Đóng gói các Engine thành sản phẩm Web SaaS, xử lý bài
   - Tích hợp Supabase Realtime lắng nghe thay đổi của bảng `jobs`. Render thanh Progress chi tiết (sub_progress) cho 14 outputs.
   - Dựng màn hình Script Editor (soạn thảo kịch bản và thay đổi B-roll).
 
+---
+
+### Sprint 5: Voice Cloning & Render Pipeline (Modal GPU)
+
+> **Stack giữ nguyên (2026-08-06 xác nhận):** dùng Modal.com cho tất cả GPU/heavy tasks.
+> - **Modal.com (T4 GPU)** chạy: Omnivoice clone voice, FFmpeg NVENC ghép video, Demucs tách audio, faster-whisper ASR
+> - **VPS CPU** chỉ giữ orchestration (FastAPI + Celery + Redis + Next.js)
+> - **Cloudflare R2** lưu media (audio, footage, video output)
+> - **Supabase** Auth + DB + Realtime
+> 
+> Lý do tập trung vào Modal: tận dụng GPU on-demand, scale-to-zero, không cần quản VPS GPU riêng.
+
+Mục tiêu: Hoàn thiện luồng "Channel DNA → Script → Voice Clone → Render Video" thành 1 video hoàn chỉnh (.mp4).
+
+- **5.1. Voice Profile & Sample Collection**
+  - Bảng `voice_profiles` (id, user_id, channel_assistant_id, sample_audio_url, language, status)
+  - Cho user upload audio sample 30-60s từ kênh gốc (host YouTube video hoặc direct file)
+  - Lưu vào R2 bucket `myapp-voice-samples` (private, signed URL only)
+  - Metadata: language (vi/en), gender (male/female), pitch_avg, duration_seconds
+- **5.2. Omnivoice Integration (Worker side)**
+  - Service `apps/worker/services/omnivoice_client.py`
+  - API: POST /api/voice/clone (audio_sample_url → voice_id)
+  - API: POST /api/voice/synthesize (voice_id + text → audio_url)
+  - Cache voice_id trong `voice_profiles.omnivoice_voice_id` để không clone lại
+  - Cost tracking: log vào `api_usage_logs` (provider='omnivoice', cost_per_char)
+- **5.3. TTS Worker Task (Sprint 5.3)**
+  - Celery task `apps.worker.tasks.tts_generate.run(job_id, script_id, voice_profile_id)`
+  - Lấy script body từ `generated_scripts`, gọi Omnivoice synthesize từng đoạn (chunk theo 500 chars)
+  - Concatenate audio bằng FFmpeg (`-c:a aac -b:a 128k`)
+  - Lưu audio file vào R2: `audio/{user_id}/{job_id}/voice.mp3`
+  - Update `jobs.sub_progress.tts_audio` → done, lưu `result_payload.audio_url`
+- **5.4. Audio Separation (Demucs on Modal T4)**
+  - Service `apps/worker/services/audio_separator.py`
+  - Optional preprocessing: tách vocal khỏi background music (dùng Demucs)
+  - Modal T4 worker: `python -m demucs --two-stems=vocals -n htdemucs audio.mp3`
+  - Chỉ áp dụng khi user chọn "Replace background music" mode
+  - Cache kết quả trong `audio/{user_id}/{job_id}/vocals.wav`
+- **5.5. Scene-Aware Whisper ASR (verification)**
+  - Dùng faster-whisper (CTranslate2) trên Modal T4
+  - Sau khi generate voice audio, chạy ASR lại để xác minh timing từng scene
+  - Adjust scene timestamps nếu voice dài hơn script ước tính
+  - Lưu output vào `scene_audios/{job_id}/scene_{n}.mp3` (từng scene riêng)
+- **5.6. Final Render (FFmpeg NVENC pipeline)**
+  - Celery task `apps.worker.tasks.render_video.run(job_id, audio_url, scenes, subtitle_srt)`
+  - Chạy trên **Modal T4 function** (NVENC encode)
+  - Pipeline:
+    1. Download audio từ R2 → local `/tmp/{job_id}/audio.mp3`
+    2. Download footage Pexels cho từng scene → local
+    3. Build `concat.txt` cho FFmpeg
+    4. Render command:
+       ```bash
+       ffmpeg -y -hwaccel cuda -f concat -i concat.txt -i audio.mp3 \
+         -vf "subtitles=subs.srt:force_style='FontSize=20'" \
+         -c:v h264_nvenc -preset p4 -b:v 4M \
+         -c:a aac -b:a 128k -map 0:v:0 -map 1:a:0 -shortest \
+         output.mp4
+       ```
+    5. Upload output.mp4 lên R2: `renders/{user_id}/{job_id}.mp4`
+    6. Update jobs → succeeded, `result_payload.output_url`
+- **5.7. Render UI (Web preview)**
+  - Trang `/render/[job_id]` hiển thị video player + nút tải
+  - Realtime progress cho cả 6 sub-tasks: tts / separator / asr / download / render / upload
+  - Download button với signed R2 URL (expires 24h)
+- *Verify Sprint 5:* End-to-end từ script → clone voice → render → user xem được video .mp4 đầy đủ trên web, audio là cloned voice (verify bằng cách so sánh pitch).
+
+---
+
 ## Verification Plan
 
 Vì chúng ta làm Backend/Engine trước, việc Verify sẽ chủ yếu dùng Python Script hoặc Swagger UI (FastAPI docs).

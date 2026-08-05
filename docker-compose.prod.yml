@@ -1,0 +1,126 @@
+version: '3.8'
+
+# Production stack chạy trên VPS Ubuntu 24.04
+# Không mount source code vào container — image đã bake code sẵn.
+# Redeploy = `git pull` + `docker compose build` + `docker compose up -d`.
+
+services:
+  # ─── Reverse Proxy (auto HTTPS) ───
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - api
+      - web
+    networks:
+      - appnet
+
+  # ─── FastAPI Backend ───
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file: .env
+    expose:
+      - "8000"
+    command: uvicorn apps.api.main:app --host 0.0.0.0 --port 8000 --workers 2
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    depends_on:
+      - redis
+    networks:
+      - appnet
+
+  # ─── Next.js Frontend ───
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file: .env
+    expose:
+      - "3000"
+    depends_on:
+      - api
+    networks:
+      - appnet
+
+  # ─── Redis (broker + cache) ───
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    networks:
+      - appnet
+
+  # ─── Celery Workers (CPU only - không GPU) ───
+  worker_ml:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file: .env
+    command: celery -A apps.worker.celery_app worker -Q ml_queue --loglevel=info --concurrency=2
+    environment:
+      - CELERYD_MAX_TASKS_PER_CHILD=50
+    depends_on:
+      - redis
+    networks:
+      - appnet
+
+  worker_high:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file: .env
+    command: celery -A apps.worker.celery_app worker -Q high_queue --loglevel=info --concurrency=4
+    depends_on:
+      - redis
+    networks:
+      - appnet
+
+  worker_io:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file: .env
+    command: celery -A apps.worker.celery_app worker -Q io_queue --loglevel=info --concurrency=8
+    depends_on:
+      - redis
+    networks:
+      - appnet
+
+  worker_normal:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file: .env
+    command: celery -A apps.worker.celery_app worker -Q normal_queue --loglevel=info --concurrency=4
+    depends_on:
+      - redis
+    networks:
+      - appnet
+
+volumes:
+  redis_data:
+  caddy_data:
+  caddy_config:
+
+networks:
+  appnet:
+    driver: bridge

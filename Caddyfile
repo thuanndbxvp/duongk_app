@@ -1,0 +1,14 @@
+# Caddyfile - Production reverse proxy
+# Auto HTTPS via Let's Encrypt. Just point domain A record to VPS IP.
+
+# Main web app (Next.js)
+ai86.click, www.ai86.click {
+    encode gzip zstd
+    reverse_proxy web:3000
+}
+
+# API subdomain
+api.ai86.click {
+    encode gzip zstd
+    reverse_proxy api:8000
+}
