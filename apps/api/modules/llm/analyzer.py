@@ -3,6 +3,7 @@ import os
 import json
 from typing import List, Dict, Any
 import openai
+from apps.api.modules.llm.prompts import HOOK_ANALYSIS_PROMPT, EXTRACT_STRUCTURE_PROMPT, GENERATE_MIMIC_RULES_PROMPT
 
 class LLMAnalyzer:
     """GPT-4o for analysis."""
@@ -10,15 +11,15 @@ class LLMAnalyzer:
     def __init__(self, api_key: str = None):
         self.client = openai.AsyncOpenAI(api_key=api_key or os.environ.get('OPENAI_API_KEY'))
     
-    async def analyze_hooks(self, transcripts: List[str], titles: List[str]) -> dict:
+    async def analyze_hooks(self, transcripts: List[str], titles: List[str] = None) -> dict:
         """Output 8: Hook Analysis."""
-        prompt = f"""Analyze these video titles and transcripts to identify hook patterns.
-        
-Titles: {chr(10).join(titles[:10])}
-        
-Transcripts (first 30s): {chr(10).join([t[:200] for t in transcripts[:10]])}
-        
-Return JSON: {{"hook_patterns": [{{"type": "string", "example": "string", "effectiveness_score": 0.0}}], "hook_framework": "string"}}"""
+        if titles is None:
+            titles = ["Unknown"] * len(transcripts)
+            
+        prompt = HOOK_ANALYSIS_PROMPT.format(
+            titles=chr(10).join(titles[:10]),
+            transcripts=chr(10).join([t[:200] for t in transcripts[:10]])
+        )
         
         response = await self.client.chat.completions.create(
             model="gpt-4o",
@@ -29,11 +30,9 @@ Return JSON: {{"hook_patterns": [{{"type": "string", "example": "string", "effec
     
     async def extract_structure(self, transcripts: List[str]) -> dict:
         """Output 9: Structural Formula."""
-        prompt = f"""Analyze these transcripts to find the structural pattern.
-        
-Transcripts: {chr(10).join([t[:500] for t in transcripts[:5]])}
-        
-Return JSON: {{"typical_structure": {{"opening": {{"seconds": 15}}, "main_content": {{"seconds": 600}}}}, "structure_type": "string"}}"""
+        prompt = EXTRACT_STRUCTURE_PROMPT.format(
+            transcripts=chr(10).join([t[:500] for t in transcripts[:5]])
+        )
         
         response = await self.client.chat.completions.create(
             model="gpt-4o",
@@ -44,11 +43,9 @@ Return JSON: {{"typical_structure": {{"opening": {{"seconds": 15}}, "main_conten
     
     async def generate_mimic_rules(self, transcripts: List[str]) -> dict:
         """Output 11: Mimic Rules."""
-        prompt = f"""Analyze these transcripts to create mimic rules.
-        
-Transcripts: {chr(10).join([t[:500] for t in transcripts[:5]])}
-        
-Return JSON: {{"mimic_guidelines": {{"vocabulary_level": "string", "common_phrases": ["string"]}}, "tone": "string"}}"""
+        prompt = GENERATE_MIMIC_RULES_PROMPT.format(
+            transcripts=chr(10).join([t[:500] for t in transcripts[:5]])
+        )
         
         response = await self.client.chat.completions.create(
             model="gpt-4o",
