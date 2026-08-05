@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Loader2, Play, Plus, Trash, Upload } from "lucide-react";
 
 export default function VoiceCloningPage() {
   const [profiles, setProfiles] = useState<any[]>([]);
@@ -117,7 +116,7 @@ export default function VoiceCloningPage() {
               disabled={isUploading}
               className="w-full bg-blue-600 text-white p-2 rounded text-sm flex items-center justify-center gap-2 disabled:bg-blue-300"
             >
-              {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+              {isUploading ? "⏳" : "📤"}
               Tải lên
             </button>
             <p className="text-xs text-gray-500 mt-2">Chỉ hỗ trợ file .wav (10-30 giây).</p>
@@ -174,7 +173,7 @@ export default function VoiceCloningPage() {
             disabled={isGenerating || !selectedVoice || !text}
             className="bg-green-600 text-white px-6 py-2 rounded font-medium flex items-center justify-center gap-2 disabled:bg-gray-400"
           >
-            {isGenerating ? <Loader2 className="w-5 h-5 animate-spin" /> : <Play className="w-5 h-5" />}
+            {isGenerating ? "⏳" : "▶️"}
             {isGenerating ? 'Đang gọi GPU xử lý...' : 'Tạo âm thanh'}
           </button>
 
