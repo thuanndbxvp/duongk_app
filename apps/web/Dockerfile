@@ -8,7 +8,7 @@ WORKDIR /app
 COPY package.json package-lock.json* ./
 # Nếu web có package.json riêng trong apps/web, copy cả 2
 COPY apps/web/package.json ./apps/web/
-RUN cd apps/web && npm ci
+RUN cd apps/web && npm install --no-audit --no-fund
 
 # ─── Stage 2: builder ───
 FROM node:20-alpine AS builder
