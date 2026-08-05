@@ -86,20 +86,20 @@ export default function VoiceCloningPage() {
   };
 
   return (
-    <main className="container mx-auto p-8 max-w-6xl">
-      <h1 className="text-3xl font-bold mb-8">Voice Cloning Studio</h1>
+    <main className="container mx-auto p-8 max-w-6xl text-[#f9fafb]">
+      <h1 className="text-3xl font-bold mb-8 text-white">Voice Cloning Studio</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         {/* Left Column: Voice Profiles */}
-        <div className="md:col-span-1 bg-white p-6 rounded-lg shadow-sm border">
-          <h2 className="text-xl font-semibold mb-4">Giọng mẫu (Profiles)</h2>
+        <div className="md:col-span-1 bg-[#1f2937] p-6 rounded-xl border border-[#374151]">
+          <h2 className="text-xl font-semibold mb-4 text-white">Giọng mẫu (Profiles)</h2>
           
-          <form onSubmit={handleUpload} className="mb-6 p-4 bg-gray-50 rounded border border-dashed">
-            <h3 className="font-medium mb-2 text-sm text-gray-700">Thêm giọng mới</h3>
+          <form onSubmit={handleUpload} className="mb-6 p-4 bg-[#111827] rounded-lg border border-dashed border-[#374151]">
+            <h3 className="font-medium mb-2 text-sm text-[#9ca3af]">Thêm giọng mới</h3>
             <input 
               type="text" 
               placeholder="Tên giọng (vd: MC Tuấn Anh)" 
-              className="w-full mb-2 p-2 border rounded text-sm"
+              className="w-full mb-3 p-3 bg-[#111827] border border-[#374151] rounded-lg text-sm text-[#f9fafb] focus:border-[#3b82f6] outline-none"
               value={uploadName}
               onChange={(e) => setUploadName(e.target.value)}
               required
@@ -107,31 +107,31 @@ export default function VoiceCloningPage() {
             <input 
               type="file" 
               accept=".wav"
-              className="w-full mb-3 text-sm"
+              className="w-full mb-4 text-sm text-[#9ca3af] file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-[#3b82f6] file:text-white hover:file:bg-[#2563eb] cursor-pointer"
               onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
               required
             />
             <button 
               type="submit" 
               disabled={isUploading}
-              className="w-full bg-blue-600 text-white p-2 rounded text-sm flex items-center justify-center gap-2 disabled:bg-blue-300"
+              className="w-full bg-[#3b82f6] hover:bg-[#2563eb] text-white py-2.5 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-60 transition-colors"
             >
               {isUploading ? "⏳" : "📤"}
               Tải lên
             </button>
-            <p className="text-xs text-gray-500 mt-2">Chỉ hỗ trợ file .wav (10-30 giây).</p>
+            <p className="text-xs text-[#9ca3af] mt-3">Chỉ hỗ trợ file .wav (10-30 giây).</p>
           </form>
 
           <div className="space-y-3">
             {loadingProfiles ? (
-              <p className="text-sm text-gray-500">Đang tải...</p>
+              <p className="text-sm text-[#9ca3af]">Đang tải...</p>
             ) : profiles.length === 0 ? (
-              <p className="text-sm text-gray-500">Chưa có giọng mẫu nào.</p>
+              <p className="text-sm text-[#9ca3af]">Chưa có giọng mẫu nào.</p>
             ) : (
               profiles.map(p => (
-                <div key={p.id} className={`p-3 border rounded ${selectedVoice === p.id ? 'border-blue-500 bg-blue-50' : ''}`}>
+                <div key={p.id} className={`p-3 border rounded-lg ${selectedVoice === p.id ? 'border-[#3b82f6] bg-[rgba(59,130,246,0.15)]' : 'border-[#374151] bg-[#111827]'}`}>
                   <div className="flex justify-between items-center mb-2">
-                    <span className="font-medium text-sm">{p.name}</span>
+                    <span className={`font-medium text-sm ${selectedVoice === p.id ? 'text-[#3b82f6]' : 'text-[#f9fafb]'}`}>{p.name}</span>
                   </div>
                   <audio src={p.sample_audio_url} controls className="w-full h-8" />
                 </div>
@@ -141,13 +141,13 @@ export default function VoiceCloningPage() {
         </div>
 
         {/* Right Column: Playground */}
-        <div className="md:col-span-2 bg-white p-6 rounded-lg shadow-sm border">
-          <h2 className="text-xl font-semibold mb-4">Thử nghiệm tạo âm thanh (Playground)</h2>
+        <div className="md:col-span-2 bg-[#1f2937] p-6 rounded-xl border border-[#374151]">
+          <h2 className="text-xl font-semibold mb-6 text-white">Thử nghiệm tạo âm thanh (Playground)</h2>
           
-          <div className="mb-4">
-            <label className="block text-sm font-medium mb-1">Chọn giọng đọc</label>
+          <div className="mb-5">
+            <label className="block text-sm font-semibold mb-2 text-[#9ca3af]">Chọn giọng đọc</label>
             <select 
-              className="w-full p-2 border rounded"
+              className="w-full p-3 bg-[#111827] border border-[#374151] rounded-lg text-[#f9fafb] focus:border-[#3b82f6] outline-none"
               value={selectedVoice}
               onChange={(e) => setSelectedVoice(e.target.value)}
             >
@@ -158,10 +158,10 @@ export default function VoiceCloningPage() {
             </select>
           </div>
 
-          <div className="mb-4">
-            <label className="block text-sm font-medium mb-1">Văn bản cần đọc (Script)</label>
+          <div className="mb-6">
+            <label className="block text-sm font-semibold mb-2 text-[#9ca3af]">Văn bản cần đọc (Script)</label>
             <textarea 
-              className="w-full p-3 border rounded h-32"
+              className="w-full p-4 bg-[#111827] border border-[#374151] rounded-lg h-40 text-[#f9fafb] focus:border-[#3b82f6] outline-none resize-none leading-relaxed"
               value={text}
               onChange={(e) => setText(e.target.value)}
               placeholder="Nhập nội dung vào đây..."
@@ -171,18 +171,18 @@ export default function VoiceCloningPage() {
           <button 
             onClick={handleGenerate}
             disabled={isGenerating || !selectedVoice || !text}
-            className="bg-green-600 text-white px-6 py-2 rounded font-medium flex items-center justify-center gap-2 disabled:bg-gray-400"
+            className="bg-[#10b981] hover:bg-[#059669] text-white px-8 py-3 rounded-lg font-semibold flex items-center justify-center gap-2 disabled:opacity-60 transition-colors"
           >
             {isGenerating ? "⏳" : "▶️"}
             {isGenerating ? 'Đang gọi GPU xử lý...' : 'Tạo âm thanh'}
           </button>
 
           {resultAudio && (
-            <div className="mt-8 p-6 bg-green-50 border border-green-200 rounded-lg">
-              <h3 className="font-medium text-green-800 mb-3">Kết quả:</h3>
-              <audio src={resultAudio} controls className="w-full" autoPlay />
-              <div className="mt-3 text-sm">
-                <a href={resultAudio} target="_blank" className="text-blue-600 hover:underline">Tải xuống file .wav</a>
+            <div className="mt-8 p-6 bg-[rgba(16,185,129,0.1)] border border-[#10b981] rounded-xl">
+              <h3 className="font-semibold text-[#10b981] mb-4">✨ Kết quả sinh âm thanh:</h3>
+              <audio src={resultAudio} controls className="w-full outline-none" autoPlay />
+              <div className="mt-4 text-sm">
+                <a href={resultAudio} target="_blank" className="text-[#3b82f6] hover:text-[#2563eb] hover:underline font-medium">⬇️ Tải xuống file .wav</a>
               </div>
             </div>
           )}

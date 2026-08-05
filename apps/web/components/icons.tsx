@@ -125,3 +125,15 @@ export const IconAlert = (p: IconProps) => (
     <path d="M12 10v5M12 18h.01" />
   </svg>
 );
+
+export const IconBolt = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+  </svg>
+);
+
+export const IconShield = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+  </svg>
+);
