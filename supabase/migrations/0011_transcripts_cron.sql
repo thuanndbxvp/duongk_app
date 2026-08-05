@@ -4,7 +4,7 @@ CREATE TABLE transcripts (
   text_content TEXT NOT NULL,
   raw_data JSONB,
   fetched_at TIMESTAMPTZ DEFAULT NOW(),
-  expires_at TIMESTAMPTZ GENERATED ALWAYS AS (fetched_at + INTERVAL '90 days') STORED
+  expires_at TIMESTAMPTZ DEFAULT (NOW() + INTERVAL '90 days')
 );
 CREATE INDEX idx_transcripts_expires ON transcripts(expires_at);
 

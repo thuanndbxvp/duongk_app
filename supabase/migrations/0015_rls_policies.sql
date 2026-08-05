@@ -25,8 +25,8 @@ CREATE POLICY "Users can view own credit transactions" ON credit_transactions FO
 -- 4. API Usage Logs (Read own)
 CREATE POLICY "Users can view own API usage" ON api_usage_logs FOR SELECT USING (auth.uid() = user_id);
 
--- 5. Quota Ledger (Read own)
-CREATE POLICY "Users can view own quota" ON quota_ledger FOR SELECT USING (auth.uid() = user_id);
+-- 5. Quota Ledger (No direct user access, service_role only)
+-- Policy removed because user_id does not exist
 
 -- 6. Channel Assistants (Read/Write own)
 CREATE POLICY "Users can view own channel assistants" ON channel_assistants FOR SELECT USING (auth.uid() = user_id);

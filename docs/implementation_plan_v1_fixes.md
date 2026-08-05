@@ -284,6 +284,9 @@ async def openapi():
 
 *Verify Sprint 3:* Chạy test truyền 1 chủ đề, nhận về 1 script hoàn chỉnh (có phân chia Scene) mang đậm phong cách của kênh mẫu.
 
+**Sprint 3 Documents:**
+- **Chi tiết:** `docs/sprints/02_sprint3_ai_script_generation.md`
+
 ---
 
 ### Sprint 4: The Wrapper (User, Auth, Credit & UI)
