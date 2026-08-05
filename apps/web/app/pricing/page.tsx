@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
-import { apiFetch } from '../../../lib/api-client';
-import { getAccessToken } from '../../../lib/auth';
-import { PricingCard } from '../../../components/pricing-card';
+import { apiFetch } from '@/lib/api-client';
+import { getAccessToken } from '@/lib/auth';
+import { PricingCard } from '@/components/pricing-card';
 
 export default async function PricingPage() {
   const token = await getAccessToken();

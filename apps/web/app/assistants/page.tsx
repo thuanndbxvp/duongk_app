@@ -1,8 +1,8 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { apiFetch } from '../../../../lib/api-client';
-import { getAccessToken } from '../../../../lib/auth';
-import { AssistantCard } from '../../../../components/assistant-card';
+import { apiFetch } from '@/lib/api-client';
+import { getAccessToken } from '@/lib/auth';
+import { AssistantCard } from '@/components/assistant-card';
 
 interface Assistant {
   id: string;

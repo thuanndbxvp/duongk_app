@@ -5,7 +5,7 @@ export const metadata = {
   description: 'AI YouTube Script Generator',
 };
 
-import { CreditsBadge } from '../components/credits-badge';
+import { CreditsBadge } from '@/components/credits-badge';
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (

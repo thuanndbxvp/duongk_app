@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAccessToken } from '../../../../../lib/auth';
+import { getAccessToken } from '@/lib/auth';
 
 export async function POST(req: NextRequest) {
   const token = await getAccessToken();

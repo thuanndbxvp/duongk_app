@@ -1,9 +1,9 @@
 import { notFound, redirect } from 'next/navigation';
 import Link from 'next/link';
-import { apiFetch } from '../../../../lib/api-client';
-import { getAccessToken } from '../../../../lib/auth';
-import { IdeasList } from '../../../../components/ideas/ideas-list';
-import { RegenerateButton } from '../../../../components/ideas/regenerate-button';
+import { apiFetch } from '@/lib/api-client';
+import { getAccessToken } from '@/lib/auth';
+import { IdeasList } from '@/components/ideas/ideas-list';
+import { RegenerateButton } from '@/components/ideas/regenerate-button';
 
 interface Idea {
   id: string;

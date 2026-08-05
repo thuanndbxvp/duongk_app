@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { apiFetch } from '../../../../../lib/api-client';
-import { getAccessToken } from '../../../../../lib/auth';
+import { apiFetch } from '@/lib/api-client';
+import { getAccessToken } from '@/lib/auth';
 
 export async function PATCH(req: NextRequest) {
   const token = await getAccessToken();

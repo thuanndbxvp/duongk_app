@@ -1,9 +1,9 @@
 import { redirect } from 'next/navigation';
-import { apiFetch } from '../../../lib/api-client';
-import { getAccessToken } from '../../../lib/auth';
-import { CreditsCard } from '../../../components/credits-card';
-import { PricingTable } from '../../../components/pricing-table';
-import { TransactionHistory } from '../../../components/transaction-history';
+import { apiFetch } from '@/lib/api-client';
+import { getAccessToken } from '@/lib/auth';
+import { CreditsCard } from '@/components/credits-card';
+import { PricingTable } from '@/components/pricing-table';
+import { TransactionHistory } from '@/components/transaction-history';
 
 const TIER_QUOTAS: Record<string, number> = {
   free: 100,

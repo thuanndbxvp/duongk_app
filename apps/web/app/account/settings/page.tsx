@@ -1,8 +1,8 @@
 import { redirect } from 'next/navigation';
-import { apiFetch } from '../../../../lib/api-client';
-import { getAccessToken } from '../../../../lib/auth';
-import { ProfileForm } from '../../../../components/profile-form';
-import { PasswordForm } from '../../../../components/password-form';
+import { apiFetch } from '@/lib/api-client';
+import { getAccessToken } from '@/lib/auth';
+import { ProfileForm } from '@/components/profile-form';
+import { PasswordForm } from '@/components/password-form';
 
 export default async function AccountSettingsPage() {
   const token = await getAccessToken();

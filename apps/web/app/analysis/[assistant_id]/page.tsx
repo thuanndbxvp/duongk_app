@@ -1,9 +1,9 @@
 import { notFound, redirect } from 'next/navigation';
 import Link from 'next/link';
-import { apiFetch } from '../../../../../lib/api-client';
-import { getAccessToken } from '../../../../../lib/auth';
-import { AnalysisTabs } from '../../../../../components/analysis/analysis-tabs';
-import { ReanalyzeButton } from '../../../../../components/analysis/reanalyze-button';
+import { apiFetch } from '@/lib/api-client';
+import { getAccessToken } from '@/lib/auth';
+import { AnalysisTabs } from '@/components/analysis/analysis-tabs';
+import { ReanalyzeButton } from '@/components/analysis/reanalyze-button';
 
 export default async function AnalysisPage({
   params,

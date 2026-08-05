@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { apiFetch } from '../../../../lib/api-client';
-import { getAccessToken } from '../../../../lib/auth';
+import { apiFetch } from '@/lib/api-client';
+import { getAccessToken } from '@/lib/auth';
 
 export async function GET() {
   const token = await getAccessToken();

@@ -1,9 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { SubProgressList } from '../../../components/sub-progress-list';
-import { ProgressBar } from '../../../components/progress-bar';
-import { subscribeToJobUpdates } from '../../../lib/realtime';
+import { SubProgressList } from '@/components/sub-progress-list';
+import { ProgressBar } from '@/components/progress-bar';
+import { subscribeToJobUpdates } from '@/lib/realtime';
 import { useRouter } from 'next/navigation';
 
 interface Job {

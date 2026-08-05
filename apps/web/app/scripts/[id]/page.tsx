@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { SceneTimeline } from '../../../components/scene-timeline';
+import { SceneTimeline } from '@/components/scene-timeline';
+import { ScriptEditor } from '@/components/script-editor';
 
 interface Script {
   id: string;
@@ -56,8 +57,6 @@ export default function ScriptEditorPage({ params }: { params: Promise<{ id: str
       </div>
 
       <div className="grid lg:grid-cols-2 gap-8">
-import { ScriptEditor } from '../../../components/script-editor';
-
         <ScriptEditor script={script.script} />
 
         <div>
