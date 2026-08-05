@@ -1,0 +1,27 @@
+CREATE TABLE channel_deep_analysis (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  assistant_id UUID NOT NULL REFERENCES channel_assistants(id) ON DELETE CASCADE,
+  version INT NOT NULL DEFAULT 1,
+  is_latest BOOLEAN NOT NULL DEFAULT TRUE,
+  previous_version_id UUID REFERENCES channel_deep_analysis(id),
+  reanalysis_trigger TEXT,
+  metadata_report JSONB,
+  tags_report JSONB,
+  performance_report JSONB,
+  hidden_insights JSONB,
+  persona JSONB,
+  hook_analysis JSONB,
+  structural_formula JSONB,
+  signature_phrases JSONB,
+  mimic_rules JSONB,
+  viral_topics_formula JSONB,
+  untapped_opportunities JSONB,
+  content_calendar JSONB,
+  thumbnail_analysis JSONB,
+  analysis_version TEXT DEFAULT 'v3.0',
+  source_video_ids TEXT[],
+  source_transcript_count INT,
+  completed_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE UNIQUE INDEX idx_deep_analysis_asst_latest ON channel_deep_analysis(assistant_id) WHERE is_latest = TRUE;

@@ -1,0 +1,2 @@
+-- Placeholder cho RLS ở Sprint 4
+-- ALTER TABLE jobs ENABLE ROW LEVEL SECURITY;
