@@ -4,7 +4,7 @@ Celery task for script generation with RAG + Anti-Slop.
 from celery import Task
 from apps.worker.celery_app import celery_app
 from apps.worker.services.rag_service import RAGService
-from apps.api.modules.rag.embedding_router import EmbeddingRouter
+from apps.api.modules.rag.embedder import Embedder
 from apps.worker.services.antislop_service import AntiSlopService
 from apps.worker.progress_tracker import ProgressTracker
 from supabase import create_client
@@ -39,10 +39,10 @@ def run(self: Task, job_id: str, assistant_id: str, topic: str) -> dict:
         try:
             # === PHASE 1: RAG Retrieval (30%) ===
             await tracker.start('rag_retrieve')
-            await tracker.tick('rag_retrieve', 10)
+            await tracker.increment('rag_retrieve', 10)
 
-            embedding_router = EmbeddingRouter()
-            rag_service = RAGService(supabase, embedding_router)
+            embedder = Embedder()
+            rag_service = RAGService(supabase, embedder)
 
             # Get channel persona
             assistant = supabase.table('channel_assistants').select('*').eq('id', assistant_id).single().execute()
@@ -55,7 +55,7 @@ def run(self: Task, job_id: str, assistant_id: str, topic: str) -> dict:
                 top_k=10,
                 lambda_mmr=0.7,
             )
-            await tracker.tick('rag_retrieve', 30)
+            await tracker.increment('rag_retrieve', 30)
 
             # Build prompt
             prompt = rag_service.build_script_prompt(
@@ -67,7 +67,7 @@ def run(self: Task, job_id: str, assistant_id: str, topic: str) -> dict:
 
             # === PHASE 2: Generate Script (50%) ===
             await tracker.start('generate')
-            await tracker.tick('generate', 10)
+            await tracker.increment('generate', 10)
 
             openai = OpenAI()
 
@@ -78,7 +78,7 @@ def run(self: Task, job_id: str, assistant_id: str, topic: str) -> dict:
             )
 
             script_data = json.loads(response.choices[0].message.content)
-            await tracker.tick('generate', 40)
+            await tracker.increment('generate', 40)
 
             # === PHASE 3: Anti-Slop Validation (20%) ===
             await tracker.start('validate')

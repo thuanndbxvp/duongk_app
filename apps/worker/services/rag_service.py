@@ -3,22 +3,21 @@ RAG Service - Retrieval Augmented Generation for script generation.
 """
 from typing import Optional
 from supabase import Client
-from apps.api.modules.rag.embedding_router import EmbeddingRouter
-
+from apps.api.modules.rag.embedder import Embedder
 
 class RAGService:
     """Service for retrieving relevant DNA chunks using RAG."""
 
-    def __init__(self, supabase: Client, embedding_router: EmbeddingRouter):
+    def __init__(self, supabase: Client, embedder: Embedder):
         """
         Initialize RAG service.
         
         Args:
             supabase: Supabase client (admin/service_role)
-            embedding_router: Router for embedding generation
+            embedder: Embedder for generating vectors
         """
         self.supabase = supabase
-        self.embedding_router = embedding_router
+        self.embedder = embedder
 
     async def retrieve_context(
         self,
@@ -42,7 +41,8 @@ class RAGService:
             dict with keys: chunks, context_text, num_chunks
         """
         # 1. Embed query
-        query_embedding = await self.embedding_router.embed(query)
+        embeddings = await self.embedder.embed_texts([query])
+        query_embedding = embeddings[0]
 
         # 2. Call RPC for MMR search
         result = self.supabase.rpc('match_dna_chunks', {
