@@ -14,7 +14,7 @@ export default function NewProjectPage() {
     setLoading(true);
     setError('');
 
-    const response = await fetch('/api/scripts/generate', {
+    const response = await fetch('/api/projects/start', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ youtube_url: url }),

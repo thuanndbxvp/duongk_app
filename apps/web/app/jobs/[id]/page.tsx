@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { createBrowserClient } from '@supabase/ssr';
 import { SubProgressList } from '../../../components/sub-progress-list';
+import { ProgressBar } from '../../../components/progress-bar';
+import { subscribeToJobUpdates } from '../../../lib/realtime';
 import { useRouter } from 'next/navigation';
 
 interface Job {
@@ -19,39 +20,27 @@ export default function JobProgressPage({ params }: { params: Promise<{ id: stri
   const router = useRouter();
 
   useEffect(() => {
-    let channel: any;
+    let unsubscribe: () => void;
 
     async function init() {
       const resolvedParams = await params;
-      const supabase = createBrowserClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-      );
 
       // Initial fetch via our BFF
       fetch(`/api/jobs/${resolvedParams.id}`)
         .then((r) => r.json())
         .then(setJob);
 
-      // Realtime subscription via Supabase directly
-      channel = supabase
-        .channel(`job-${resolvedParams.id}`)
-        .on('postgres_changes', {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'jobs',
-          filter: `id=eq.${resolvedParams.id}`,
-        }, (payload) => {
-          setJob(payload.new as Job);
-        })
-        .subscribe();
+      // Realtime subscription
+      unsubscribe = subscribeToJobUpdates(resolvedParams.id, (newJob) => {
+        setJob(newJob as Job);
+      });
     }
 
     init();
 
     return () => {
-      if (channel) {
-        channel.unsubscribe();
+      if (unsubscribe) {
+        unsubscribe();
       }
     };
   }, [params]);
@@ -73,12 +62,7 @@ export default function JobProgressPage({ params }: { params: Promise<{ id: stri
           <span className="font-semibold text-gray-700">Tiến trình tổng</span>
           <span className="font-bold text-blue-600">{job.progress}%</span>
         </div>
-        <div className="w-full bg-gray-200 rounded-full h-3">
-          <div
-            className="bg-blue-600 h-3 rounded-full transition-all duration-500 ease-out"
-            style={{ width: `${job.progress}%` }}
-          />
-        </div>
+        <ProgressBar progress={job.progress} barColor="bg-blue-600" height="h-3" />
         <div className="mt-4 flex justify-between items-center">
           <span className="text-sm font-medium text-gray-500 uppercase tracking-wider">Trạng thái: {job.status}</span>
           {job.status === 'succeeded' && job.result?.script_id && (

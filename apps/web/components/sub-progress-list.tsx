@@ -2,6 +2,8 @@ interface SubProgress {
   [key: string]: { status: string; progress: number };
 }
 
+import { ProgressBar } from './progress-bar';
+
 export function SubProgressList({ subProgress }: { subProgress: SubProgress }) {
   if (!subProgress) return null;
   
@@ -34,12 +36,7 @@ export function SubProgressList({ subProgress }: { subProgress: SubProgress }) {
                 {value.status} ({value.progress}%)
               </span>
             </div>
-            <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
-              <div
-                className={`${barColor} h-1.5 rounded-full transition-all duration-300`}
-                style={{ width: `${value.progress}%` }}
-              />
-            </div>
+            <ProgressBar progress={value.progress} barColor={barColor} height="h-1.5" bgColor="bg-gray-100" />
           </div>
         );
       })}

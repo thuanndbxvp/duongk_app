@@ -50,3 +50,6 @@ build/
 
 # Gemini AI workspace specific
 .gemini/
+
+# Un-ignore Next.js lib folder
+!apps/web/lib/
