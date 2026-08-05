@@ -246,15 +246,13 @@ def health():
 @app.get("/v1/version")
 def version():
     """Report server + omnivoice version (Phase 3 / B3.4)."""
-    import omnivoice
-
-    omnivoice_path = Path(omnivoice.__file__).resolve()
+    omnivoice_path = "N/A (Modal version)"
     return {
         "server_version": "1.1.0",
         "server_name": "omnivoice-api-server",
-        "omnivoice_version": getattr(omnivoice, "__version__", "unknown"),
+        "omnivoice_version": "Modal",
         "omnivoice_path": str(omnivoice_path),
-        "omnivoice_pinned_tag": "0.2.0",
+        "omnivoice_pinned_tag": "Modal",
         "model_loaded": True,
     }
 
@@ -581,33 +579,16 @@ def identify_server():
 
     App nen goi endpoint nay truoc khi luu IP:port de tranh nhap nham.
     """
-    import omnivoice
-
-    # Lay IP local (best-effort)
-    ip_local = "127.0.0.1"
-    try:
-        # Trick: connect to external IP de lay local IP (khong can gui packet)
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.settimeout(0.5)
-        s.connect(("8.8.8.8", 80))
-        ip_local = s.getsockname()[0]
-        s.close()
-    except (TimeoutError, OSError):
-        try:
-            ip_local = socket.gethostbyname(socket.gethostname())
-        except OSError:
-            pass
-
     return {
         "server_id": SERVER_ID,
         "server_version": "1.1.0",
         "server_name": "omnivoice-api-server",
-        "hostname": socket.gethostname(),
-        "ip_local": ip_local,
-        "port": int(os.getenv("OMNIVOICE_PORT") or os.getenv("PORT", "8088")),
+        "hostname": "modal",
+        "ip_local": "127.0.0.1",
+        "port": 8088,
         "supported_languages": ["vi", "km", "my", "en", "zh", "es", "hi", "ar"],
-        "omnivoice_version": getattr(omnivoice, "__version__", "unknown"),
-        "omnivoice_pinned_tag": "0.2.0",
+        "omnivoice_version": "Modal",
+        "omnivoice_pinned_tag": "Modal",
         "model_status": "ready",
         "voice_count": len(registry.list()),
     }
