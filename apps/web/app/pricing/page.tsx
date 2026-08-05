@@ -2,10 +2,10 @@ import { redirect } from 'next/navigation';
 import { apiFetch } from '@/lib/api-client';
 import { getAccessToken } from '@/lib/auth';
 import { PricingCard } from '@/components/pricing-card';
+import { TopBar } from '@/components/layout/topbar';
 
 export default async function PricingPage() {
   const token = await getAccessToken();
-  // Pricing có thể public, nhưng cần current tier để highlight
   let currentTier = 'free';
 
   if (token) {
@@ -59,38 +59,32 @@ export default async function PricingPage() {
     },
   ];
 
-  function handleUpgrade(tier: string) {
-    if (tier === 'enterprise') {
-      window.location.href = 'mailto:sales@appdk.vn';
-    } else {
-      alert(`Upgrade to ${tier} - Tính năng thanh toán đang phát triển`);
-    }
-  }
-
   return (
-    <main className="container mx-auto p-8 max-w-6xl">
-      <div className="text-center mb-12">
-        <h1 className="text-4xl font-bold mb-2">Choose Your Plan</h1>
-        <p className="text-gray-600">
-          Bắt đầu miễn phí, nâng cấp khi cần thiết
-        </p>
-      </div>
+    <div className="min-h-screen flex flex-col">
+      <TopBar />
+      <main className="flex-1 container mx-auto p-8 max-w-6xl">
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-bold mb-2">Choose Your Plan</h1>
+          <p className="text-gray-600">
+            Bắt đầu miễn phí, nâng cấp khi cần thiết
+          </p>
+        </div>
 
-      <div className="grid md:grid-cols-3 gap-6">
-        {tiers.map((t) => (
-          <PricingCard
-            key={t.tier}
-            tier={t.tier}
-            name={t.name}
-            price={t.price}
-            credits={t.credits}
-            features={t.features}
-            currentTier={currentTier}
-            popular={t.popular}
-            onUpgrade={() => handleUpgrade(t.tier)}
-          />
-        ))}
-      </div>
-    </main>
+        <div className="grid md:grid-cols-3 gap-6">
+          {tiers.map((t) => (
+            <PricingCard
+              key={t.tier}
+              tier={t.tier}
+              name={t.name}
+              price={t.price}
+              credits={t.credits}
+              features={t.features}
+              currentTier={currentTier}
+              popular={t.popular}
+            />
+          ))}
+        </div>
+      </main>
+    </div>
   );
 }

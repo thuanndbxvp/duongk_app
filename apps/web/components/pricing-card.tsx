@@ -7,7 +7,6 @@ interface Props {
   credits: number;
   features: string[];
   currentTier: string;
-  onUpgrade?: () => void;
   popular?: boolean;
 }
 
@@ -18,10 +17,17 @@ export function PricingCard({
   credits,
   features,
   currentTier,
-  onUpgrade,
   popular,
 }: Props) {
   const isCurrent = currentTier === tier;
+
+  function handleUpgrade() {
+    if (tier === 'enterprise') {
+      window.location.href = 'mailto:sales@appdk.vn';
+    } else {
+      alert(`Upgrade to ${tier} - Tính năng thanh toán đang phát triển`);
+    }
+  }
 
   return (
     <div
@@ -64,7 +70,7 @@ export function PricingCard({
           </button>
         ) : (
           <button
-            onClick={onUpgrade}
+            onClick={handleUpgrade}
             className={`w-full px-4 py-2 rounded font-medium ${
               popular
                 ? 'bg-blue-600 text-white hover:bg-blue-700'
