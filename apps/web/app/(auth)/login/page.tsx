@@ -1,56 +1,71 @@
-import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
+'use client';
 
-export default async function LoginPage() {
-  const login = async (formData: FormData) => {
-    'use server'
-    const email = formData.get('email') as string
-    const password = formData.get('password') as string
-    const supabase = await createClient()
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
+export default function LoginPage() {
+  const router = useRouter();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-    if (error) {
-      redirect('/login?error=true')
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+
+    const response = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      router.push(data.redirect || '/dashboard');
+    } else {
+      const error = await response.json();
+      setError(error.error || 'Login failed');
     }
-    redirect('/dashboard')
+    setLoading(false);
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
-      <form action={login} className="w-full max-w-sm space-y-6 rounded-lg bg-white p-8 shadow-md">
-        <h2 className="text-2xl font-bold text-center text-gray-900">Sign in to your account</h2>
+    <main className="min-h-screen flex items-center justify-center bg-gray-50">
+      <form onSubmit={handleSubmit} className="w-96 space-y-4 bg-white p-8 rounded-lg shadow-md">
+        <h1 className="text-2xl font-bold text-center mb-6">Đăng nhập</h1>
+        {error && <p className="text-red-600 text-sm p-2 bg-red-50 rounded">{error}</p>}
         <div>
-          <label className="block text-sm font-medium text-gray-700">Email Address</label>
+          <label className="block text-sm font-medium mb-1">Email</label>
           <input
-            name="email"
             type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Email"
             required
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500"
+            className="w-full p-2 border rounded focus:ring-blue-500 focus:border-blue-500"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700">Password</label>
+          <label className="block text-sm font-medium mb-1">Mật khẩu</label>
           <input
-            name="password"
             type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Mật khẩu"
             required
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500"
+            className="w-full p-2 border rounded focus:ring-blue-500 focus:border-blue-500"
           />
         </div>
         <button
           type="submit"
-          className="w-full rounded-md bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700"
+          disabled={loading}
+          className="w-full p-2 bg-blue-600 text-white rounded font-medium hover:bg-blue-700 disabled:opacity-50"
         >
-          Sign In
+          {loading ? 'Đang đăng nhập...' : 'Đăng nhập'}
         </button>
-        <p className="text-center text-sm text-gray-600">
-          Don't have an account? <a href="/register" className="text-indigo-600 hover:underline">Register</a>
-        </p>
       </form>
-    </div>
-  )
+    </main>
+  );
 }

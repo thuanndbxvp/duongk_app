@@ -1,13 +1,15 @@
-import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
+import Link from 'next/link';
 
-export default async function Home() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-
-  if (user) {
-    redirect('/dashboard')
-  } else {
-    redirect('/login')
-  }
+export default function HomePage() {
+  return (
+    <main className="container mx-auto p-8">
+      <h1 className="text-4xl font-bold">AppDK</h1>
+      <p className="text-gray-600 mt-4">
+        AI YouTube Script Generator - Tạo kịch bản YouTube chuẩn phong cách kênh mẫu
+      </p>
+      <Link href="/login" className="text-blue-600 mt-4 inline-block hover:underline">
+        Đăng nhập →
+      </Link>
+    </main>
+  );
 }
