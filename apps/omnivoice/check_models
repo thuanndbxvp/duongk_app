@@ -1,0 +1,5 @@
+$hub = 'C:\Users\Admin\.cache\huggingface\hub'
+Get-ChildItem $hub -Directory | ForEach-Object {
+    $size = (Get-ChildItem $_.FullName -Recurse -ErrorAction SilentlyContinue | Measure-Object -Property Length -Sum).Sum / 1MB
+    '{0,-50} {1,10:N1} MB' -f $_.Name, $size
+}

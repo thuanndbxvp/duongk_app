@@ -12,3 +12,9 @@ api.ai86.click {
     encode gzip zstd
     reverse_proxy api:8000
 }
+
+# Voice Cloning UI (Omnivoice-sv)
+voice.ai86.click {
+    encode gzip zstd
+    reverse_proxy omnivoice:8088
+}

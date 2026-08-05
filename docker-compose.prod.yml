@@ -116,6 +116,17 @@ services:
     networks:
       - appnet
 
+  omnivoice:
+    build:
+      context: apps/omnivoice
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file: .env.production
+    expose:
+      - "8088"
+    networks:
+      - appnet
+
 volumes:
   redis_data:
   caddy_data:

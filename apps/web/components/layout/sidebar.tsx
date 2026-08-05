@@ -20,6 +20,7 @@ export function Sidebar() {
             <Link
               key={item.href}
               href={item.href}
+              target={item.href.startsWith('http') ? '_blank' : undefined}
               className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
                 active
                   ? 'bg-white/[0.07] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]'

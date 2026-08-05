@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TTS Voice Studio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-body: #0b0f19; --bg-sidebar: #111827; --bg-card: #1f2937; --bg-input: #111827;
+            --border-color: #374151; --text-main: #f9fafb; --text-muted: #9ca3af;
+            --accent-blue: #3b82f6; --accent-blue-hover: #2563eb; --accent-green: #10b981; --danger: #ef4444;
+            --radius-md: 8px; --radius-lg: 12px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        html, body { height: 100%; }
+        body { background-color: var(--bg-body); color: var(--text-main); min-height: 100vh; overflow-x: hidden; overflow-y: auto; display: flex; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; } ::-webkit-scrollbar-track { background: var(--bg-body); } ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 10px; }
+        * { scrollbar-width: thin; scrollbar-color: var(--border-color) var(--bg-body); }
+
+        .app-container { display: grid; grid-template-columns: 260px 1fr; width: 100%; min-height: 100vh; }
+
+        /* SIDEBAR */
+        .sidebar { background-color: var(--bg-sidebar); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; padding: 20px; z-index: 10; height: 100vh; position: sticky; top: 0; overflow-y: auto; }
+        .logo { font-size: 1.2rem; font-weight: 700; color: white; margin-bottom: 30px; display: flex; align-items: center; gap: 10px; }
+        .logo-box { width: 24px; height: 24px; background-color: var(--accent-blue); border-radius: 6px; }
+        .nav-item { padding: 12px 16px; margin-bottom: 8px; border-radius: var(--radius-md); color: var(--text-muted); cursor: pointer; font-weight: 500; font-size: 0.95rem; transition: 0.2s; }
+        .nav-item:hover { background-color: rgba(255,255,255,0.05); color: var(--text-main); }
+        .nav-item.active { background-color: rgba(59, 130, 246, 0.15); color: var(--accent-blue); }
+
+        /* MAIN CONTENT AREA */
+        .main-wrapper { display: flex; flex-direction: column; min-height: 100vh; background-color: var(--bg-body); }
+
+        .view-panel { display: none; width: 100%; }
+        .view-panel.active { display: block; }
+
+        /* LAYOUT CHO VIEW TTS (3 Cot cu) */
+        .tts-layout { display: grid; grid-template-columns: 1fr 380px; min-height: 100vh; width: 100%; }
+        .center-content { overflow-y: auto; padding: 30px; }
+        .right-panel { background-color: var(--bg-sidebar); border-left: 1px solid var(--border-color); padding: 30px 24px; display: flex; flex-direction: column; overflow-y: auto; height: 100vh; position: sticky; top: 0; }
+
+        /* LAYOUT CHO CAC VIEW CON LAI (1 Cot rong) */
+        .single-layout { padding: 30px; width: 100%; max-width: 1200px; margin: 0 auto; }
+
+        /* SHARED COMPONENTS */
+        .page-title { font-size: 1.5rem; font-weight: 700; margin-bottom: 6px; }
+        .page-desc { color: var(--text-muted); font-size: 0.95rem; margin-bottom: 24px;}
+        .card { background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 24px; margin-bottom: 24px; }
+        .form-label { display: block; font-size: 0.95rem; font-weight: 600; margin-bottom: 12px; color: var(--text-main); }
+        .text-input, .select-input { width: 100%; background-color: var(--bg-input); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 12px 16px; color: var(--text-main); font-size: 0.95rem; outline: none; font-family: inherit; }
+        .text-input:focus, .select-input:focus { border-color: var(--accent-blue); }
+        .btn-blue { background-color: var(--accent-blue); color: white; border: none; padding: 12px 20px; border-radius: var(--radius-md); font-weight: 600; cursor: pointer; }
+        .btn-blue:hover { background-color: var(--accent-blue-hover); }
+        .btn-blue:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        /* TABLE & SNIPPETS */
+        .registry-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+        .registry-table th { text-align: left; padding: 12px; border-bottom: 1px solid var(--border-color); color: var(--text-muted); }
+        .registry-table td { padding: 12px; border-bottom: 1px solid var(--border-color); }
+        .registry-table code { background: var(--bg-input); padding: 2px 6px; border-radius: 4px; font-size: 0.85rem; }
+        .snippet-box { background: #000; padding: 16px; border-radius: var(--radius-md); font-family: monospace; font-size: 0.85rem; color: #a5b4fc; white-space: pre-wrap; margin-bottom: 16px; line-height: 1.5;}
+
+        /* EMOTIONS (Tu code cu) */
+        .emotion-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .emotion-btn { background-color: var(--bg-input); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 10px; cursor: pointer; color: var(--text-main); text-align: left; }
+        .emotion-btn:hover { border-color: var(--accent-blue); }
+        .emotion-title { display: block; font-weight: 600; font-size: 0.9rem;} .emotion-sub { font-size: 0.75rem; color: var(--text-muted); }
+
+        /* TTS Player & History */
+        .result-box { border: 1px dashed var(--border-color); border-radius: var(--radius-lg); padding: 20px; min-height: 120px; display: flex; flex-direction: column; justify-content: center; }
+        .empty-state { text-align: center; color: var(--text-muted); font-size: 0.85rem; }
+        .empty-state .empty-icon { font-size: 1.6rem; margin-bottom: 6px; opacity: 0.6; }
+        audio { width: 100%; height: 36px; outline: none; }
+
+        .history-section { margin-top: 20px; }
+        .history-header { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 10px; font-weight: 600; }
+        .history-list { display: flex; flex-direction: column; gap: 8px; max-height: 320px; overflow-y: auto; }
+        .history-item { background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
+        .history-meta { display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem; color: var(--text-muted); }
+        .history-meta .history-time { color: var(--text-main); font-weight: 500; }
+        .history-text { font-size: 0.82rem; color: var(--text-muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.4; }
+        .history-controls { display: flex; align-items: center; gap: 8px; }
+        .history-controls audio { flex: 1; height: 32px; margin: 0; }
+        .history-download { color: var(--accent-blue); text-decoration: none; font-size: 0.8rem; padding: 4px 10px; border: 1px solid var(--accent-blue); border-radius: 6px; white-space: nowrap; }
+        .history-download:hover { background-color: rgba(59, 130, 246, 0.15); }
+
+        input[type="range"] { accent-color: var(--accent-blue); }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+        <div class="logo"><div class="logo-box"></div> TTS Voice Studio</div>
+        <div class="nav-item active" data-view="tts">✨ Tạo giọng nói</div>
+        <div class="nav-item" data-view="clone">👤 Nhân bản giọng nói</div>
+        <div class="nav-item" data-view="registry">🎙️ Đa giọng</div>
+        <div class="nav-item" data-view="profile">⚙️ Profile</div>
+    </div>
+
+    <div class="main-wrapper">
+
+        <!-- 1. VIEW: TẠO GIỌNG NÓI -->
+        <div id="view-tts" class="view-panel active tts-layout">
+            <div class="center-content">
+                <div class="page-title">✨ Tạo giọng nói</div>
+                <div class="page-desc">Nhập văn bản, chọn chế độ giọng, đổ bóng sáng tạo.</div>
+
+                <div class="card">
+                    <label class="form-label">Văn bản</label>
+                    <textarea id="text-input" class="text-input" style="height:120px" oninput="document.getElementById('char-count').innerText = this.value.length + ' ký tự'">Xin chào, đây là bản demo của TTS Voice Studio.</textarea>
+                    <div id="char-count" style="font-size:0.8rem; color:gray; margin-top:5px;">45 ký tự</div>
+
+                    <label class="form-label" style="margin-top:20px;">Biểu cảm / Hiệu ứng</label>
+                    <div class="emotion-grid">
+                        <div class="emotion-btn" onclick="insertTag('[sigh]')"><span class="emotion-title">Thở dài</span><span class="emotion-sub">Sighing</span></div>
+                        <div class="emotion-btn" onclick="insertTag('[uh]')"><span class="emotion-title">Xác nhận</span><span class="emotion-sub">Uh sound</span></div>
+                        <div class="emotion-btn" onclick="insertTag('[laugh]')"><span class="emotion-title">Cười</span><span class="emotion-sub">Laughter</span></div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <label class="form-label">Chế độ giọng</label>
+                    <select id="voice-select" class="select-input"></select>
+                </div>
+
+                <div class="card">
+                    <label class="form-label">Tốc độ (Speed): <span id="speed-value">1.0</span></label>
+                    <input type="range" id="speed-slider" min="0.5" max="2.0" step="0.1" value="1.0" style="width:100%" oninput="document.getElementById('speed-value').innerText = parseFloat(this.value).toFixed(1)">
+                </div>
+            </div>
+
+            <div class="right-panel">
+                <div class="page-title">Tạo giọng nói</div>
+                <div class="page-desc">Audio sẽ truyền về sau khi server xử lý xong.</div>
+                <button class="btn-blue" id="btn-generate" onclick="generateTTS()" style="padding:16px; font-size:1.1rem; margin-bottom:20px; width:100%;">✨ Tạo</button>
+                <div class="result-box" id="result-box" style="margin-bottom:20px;">
+                    <div class="empty-state" id="empty-state">
+                        <div class="empty-icon">🎧</div>
+                        <div>Chưa có audio nào.</div>
+                    </div>
+                    <div class="history-section" id="history-section" style="display: none;">
+                        <div class="history-header">Lịch sử audio</div>
+                        <div class="history-list" id="history-list"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. VIEW: NHÂN BẢN GIỌNG NÓI -->
+        <div id="view-clone" class="view-panel single-layout">
+            <div class="page-title">👤 Nhân bản giọng nói</div>
+            <div class="page-desc">Tải lên file audio gốc để hệ thống AI học và nhân bản giọng nói.</div>
+
+            <div class="card">
+                <label class="form-label">1. Tải lên file giọng mẫu (.wav, .mp3)</label>
+                <input type="file" id="file-uploader" class="select-input" accept=".wav,.mp3,.ogg,.flac">
+                <button class="btn-blue" style="margin-top:10px;" onclick="uploadRefFile()">Tải lên Server</button>
+                <div id="upload-status" style="margin-top:10px; color:var(--accent-green);"></div>
+            </div>
+
+            <div class="card">
+                <label class="form-label">2. Lưu thành Profile VoiceID</label>
+                <input type="text" id="save-clone-id" class="text-input" placeholder="Nhập ID không dấu (vd: sep_tong)" style="margin-bottom:10px;">
+                <input type="text" id="save-clone-file" class="text-input" placeholder="Tên file đã tải lên (vd: sep_tong.wav)" style="margin-bottom:10px;" readonly>
+                <button class="btn-blue" onclick="saveCloneToRegistry()">Lưu VoiceID</button>
+            </div>
+        </div>
+
+        <!-- 3. VIEW: ĐA GIỌNG (REGISTRY) -->
+        <div id="view-registry" class="view-panel single-layout">
+            <div class="page-title">🎙️ Đa giọng (Quản lý Voice Registry)</div>
+            <div class="page-desc">Danh sách toàn bộ các giọng đã được thiết kế và nhân bản trên hệ thống.</div>
+
+            <div class="card">
+                <button class="btn-blue" onclick="loadVoiceRegistryTable()" style="margin-bottom:20px;">↻ Tải lại danh sách</button>
+                <table class="registry-table" id="registry-table">
+                    <thead><tr><th>VoiceID</th><th>Tên hiển thị</th><th>Loại</th><th>Hành động</th></tr></thead>
+                    <tbody><!-- Render via JS --></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 4. VIEW: PROFILE (API) -->
+        <div id="view-profile" class="view-panel single-layout">
+            <div class="page-title">⚙️ Profile & API Integration</div>
+            <div class="page-desc">Tích hợp OmniVoice API vào phần mềm của bên thứ 3.</div>
+
+            <div class="card">
+                <label class="form-label">Server Endpoint</label>
+                <input type="text" id="api-endpoint" class="text-input" value="http://127.0.0.1:8088" readonly style="color:var(--accent-green); font-family:monospace;">
+            </div>
+
+            <div class="card">
+                <label class="form-label">Python (requests) Snippet</label>
+                <div class="snippet-box">
+import requests
+url = "http://127.0.0.1:8088/v1/voices/YOUR_VOICE_ID/tts"
+res = requests.post(url, json={"text": "Xin chào"})
+with open("output.wav", "wb") as f:
+    f.write(res.content)
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Navigation Logic
+    document.querySelectorAll('.nav-item').forEach(item => {
+        item.addEventListener('click', () => {
+            const viewId = item.dataset.view;
+            document.querySelectorAll('.nav-item').forEach(e => e.classList.remove('active'));
+            item.classList.add('active');
+            document.querySelectorAll('.view-panel').forEach(e => e.classList.remove('active'));
+            document.getElementById('view-' + viewId).classList.add('active');
+            if (viewId === 'registry') loadVoiceRegistryTable();
+        });
+    });
+
+    // TTS View Logic
+    function insertTag(tag) {
+        const ta = document.getElementById('text-input');
+        const start = ta.selectionStart;
+        const text = ta.value;
+        ta.value = text.substring(0, start) + tag + text.substring(ta.selectionEnd);
+        ta.focus();
+        ta.selectionEnd = start + tag.length;
+        document.getElementById('char-count').innerText = ta.value.length + ' ký tự';
+    }
+
+    async function loadCatalog() {
+        try {
+            const res = await fetch('/v1/catalog');
+            const data = await res.json();
+            const select = document.getElementById('voice-select');
+            select.innerHTML = data.voices.map(v => `<option value="${v.id}">${v.display_name || v.id} (${v.type})</option>`).join('');
+        } catch(e) { console.error(e); }
+    }
+
+    async function generateTTS() {
+        const btn = document.getElementById('btn-generate');
+        const text = document.getElementById('text-input').value;
+        const voiceId = document.getElementById('voice-select').value;
+        const speed = parseFloat(document.getElementById('speed-slider').value);
+
+        if (!text.trim()) return alert("Vui lòng nhập văn bản!");
+        if (!voiceId) return alert("Chưa có voice nào trong catalog!");
+
+        btn.disabled = true;
+        btn.innerText = "⏳ Đang tạo...";
+
+        try {
+            const res = await fetch('/v1/tts', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text, voice_id: voiceId, speed })
+            });
+
+            if (!res.ok) throw new Error(await res.text());
+
+            const blob = await res.blob();
+            const url = URL.createObjectURL(blob);
+
+            const snippet = text.length > 80 ? text.substring(0, 80) + '...' : text;
+            const now = new Date();
+            const time = now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            const filename = `tts_${Date.now()}.wav`;
+
+            const item = document.createElement('div');
+            item.className = 'history-item';
+            item.innerHTML = `
+                <div class="history-meta">
+                    <span class="history-time">${time}</span>
+                    <span>${(blob.size / 1024).toFixed(1)} KB</span>
+                </div>
+                <div class="history-text">${escapeHtml(snippet)}</div>
+                <div class="history-controls">
+                    <audio src="${url}" controls></audio>
+                    <a class="history-download" href="${url}" download="${filename}">⬇️ Tải</a>
+                </div>
+            `;
+
+            const list = document.getElementById('history-list');
+            list.insertBefore(item, list.firstChild);
+
+            document.getElementById('empty-state').style.display = 'none';
+            document.getElementById('history-section').style.display = 'block';
+
+            const audioInItem = item.querySelector('audio');
+            audioInItem.play();
+        } catch (e) {
+            alert("Lỗi khi tạo TTS: " + e.message);
+        } finally {
+            btn.disabled = false;
+            btn.innerText = "✨ Tạo";
+        }
+    }
+
+    function escapeHtml(str) {
+        return str.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+
+    // Clone View Logic
+    async function uploadRefFile() {
+        const fileInput = document.getElementById('file-uploader');
+        if (!fileInput.files[0]) return alert("Chưa chọn file!");
+        const formData = new FormData();
+        formData.append("file", fileInput.files[0]);
+
+        try {
+            const res = await fetch('/api/upload-ref', { method: 'POST', body: formData });
+            const data = await res.json();
+            document.getElementById('upload-status').innerText = "Đã tải lên: " + data.filename;
+            document.getElementById('save-clone-file').value = data.filename;
+        } catch (e) {
+            alert("Lỗi upload: " + e.message);
+        }
+    }
+
+    async function saveCloneToRegistry() {
+        const id = document.getElementById('save-clone-id').value;
+        const file = document.getElementById('save-clone-file').value;
+        if (!id || !file) return alert("Vui lòng điền ID và upload file trước!");
+        try {
+            await fetch('/v1/voices', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: id, type: 'clone', ref_audio_file: file, display_name: id })
+            });
+            alert("Đã lưu VoiceID thành công!");
+            loadCatalog();
+        } catch (e) {
+            alert("Lỗi lưu: " + e.message);
+        }
+    }
+
+    // Registry View Logic
+    async function loadVoiceRegistryTable() {
+        try {
+            const res = await fetch('/v1/catalog');
+            const data = await res.json();
+            const tbody = document.querySelector('#registry-table tbody');
+            tbody.innerHTML = data.voices.map(v => `
+                <tr>
+                    <td><code>${escapeHtml(v.id)}</code></td>
+                    <td>${escapeHtml(v.display_name || '')}</td>
+                    <td>${escapeHtml(v.type || '')}</td>
+                    <td><button onclick="deleteVoice('${escapeHtml(v.id)}')" style="background:var(--danger); color:#fff; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-size:0.8rem;">Xóa</button></td>
+                </tr>
+            `).join('');
+        } catch (e) { console.error(e); }
+    }
+
+    async function deleteVoice(id) {
+        if (!confirm(`Xác nhận xóa voice ${id}?`)) return;
+        try {
+            await fetch(`/v1/voices/${id}`, { method: 'DELETE' });
+            loadVoiceRegistryTable();
+            loadCatalog();
+        } catch (e) {
+            alert("Lỗi xóa: " + e.message);
+        }
+    }
+
+    window.onload = () => {
+        loadCatalog();
+    };
+</script>
+</body>
+</html>

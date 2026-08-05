@@ -1,0 +1,13 @@
+@echo off
+setlocal enabledelayedexpansion
+set "MODE=lite"
+if not "%~2"=="" set "MODE=%~2"
+echo MODE=%MODE%
+if /i "!MODE!"=="full" goto mode_full
+if /i "!MODE!"=="2" goto mode_full
+set "MODE=lite"
+goto mode_done
+:mode_full
+set "MODE=full"
+:mode_done
+echo DONE MODE=%MODE%

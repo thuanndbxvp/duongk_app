@@ -1,0 +1,14 @@
+INFO:     Started server process [15380]
+INFO:     Waiting for application startup.
+2026-07-12T21:31:05Z [INFO] omnivoice-api-server: Python executable: d:\Omnivoice-sv\venv\Scripts\python.exe
+2026-07-12T21:31:05Z [INFO] omnivoice-api-server: Torch version: 2.13.0+cpu | torch.cuda.is_available(): False | torch.version.cuda: None
+2026-07-12T21:31:05Z [INFO] omnivoice-api-server: Loading OmniVoice model onto 'cpu' (precision: float32)...
+Fetching 13 files:   0%|          | 0/13 [00:00<?, ?it/s]Fetching 13 files: 100%|##########| 13/13 [00:00<00:00, 4988.65it/s]
+Loading weights:   0%|          | 0/313 [00:00<?, ?it/s]Loading weights: 100%|##########| 313/313 [00:00<00:00, 6332.38it/s]
+Loading weights:   0%|          | 0/527 [00:00<?, ?it/s]Loading weights: 100%|##########| 527/527 [00:00<00:00, 6217.82it/s]
+2026-07-12T21:31:07Z [INFO] omnivoice-api-server: OmniVoice model loaded successfully!
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8088 (Press CTRL+C to quit)
+2026-07-12T21:32:31Z [INFO] omnivoice-api-server: [req=bd8756c38af2] Treating voice_id 'narrator_vi_male' as Voice Design instruction: male, young adult, moderate pitch
+2026-07-12T21:32:31Z [INFO] omnivoice-api-server: [req=bd8756c38af2] Generating speech: language=vi voice_id=narrator_vi_male text_len=4
+2026-07-12T21:33:16Z [INFO] omnivoice-api-server: [req=bd8756c38af2] Speech generation successful. Duration: 1.07s, audio_bytes=51404

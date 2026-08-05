@@ -110,7 +110,7 @@ def transcribe_video(video_id: str, language: str = "vi") -> dict:
     secrets=[modal.Secret.from_name("r2-credentials")],
     timeout=1200
 )
-def synthesize_voice(text: str, reference_audio_url: str, output_key: str) -> dict:
+def synthesize_voice(text: str, output_key: str, reference_audio_url: str = None, instruct: str = None) -> dict:
     import subprocess
     import tempfile
     import os
@@ -118,11 +118,14 @@ def synthesize_voice(text: str, reference_audio_url: str, output_key: str) -> di
     import boto3
     
     with tempfile.TemporaryDirectory() as tmp:
-        ref_audio_path = f"{tmp}/ref.wav"
-        out_audio_path = f"{tmp}/output.wav"
+        ref_audio_path = None
         
-        # Download reference audio
-        subprocess.run(["curl", "-sL", reference_audio_url, "-o", ref_audio_path], check=True)
+        # Download reference audio if provided
+        if reference_audio_url:
+            ref_audio_path = f"{tmp}/ref.wav"
+            subprocess.run(["curl", "-sL", reference_audio_url, "-o", ref_audio_path], check=True)
+        
+        out_audio_path = f"{tmp}/output.wav"
         
         # --- OMNIVOICE INFERENCE ---
         import torch
@@ -151,7 +154,7 @@ def synthesize_voice(text: str, reference_audio_url: str, output_key: str) -> di
             text=text,
             language="vi",
             ref_audio=ref_audio_path,
-            instruct=None,
+            instruct=instruct,
             generation_config=gen_cfg,
         )
         

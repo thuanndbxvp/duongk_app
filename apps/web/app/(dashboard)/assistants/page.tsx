@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation';
 import { apiFetch } from '@/lib/api-client';
 import { getAccessToken } from '@/lib/auth';
 import { AssistantCard } from '@/components/assistant-card';
-import { IconChannels, IconPlus } from '@/components/icons';
+import { IconChannels } from '@/components/icons';
 
 interface Assistant {
   id: string;
@@ -43,11 +43,9 @@ export default async function AssistantsPage() {
         </div>
         <Link
           href="/projects/new"
-          className="btn-glow relative inline-flex items-center gap-2 px-5 h-11 rounded-xl text-sm font-semibold text-white"
+          className="inline-flex items-center gap-2 px-5 h-11 rounded-xl text-sm font-semibold glass border border-[var(--glass-border-strong)] text-[var(--brand-300)] hover:bg-[var(--surface-hover)] hover:text-white transition"
         >
-          <span className="relative inline-flex items-center gap-2 gradient-bg rounded-[10px] px-5 h-11">
-            <IconPlus size={16} /> Tạo mới
-          </span>
+          <IconChannels size={16} /> Tạo mới
         </Link>
       </div>
 
@@ -95,11 +93,9 @@ function EmptyState() {
         </p>
         <Link
           href="/projects/new"
-          className="btn-glow relative inline-flex items-center gap-2 px-6 h-12 rounded-xl text-sm font-semibold text-white"
+          className="inline-flex items-center gap-2 px-6 h-12 rounded-xl text-sm font-semibold glass border border-[var(--glass-border-strong)] text-[var(--brand-300)] hover:bg-[var(--surface-hover)] hover:text-white transition"
         >
-          <span className="relative inline-flex items-center gap-2 gradient-bg rounded-[10px] px-6 h-12">
-            <IconPlus size={16} /> Tạo Channel Assistant mới
-          </span>
+          <IconChannels size={16} /> Tạo Channel Assistant mới
         </Link>
       </div>
     </div>

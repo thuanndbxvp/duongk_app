@@ -22,7 +22,7 @@ export const NAV_ITEMS: NavItem[] = [
   { href: '/dashboard', label: 'Dashboard', icon: IconDashboard, group: 'main' },
   { href: '/assistants', label: 'Channels', icon: IconChannels, group: 'main' },
   { href: '/projects/new', label: 'New Project', icon: IconPlus, group: 'main' },
-  { href: '/voice-cloning', label: 'Voice Cloning', icon: IconMic, group: 'main' },
+  { href: 'https://voice.ai86.click', label: 'Voice Cloning', icon: IconMic, group: 'main' },
   { href: '/billing', label: 'Billing', icon: IconBilling, group: 'main' },
   { href: '/account/settings', label: 'Account', icon: IconUser, group: 'account' },
   { href: '/pricing', label: 'Pricing', icon: IconChart, group: 'account' },
