@@ -126,3 +126,51 @@ async def breakdown_scenes(req: GenerateScriptRequest):
         status='pending',
         message=f'Scene breakdown started. Track at /api/jobs/{job_id}',
     )
+
+@router.get('/{script_id}')
+async def get_script(script_id: UUID, user_id: str):
+    """Get generated script by ID."""
+    admin = create_client(
+        os.environ.get('NEXT_PUBLIC_SUPABASE_URL', 'https://xxx.supabase.co'),
+        os.environ.get('SUPABASE_SERVICE_ROLE_KEY', 'xxx')
+    )
+
+    # Get script
+    script = (
+        admin.table('generated_scripts')
+        .select('*')
+        .eq('id', str(script_id))
+        .single()
+        .execute()
+    )
+
+    if not script.data:
+        raise HTTPException(404, 'Script not found')
+
+    # Verify ownership via assistant
+    assistant = (
+        admin.table('channel_assistants')
+        .select('user_id')
+        .eq('id', script.data['assistant_id'])
+        .single()
+        .execute()
+    )
+
+    if not assistant.data or str(assistant.data['user_id']) != user_id:
+        raise HTTPException(403, 'Forbidden')
+
+    # Parse script JSON
+    try:
+        script_data = json.loads(script.data['script_text'])
+    except Exception:
+        script_data = script.data['script_text']
+
+    return {
+        'id': script.data['id'],
+        'topic': script.data['topic'],
+        'script': script_data,
+        'score': script.data.get('score', 0),
+        'cost_usd': script.data.get('cost_usd', 0),
+        'scenes': script.data.get('scenes'),
+        'created_at': script.data['created_at'],
+    }
