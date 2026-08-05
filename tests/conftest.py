@@ -1,52 +1,44 @@
 """
-Test configuration and fixtures.
+Shared test fixtures.
 """
 import pytest
-import asyncio
+import os
+import jwt
+from datetime import datetime, timedelta, timezone
+from supabase import create_client
 
-@pytest.fixture(scope="session")
-def event_loop():
-    """Create event loop for async tests."""
-    try:
-        loop = asyncio.get_running_loop()
-    except RuntimeError:
-        loop = asyncio.new_event_loop()
-    yield loop
-    loop.close()
+
+SUPABASE_URL = os.getenv('SUPABASE_URL', 'http://localhost:54321')
+SUPABASE_KEY = os.getenv('SUPABASE_SERVICE_ROLE_KEY', 'test-key')
+JWT_SECRET = os.getenv('SUPABASE_JWT_SECRET', 'test-secret')
 
 
 @pytest.fixture
-def mock_supabase():
-    """Mock Supabase client for unit tests."""
-    from unittest.mock import MagicMock
+def admin_client():
+    """Admin client (bypasses RLS)."""
+    return create_client(SUPABASE_URL, SUPABASE_KEY)
 
-    mock = MagicMock()
-    mock.table.return_value.select.return_value.eq.return_value.single.return_value.execute.return_value = MagicMock(
-        data={
-            'id': 'test-assistant-id',
-            'user_id': 'test-user-id',
-            'persona': {'channel_name': 'Test Channel'},
+
+@pytest.fixture
+def make_user_token():
+    """Generate JWT for a test user."""
+    def _make(user_id: str, email: str = 'test@example.com') -> str:
+        payload = {
+            'sub': user_id,
+            'aud': 'authenticated',
+            'exp': datetime.now(timezone.utc) + timedelta(hours=1),
+            'email': email,
         }
-    )
-    return mock
+        return jwt.encode(payload, JWT_SECRET, algorithm='HS256')
+    return _make
 
 
 @pytest.fixture
-def mock_supabase_admin():
-    """Mock admin Supabase client."""
-    from unittest.mock import MagicMock
-
-    mock = MagicMock()
-
-    # Mock table responses
-    mock.table.return_value.select.return_value.eq.return_value.single.return_value.execute.return_value = MagicMock(
-        data={'id': 'test-id', 'user_id': 'test-user-id'}
-    )
-    mock.table.return_value.insert.return_value.execute.return_value = MagicMock(
-        data=[{'id': 'job-id', 'status': 'pending'}]
-    )
-    mock.table.return_value.update.return_value.eq.return_value.execute.return_value = MagicMock(
-        data=[{'id': 'job-id'}]
-    )
-
-    return mock
+def user_client(make_user_token):
+    """Create user-scoped client."""
+    def _make(user_id: str):
+        token = make_user_token(user_id)
+        client = create_client(SUPABASE_URL, SUPABASE_KEY)
+        client.auth.session = type('S', (), {'access_token': token})()
+        return client
+    return _make
