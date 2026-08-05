@@ -1,13 +1,18 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { NAV_ITEMS, isActiveRoute } from '@/lib/navigation';
+import { IconClose, IconMenu, IconLogout } from '@/components/icons';
 
 export function MobileMenu() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
+
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
 
   async function handleLogout() {
     await fetch('/api/auth/logout', { method: 'POST' });
@@ -18,66 +23,69 @@ export function MobileMenu() {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="lg:hidden p-2 hover:bg-gray-100 rounded"
-        aria-label="Open menu"
+        className="lg:hidden inline-flex items-center justify-center h-10 w-10 rounded-xl text-[var(--fg-secondary)] hover:text-white hover:bg-white/[0.05] transition"
+        aria-label="Mở menu"
       >
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-          <path d="M3 12h18M3 6h18M3 18h18" stroke="currentColor" strokeWidth="2" />
-        </svg>
+        <IconMenu size={20} />
       </button>
 
-      {/* Backdrop */}
       {open && (
         <div
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          className="fixed inset-0 z-40 lg:hidden bg-black/60 backdrop-blur-sm animate-fade-up"
           onClick={() => setOpen(false)}
+          aria-hidden
         />
       )}
 
-      {/* Slide-in panel */}
       <div
-        className={`fixed top-0 left-0 h-full w-64 bg-white z-50 transform transition-transform duration-300 lg:hidden ${
+        className={`fixed top-0 left-0 h-full w-72 z-50 lg:hidden transform transition-transform duration-300 ${
           open ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <div className="p-4 border-b flex items-center justify-between">
-          <span className="font-bold text-xl text-blue-600">AppDK</span>
-          <button
-            onClick={() => setOpen(false)}
-            className="p-2 hover:bg-gray-100 rounded"
-          >
-            ✕
-          </button>
+        <div className="h-full glass-strong border-r border-[var(--glass-border)] flex flex-col">
+          <div className="px-5 h-[68px] flex items-center justify-between border-b border-[var(--divider)]">
+            <span className="font-bold text-lg gradient-text">AppDK</span>
+            <button
+              onClick={() => setOpen(false)}
+              className="inline-flex items-center justify-center h-9 w-9 rounded-lg text-[var(--fg-secondary)] hover:text-white hover:bg-white/[0.05]"
+              aria-label="Đóng menu"
+            >
+              <IconClose size={18} />
+            </button>
+          </div>
+
+          <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
+            {NAV_ITEMS.map((item) => {
+              const active = isActiveRoute(pathname, item.href);
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setOpen(false)}
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition ${
+                    active
+                      ? 'bg-white/[0.07] text-white'
+                      : 'text-[var(--fg-secondary)] hover:text-white hover:bg-white/[0.04]'
+                  }`}
+                >
+                  <Icon size={18} className={active ? 'text-[#c4b5fd]' : 'text-[var(--fg-tertiary)]'} />
+                  <span>{item.label}</span>
+                </Link>
+              );
+            })}
+          </nav>
+
+          <div className="p-3 border-t border-[var(--divider)]">
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-[var(--fg-secondary)] hover:text-[var(--danger)] hover:bg-[rgba(248,113,113,0.06)] w-full transition"
+            >
+              <IconLogout size={18} />
+              <span>Đăng xuất</span>
+            </button>
+          </div>
         </div>
-
-        <nav className="p-4 space-y-1">
-          {NAV_ITEMS.map((item) => {
-            const active = isActiveRoute(pathname, item.href);
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => setOpen(false)}
-                className={`flex items-center gap-3 px-4 py-3 rounded-lg ${
-                  active
-                    ? 'bg-blue-50 text-blue-700 font-medium'
-                    : 'text-gray-700 hover:bg-gray-100'
-                }`}
-              >
-                <span className="text-xl">{item.icon}</span>
-                <span>{item.label}</span>
-              </Link>
-            );
-          })}
-
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-3 px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 w-full mt-4 border-t pt-4"
-          >
-            <span className="text-xl">🔓</span>
-            <span>Logout</span>
-          </button>
-        </nav>
       </div>
     </>
   );

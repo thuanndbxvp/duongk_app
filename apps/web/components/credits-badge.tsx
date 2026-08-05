@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { IconAlert, IconSparkle } from '@/components/icons';
 
 export function CreditsBadge() {
   const [credits, setCredits] = useState<number | null>(null);
@@ -16,12 +17,11 @@ export function CreditsBadge() {
           setCredits(data.credits);
           setTier(data.tier);
         }
-      } catch (e) {
-        // Silent fail - badge hidden if can't fetch
+      } catch {
+        /* silent */
       }
     }
     fetchBalance();
-    // Refresh every 30s
     const interval = setInterval(fetchBalance, 30000);
     return () => clearInterval(interval);
   }, []);
@@ -29,19 +29,20 @@ export function CreditsBadge() {
   if (credits === null) return null;
 
   const isLow = credits < 20;
-  const colorClass = isLow
-    ? 'bg-red-100 text-red-800 border-red-300'
-    : 'bg-green-100 text-green-800 border-green-300';
 
   return (
     <Link
       href="/billing"
-      className={`flex items-center gap-2 px-3 py-1.5 rounded-full border ${colorClass} hover:shadow transition-shadow text-sm font-medium`}
+      className={`group relative inline-flex items-center gap-2 px-3 h-9 rounded-xl text-sm font-semibold transition-all duration-200 glass glass-hover ${
+        isLow ? 'text-[var(--danger)]' : 'text-white'
+      }`}
     >
-      <span>💰</span>
-      <span>{credits} credits</span>
-      <span className="text-xs opacity-70">({tier})</span>
-      {isLow && <span>⚠️</span>}
+      <IconSparkle size={14} className={isLow ? 'text-[var(--danger)]' : 'text-[var(--brand-300)]'} />
+      <span className="tabular-nums">{credits.toLocaleString('vi-VN')}</span>
+      <span className="text-[10px] uppercase tracking-wider text-[var(--fg-tertiary)] font-semibold">
+        {tier}
+      </span>
+      {isLow && <IconAlert size={14} className="text-[var(--danger)]" />}
     </Link>
   );
 }

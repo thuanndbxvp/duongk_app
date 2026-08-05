@@ -13,16 +13,17 @@ export async function AuthenticatedLayout({
   const token = await getAccessToken();
   if (!token) redirect('/login');
 
-  // For now, breadcrumbs are computed client-side or omitted if empty
   const breadcrumbs: { label: string; href: string }[] = [];
 
   return (
     <div className="flex flex-1">
-      <aside className="hidden lg:block w-64 border-r bg-white sticky top-16 h-[calc(100vh-4rem)]">
-        <Sidebar />
+      <aside className="hidden lg:block w-64 shrink-0 sticky top-[68px] h-[calc(100dvh-68px)]">
+        <div className="h-full glass border-r border-[var(--glass-border)]">
+          <Sidebar />
+        </div>
       </aside>
 
-      <main className="flex-1 p-4 lg:p-8 overflow-x-hidden">
+      <main className="flex-1 min-w-0 px-4 lg:px-10 py-6 lg:py-10">
         {showBreadcrumbs && breadcrumbs.length > 0 && (
           <Breadcrumbs items={breadcrumbs} />
         )}
