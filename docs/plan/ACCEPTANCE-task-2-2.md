@@ -2,7 +2,9 @@
 
 ## 1. Tiêu chuẩn Chức năng
 
-- [ ] E2 FIX: Models load as singletons
+- [ ] No torch/transformers in requirements
+- [ ] Deploy time < 1 phút
+- [ ] RAM usage < 100MB
 - [ ] Output 5 (Emotions): dominant_emotions, emotion_distribution
 - [ ] Output 6 (Pacing): avg_wpm, avg_sentence_length
 - [ ] Output 7 (Category): primary_category, confidence
@@ -12,6 +14,13 @@
 ## 2. Verification Commands
 
 ```powershell
+# Kiểm tra không có torch/transformers
+pip list | Select-String -Pattern "torch|transformers"
+
+# Unit tests
+pytest tests/test_nlp/ -v
+
+# API test
 $body = @{
     transcripts = @("Bạn có biết cách làm đẹp không? Tôi sẽ hướng dẫn bạn cực kỳ chi tiết.")
     titles = @("Bạn có biết cách làm đẹp?", "Cách chăm sóc da mùa đông")
@@ -22,6 +31,7 @@ Invoke-RestMethod -Uri "http://localhost:8000/api/nlp/analyze" -Method Post -Bod
 
 ## 3. Sign-off Checklist
 
-- [ ] ML models load without errors
+- [ ] torch/transformers NOT installed
+- [ ] Deploy time verified
 - [ ] All outputs generated
 - [ ] Unit tests pass

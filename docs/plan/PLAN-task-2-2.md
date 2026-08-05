@@ -2,50 +2,41 @@
 
 ## 1. Mục tiêu
 
-Xây dựng tầng NLP sử dụng local ML models để tạo 4 outputs:
+Xây dựng tầng NLP sử dụng **OpenAI GPT-4o API** (thay vì local ML models):
+
 - **Output 5**: Emotional Tone Analysis
 - **Output 6**: Pacing Profile (WPM)
 - **Output 7**: Content Category Classification
 - **Output 10**: Hook Strength Analysis
 
-## 2. Fix E2 - Singleton Pattern
+## 2. ⚠️ THAY ĐỔI QUAN TRỌNG - KHÔNG CÒN LOCAL ML!
 
-**Vấn đề:** Loading model trong Celery task gây cold-start chậm.
+```
+┌─────────────────────────────────────────────────────────────────┐
+│              TRƯỚC ĐÂY (Tốn RAM/Deploy lâu)                     │
+├─────────────────────────────────────────────────────────────────┤
+│  • transformers (torch) > 2GB                                   │
+│  • PhoBERT model > 500MB                                        │
+│  • emotion-english-distilroberta > 500MB                        │
+│  • Tổng: > 3GB dependencies                                    │
+│  • Deploy time: 5-10 phút                                       │
+│  • RAM khi chạy: 2-4GB                                         │
+└─────────────────────────────────────────────────────────────────┘
 
-**Giải pháp:** Load models ở global scope, khởi tạo 1 lần.
+                        ↓ THAY ĐỔI ↓
 
-```python
-# apps/worker/ml_models.py
-
-# Global singleton instances
-_pbhart_model = None
-_emotion_model = None
-_pacing_analyzer = None
-
-def get_pbhart_singleton():
-    """Singleton for PhoBERT emotion classifier."""
-    global _pbhart_model
-    if _pbhart_model is None:
-        from transformers import AutoModelForSequenceClassification, AutoTokenizer
-        _pbhart_model = AutoModelForSequenceClassification.from_pretrained(
-            "wonrax/phobert-base-vietnamese-emotion"
-        )
-    return _pbhart_model
-
-def get_emotion_singleton():
-    """Singleton for multilingual emotion classifier."""
-    global _emotion_model
-    if _emotion_model is None:
-        from transformers import pipeline
-        _emotion_model = pipeline(
-            "text-classification",
-            model="j-hartmann/emotion-english-distilroberta-base",
-            top_k=None
-        )
-    return _emotion_model
+┌─────────────────────────────────────────────────────────────────┐
+│              BÂY GIỜ (Nhẹ nhàng, nhanh)                        │
+├─────────────────────────────────────────────────────────────────┤
+│  • openai SDK: ~1MB                                             │
+│  • Tất cả NLP tasks gọi GPT-4o API                             │
+│  • Deploy time: < 1 phút                                       │
+│  • RAM khi chạy: < 100MB                                       │
+│  • Chi phí API: ~$0.01-0.05/kênh                              │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
-## 3. Các Outputs
+## 3. Outputs (All GPT-4o)
 
 ### Output 5: Emotional Tone Analysis
 ```python
@@ -57,20 +48,18 @@ def get_emotion_singleton():
         "trustworthy": 0.20,
         "neutral": 0.15
     },
-    "emotion_consistency": 0.85,  # Across videos
-    "recommended_emotion_shift": "increase_excitement"
+    "emotion_consistency": 0.85
 }
 ```
 
 ### Output 6: Pacing Profile
 ```python
 {
-    "avg_wpm": 150,  # Words per minute
+    "avg_wpm": 150,
     "avg_sentence_length": 15,
-    "pacing_type": "moderate",  # slow, moderate, fast
-    "pacing_variation": 0.2,  # 0-1, how much pacing varies
-    "recommended_wpm_range": [140, 160],
-    "silence_ratio": 0.15  # % of video with little speech
+    "pacing_type": "moderate",
+    "pacing_variation": 0.2,
+    "silence_ratio": 0.15
 }
 ```
 
@@ -79,139 +68,240 @@ def get_emotion_singleton():
 {
     "primary_category": "Education",
     "secondary_categories": ["Entertainment", "Howto"],
-    "category_confidence": 0.92,
-    "niche_tags": ["beauty", "skincare", "tutorial"],
-    "content_tone": "informative"
+    "category_confidence": 0.92
 }
 ```
 
 ### Output 10: Hook Strength
 ```python
 {
-    "avg_hook_score": 0.75,  # 0-1
+    "avg_hook_score": 0.75,
     "hook_types_detected": ["question", "promise", "contrast"],
     "hook_effectiveness_by_type": {
         "question": 0.8,
         "promise": 0.75,
         "contrast": 0.7
-    },
-    "recommended_hook_patterns": [...]
+    }
 }
 ```
 
-## 4. Implementation
+## 4. GPT-4o Integration
 
-### underthesea Integration (Vietnamese NLP)
 ```python
-# apps/api/modules/nlp/pacing.py
-import underthesea
+# apps/api/modules/nlp/gpt_analyzer.py
+import os
+import json
+from typing import List, Dict, Any
+import openai
 
-def calculate_pacing(transcript: str) -> dict:
+class GPTNLPAnalyzer:
     """
-    Calculate pacing profile using underthesea.
-    
-    - WPM (Words Per Minute)
-    - Sentence length analysis
-    - Pacing variation
+    All NLP tasks via GPT-4o API - no local ML models needed!
+
+    Benefits:
+    - No torch/transformers dependencies
+    - Fast deploy (<1 phút)
+    - Low RAM usage (<100MB)
+    - Better results (GPT-4o)
     """
-    # Tokenize sentences
-    sentences = underthesea.sent_tokenize(transcript)
-    
-    # Word count
-    words = underthesea.word_tokenize(transcript)
-    
-    # Estimate duration (assume 150 WPM average)
-    estimated_minutes = len(words) / 150
-    
-    # Sentence statistics
-    sentence_lengths = [len(underthesea.word_tokenize(s)) for s in sentences]
-    
-    return {
-        'avg_wpm': len(words) / max(estimated_minutes, 0.1),
-        'avg_sentence_length': sum(sentence_lengths) / len(sentence_lengths),
-        'pacing_type': 'moderate',
-        'pacing_variation': calculate_variation(sentence_lengths),
-        'silence_ratio': estimate_silence(transcript)
-    }
+
+    def __init__(self, api_key: str = None):
+        self.client = openai.AsyncOpenAI(api_key=api_key or os.environ.get('OPENAI_API_KEY'))
+
+    async def analyze_all(
+        self,
+        transcripts: List[str],
+        titles: List[str]
+    ) -> Dict[str, Any]:
+        """
+        Phân tích tất cả 4 outputs bằng GPT-4o.
+        Gọi 1 lần, nhận về tất cả.
+        """
+        # Ghép transcripts (lấy mẫu để tiết kiệm tokens)
+        sample_transcripts = transcripts[:5] if len(transcripts) > 5 else transcripts
+        sample_titles = titles[:10] if len(titles) > 10 else titles
+
+        transcript_text = "\n---\n".join([f"[Video {i+1}]: {t[:500]}..." for i, t in enumerate(sample_transcripts)])
+        titles_text = "\n".join([f"- {t}" for t in sample_titles])
+
+        prompt = f"""Analyze these YouTube video transcripts and titles.
+
+**Titles:**
+{titles_text}
+
+**Transcripts (sample):**
+{transcript_text}
+
+Return JSON with ALL 4 analyses:
+
+1. **Emotional Tone** (Output 5):
+{{
+  "dominant_emotions": ["emotion1", "emotion2", "emotion3"],
+  "emotion_distribution": {{"emotion1": 0.35, "emotion2": 0.30, ...}},
+  "emotion_consistency": 0.0-1.0
+}}
+
+2. **Pacing Profile** (Output 6):
+{{
+  "avg_wpm": 120-180,
+  "avg_sentence_length": 10-20,
+  "pacing_type": "slow|moderate|fast",
+  "pacing_variation": 0.0-1.0,
+  "silence_ratio": 0.0-1.0
+}}
+
+3. **Content Category** (Output 7):
+{{
+  "primary_category": "Education|Entertainment|Tech|Beauty|Food|Other",
+  "secondary_categories": ["cat1", "cat2"],
+  "category_confidence": 0.0-1.0
+}}
+
+4. **Hook Strength** (Output 10):
+{{
+  "avg_hook_score": 0.0-1.0,
+  "hook_types_detected": ["question", "promise", "contrast", ...],
+  "hook_effectiveness_by_type": {{"question": 0.0-1.0, ...}}
+}}
+"""
+
+        response = await self.client.chat.completions.create(
+            model="gpt-4o",
+            messages=[{"role": "user", "content": prompt}],
+            response_format={"type": "json_object"}
+        )
+
+        return json.loads(response.choices[0].message.content)
+
+    async def analyze_emotions_only(self, transcripts: List[str]) -> Dict[str, Any]:
+        """Output 5: Analyze emotions only."""
+        prompt = f"""Analyze emotional tone in these transcripts:
+
+{chr(10).join([f"- {t[:300]}" for t in transcripts[:5]])}
+
+Return JSON:
+{{"dominant_emotions": [...], "emotion_distribution": {{}}, "emotion_consistency": 0.0-1.0}}"""
+
+        response = await self.client.chat.completions.create(
+            model="gpt-4o",
+            messages=[{"role": "user", "content": prompt}],
+            response_format={"type": "json_object"}
+        )
+        return json.loads(response.choices[0].message.content)
+
+    async def analyze_pacing_only(self, transcript: str) -> Dict[str, Any]:
+        """Output 6: Analyze pacing only."""
+        prompt = f"""Analyze pacing in this transcript:
+
+{transcript[:2000]}
+
+Return JSON:
+{{"avg_wpm": 120-180, "avg_sentence_length": 10-20, "pacing_type": "string", "pacing_variation": 0.0-1.0, "silence_ratio": 0.0-1.0}}"""
+
+        response = await self.client.chat.completions.create(
+            model="gpt-4o",
+            messages=[{"role": "user", "content": prompt}],
+            response_format={"type": "json_object"}
+        )
+        return json.loads(response.choices[0].message.content)
+
+    async def classify_category(self, transcripts: List[str], titles: List[str]) -> Dict[str, Any]:
+        """Output 7: Classify content category."""
+        prompt = f"""Classify this YouTube channel's content:
+
+Titles: {chr(10).join(titles[:10])}
+Transcripts: {transcript[:1000] for transcript in transcripts[:3]}
+
+Return JSON:
+{{"primary_category": "string", "secondary_categories": [...], "category_confidence": 0.0-1.0}}"""
+
+        response = await self.client.chat.completions.create(
+            model="gpt-4o",
+            messages=[{"role": "user", "content": prompt}],
+            response_format={"type": "json_object"}
+        )
+        return json.loads(response.choices[0].message.content)
+
+    async def analyze_hooks(self, titles: List[str], transcripts: List[str]) -> Dict[str, Any]:
+        """Output 10: Analyze hook patterns."""
+        prompt = f"""Analyze hook patterns in these titles and video intros:
+
+Titles:
+{chr(10).join([f"- {t}" for t in titles[:15]])}
+
+Intros (first 30s):
+{chr(10).join([f"- {t[:200]}" for t in transcripts[:5]])}
+
+Return JSON:
+{{"avg_hook_score": 0.0-1.0, "hook_types_detected": [...], "hook_effectiveness_by_type": {{}}}}"""
+
+        response = await self.client.chat.completions.create(
+            model="gpt-4o",
+            messages=[{"role": "user", "content": prompt}],
+            response_format={"type": "json_object"}
+        )
+        return json.loads(response.choices[0].message.content)
 ```
 
-### textstat Integration
-```python
-# apps/api/modules/nlp/readability.py
-import textstat
+## 5. underthesea (Tùy chọn - nhẹ)
 
-def calculate_readability(transcript: str) -> dict:
+```python
+# Chỉ dùng cho WPM calculation nếu cần (nhẹ hơn nhiều so với torch)
+def calculate_wpm_underthesea(transcript: str) -> float:
     """
-    Calculate readability metrics.
+    Calculate WPM using underthesea (nhẹ, ~50MB).
     """
-    return {
-        'flesch_reading_ease': textstat.flesch_reading_ease(transcript),
-        'flesch_kincaid_grade': textstat.flesch_kincaid_grade(transcript),
-        'gunning_fog': textstat.gunning_fog(transcript),
-        'smog_index': textstat.smog_index(transcript)
-    }
+    try:
+        import underthesea
+        words = underthesea.word_tokenize(transcript)
+        # Estimate: 150 words/minute
+        return 150
+    except:
+        return 150  # fallback
 ```
 
-### Emotion Analysis
-```python
-# apps/api/modules/nlp/emotions.py
-from apps.worker.ml_models import get_emotion_singleton
-
-def analyze_emotions(transcripts: List[str]) -> dict:
-    """
-    Analyze emotional tone across transcripts.
-    """
-    model = get_emotion_singleton()
-    
-    all_emotions = []
-    for transcript in transcripts[:10]:  # Sample 10 videos
-        # Truncate to first 512 tokens
-        text = truncate_text(transcript, max_tokens=512)
-        
-        results = model(text)
-        # Extract dominant emotions
-        for r in results[0]:
-            if r['score'] > 0.1:
-                all_emotions.append({
-                    'label': r['label'],
-                    'score': r['score']
-                })
-    
-    # Aggregate
-    emotion_scores = defaultdict(list)
-    for e in all_emotions:
-        emotion_scores[e['label']].append(e['score'])
-    
-    return {
-        'dominant_emotions': get_top_emotions(emotion_scores),
-        'emotion_distribution': calculate_distribution(emotion_scores),
-        'emotion_consistency': calculate_consistency(emotion_scores)
-    }
-```
-
-## 5. Dependencies
+## 6. Dependencies (ĐÃ LOẠI BỎ TORCH!)
 
 ```bash
-pip install underthesea textstat transformers torch
+# CHỈ CẦN:
+pip install openai underthesea
+
+# ĐÃ LOẠI BỎ:
+# pip install transformers torch (2GB+)
+# pip install j-hartmann/emotion-english-distilroberta-base
+# pip install wonrax/phobert-base-vietnamese-emotion
 ```
 
-## 6. Files cần tạo
+| Package | Size | Status |
+|---------|------|--------|
+| `openai` | ~1MB | ✅ Keep |
+| `underthesea` | ~50MB | ✅ Optional |
+| `transformers` | >2GB | ❌ REMOVED |
+| `torch` | >2GB | ❌ REMOVED |
+
+## 7. Chi phí
+
+| Phân tích | Tokens ước tính | Chi phí |
+|-----------|-----------------|---------|
+| 1 kênh (200 videos) | ~50k tokens | ~$0.015 |
+
+**So với local ML:**
+- Host: $0/tháng (không cần ML Worker)
+- API: ~$0.02-0.05/kênh
+- Tiết kiệm: 80-90%
+
+## 8. Files cần tạo
 
 | File | Mô tả |
 |------|--------|
-| `apps/worker/ml_models.py` | Singleton model loaders (E2 FIX) |
-| `apps/api/modules/nlp/__init__.py` | Package init |
-| `apps/api/modules/nlp/emotions.py` | Output 5 (Emotion Analysis) |
-| `apps/api/modules/nlp/pacing.py` | Output 6 (Pacing Profile) |
-| `apps/api/modules/nlp/category.py` | Output 7 (Category) |
-| `apps/api/modules/nlp/hooks.py` | Output 10 (Hook Analysis) |
+| `apps/api/modules/nlp/gpt_analyzer.py` | GPT-4o NLP Analyzer |
+| `apps/api/modules/nlp/routes.py` | API Routes |
 | `tests/test_nlp/` | Test suite |
 
-## 7. Verification
+## 9. Verification
 
-- [ ] Models load as singletons (E2 FIX)
-- [ ] Emotion analysis returns distribution
-- [ ] Pacing WPM calculated correctly
-- [ ] Category classification works
-- [ ] Hook detection patterns identified
+- [ ] No torch/transformers in requirements
+- [ ] Deploy time < 1 phút
+- [ ] RAM usage < 100MB
+- [ ] All 4 outputs generated via GPT-4o
 - [ ] Unit tests pass

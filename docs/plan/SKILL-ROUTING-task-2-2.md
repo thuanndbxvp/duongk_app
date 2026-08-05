@@ -1,22 +1,20 @@
 # Phân bổ Kỹ năng (SKILL-ROUTING): Task 2.2
 
 ## 1. Chiến lược tổng thể
-Task này cần load ML models. Tập trung vào:
-- Singleton pattern (E2 FIX) để tránh cold-start
-- underthesea cho Vietnamese NLP
-- textstat cho readability metrics
+Task này dùng GPT-4o API thay vì local ML. Không cần:
+- ML models
+- torch/transformers
+- ML Worker trên Railway
 
 ## 2. Bảng Phân bổ
 
 | Step | Task | Primary Skill | Reference |
 |------|------|---------------|-----------|
-| 1 | ML Models Singleton | `general-purpose` | - |
-| 2 | Emotion Analysis | `general-purpose` | - |
-| 3 | Pacing Profile | `general-purpose` | - |
-| 4 | Category Classification | `general-purpose` | - |
-| 5 | Hook Analysis | `general-purpose` | - |
-| 6 | Unit Tests | `tester` | - |
+| 1 | GPT NLP Analyzer | `general-purpose` | - |
+| 2 | API Routes | `general-purpose` | - |
+| 3 | Unit Tests | `tester` | - |
 
 ## 3. Files KHÔNG được đụng
-- `apps/worker/tasks/` - Celery tasks (Sprint 2.5)
-- `apps/api/modules/llm/` - LLM module (Task 2.3)
+- `apps/worker/ml_models.py` - ĐÃ LOẠI BỎ
+- ML Worker Railway - ĐÃ XÓA
+- transformers/torch - KHÔNG cài đặt
