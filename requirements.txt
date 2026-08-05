@@ -1,4 +1,4 @@
-﻿fastapi[standard]>=0.115.0
+fastapi[standard]>=0.115.0
 pydantic>=2.9.0
 celery>=5.4.0
 redis>=5.0.0
@@ -21,3 +21,4 @@ hdbscan>=0.8.33
 PyJWT>=2.8.0
 cryptography>=42.0.0
 boto3>=1.34.0
+modal>=0.62.0
