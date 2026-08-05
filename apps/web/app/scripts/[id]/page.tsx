@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { SceneTimeline } from '@/components/scene-timeline';
-import { ScriptEditor } from '@/components/script-editor';
 
 interface Script {
   id: string;
@@ -11,62 +10,46 @@ interface Script {
   scenes: any[];
 }
 
-export default function ScriptEditorPage({ params }: { params: Promise<{ id: string }> }) {
+export default function ScriptEditorPage({ params }: { params: { id: string } }) {
   const [script, setScript] = useState<Script | null>(null);
 
   useEffect(() => {
-    async function fetchScript() {
-      const resolvedParams = await params;
-      // Using direct fetch assuming we will build an API route for script if needed, 
-      // or we can use Supabase client directly.
-      // Wait, let's assume we have a GET /api/scripts/[id] in FastAPI.
-      // We didn't build a proxy for /api/scripts/[id] in Next.js yet, so let's call FastAPI directly or Supabase.
-      // Actually, since we have RLS enabled, we can just use Supabase client.
-      const { createBrowserClient } = await import('@supabase/ssr');
-      const supabase = createBrowserClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-      );
-      
-      const { data } = await supabase
-        .from('generated_scripts')
-        .select('*')
-        .eq('id', resolvedParams.id)
-        .single();
-        
-      if (data) {
-        setScript(data as Script);
-      }
-    }
-    fetchScript();
-  }, [params]);
+    fetch(`/api/scripts/${params.id}`)
+      .then((r) => r.json())
+      .then(setScript);
+  }, [params.id]);
 
-  if (!script) return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-    </div>
-  );
+  if (!script) return <div>Loading...</div>;
 
   return (
     <main className="container mx-auto p-8">
-      <div className="mb-8 border-b pb-4">
-        <h1 className="text-3xl font-bold mb-2">{script.script.title}</h1>
-        <p className="text-gray-600">
-          <span className="font-semibold text-gray-800">Chủ đề:</span> {script.topic}
-        </p>
-      </div>
+      <h1 className="text-3xl font-bold mb-4">{script.script.title}</h1>
+      <p className="text-gray-600 mb-6">Chủ đề: {script.topic}</p>
 
-      <div className="grid lg:grid-cols-2 gap-8">
-        <ScriptEditor script={script.script} />
+      <div className="grid lg:grid-cols-2 gap-6">
+        <div>
+          <h2 className="text-xl font-semibold mb-2">Hook (30 giây)</h2>
+          <textarea
+            value={script.script.hook}
+            className="w-full p-3 border rounded h-32"
+          />
+
+          <h2 className="text-xl font-semibold mt-4 mb-2">Body</h2>
+          <textarea
+            value={script.script.body}
+            className="w-full p-3 border rounded h-96"
+          />
+
+          <h2 className="text-xl font-semibold mt-4 mb-2">CTA</h2>
+          <textarea
+            value={script.script.cta}
+            className="w-full p-3 border rounded h-24"
+          />
+        </div>
 
         <div>
-          <div className="bg-white p-6 rounded-lg shadow border sticky top-8">
-            <h2 className="text-xl font-bold mb-6 flex items-center">
-              <span className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm mr-2">B-roll</span> 
-              Gợi ý Cảnh quay (Scenes)
-            </h2>
-            <SceneTimeline scenes={script.scenes || []} />
-          </div>
+          <h2 className="text-xl font-semibold mb-2">Scenes</h2>
+          <SceneTimeline scenes={script.scenes} />
         </div>
       </div>
     </main>
