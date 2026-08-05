@@ -7,13 +7,12 @@ import tempfile
 import subprocess
 from enum import Enum
 from typing import Optional, List, Dict, Any
-import whisper
 
 
 class TranscriptTier(Enum):
     YOUTUBE_API = 1  # youtube-transcript-api
     SUPADATA = 2     # Supadata API
-    WHISPER = 3      # yt-dlp + Whisper
+    WHISPER = 3      # yt-dlp + OpenAI Whisper API
 
 
 class TranscriptEngine:
@@ -22,17 +21,22 @@ class TranscriptEngine:
     
     Tier 1: youtube-transcript-api (fastest, free)
     Tier 2: Supadata API (reliable, paid)
-    Tier 3: yt-dlp + Whisper (slowest, most expensive)
+    Tier 3: yt-dlp + OpenAI Whisper API
     """
     
     def __init__(
         self,
         supadata_api_key: Optional[str] = None,
-        whisper_model: str = "base"
+        openai_api_key: Optional[str] = None
     ):
         self.supadata_key = supadata_api_key or os.environ.get("SUPADATA_API_KEY")
-        self.whisper_model = whisper_model
-        self._whisper_model = None
+        
+        api_key = openai_api_key or os.environ.get("OPENAI_API_KEY")
+        if api_key:
+            from openai import AsyncOpenAI
+            self.openai_client = AsyncOpenAI(api_key=api_key)
+        else:
+            self.openai_client = None
     
     async def get_transcript(
         self,
@@ -65,13 +69,13 @@ class TranscriptEngine:
         except Exception as e:
             print(f"Tier 2 (Supadata) failed: {e}")
         
-        # Tier 3: yt-dlp + Whisper
+        # Tier 3: yt-dlp + OpenAI Whisper API
         try:
             result = await self._transcribe_whisper(video_id)
             if result:
                 return {**result, "tier_used": 3, "cached": False}
         except Exception as e:
-            print(f"Tier 3 (Whisper) failed: {e}")
+            print(f"Tier 3 (Whisper API) failed: {e}")
         
         return None
     
@@ -142,11 +146,10 @@ class TranscriptEngine:
         return None
     
     async def _transcribe_whisper(self, video_id: str) -> Optional[Dict[str, Any]]:
-        """Tier 3: Download audio and transcribe with Whisper."""
-        # Load Whisper model (singleton)
-        if self._whisper_model is None:
-            self._whisper_model = whisper.load_model(self.whisper_model)
-        
+        """Tier 3: Download audio and transcribe with OpenAI Whisper API."""
+        if not getattr(self, 'openai_client', None):
+            return None
+            
         # Download audio with yt-dlp
         with tempfile.TemporaryDirectory() as tmpdir:
             audio_path = os.path.join(tmpdir, f"{video_id}.mp3")
@@ -161,7 +164,7 @@ class TranscriptEngine:
             ]
             
             try:
-                result = subprocess.run(
+                subprocess.run(
                     cmd,
                     check=True,
                     capture_output=True,
@@ -173,11 +176,15 @@ class TranscriptEngine:
             except subprocess.CalledProcessError as e:
                 raise RuntimeError(f"Audio download failed: {e.stderr}")
             
-            # Transcribe
-            result = self._whisper_model.transcribe(audio_path)
+            # Transcribe via OpenAI API
+            with open(audio_path, "rb") as audio_file:
+                transcription = await self.openai_client.audio.transcriptions.create(
+                    model="whisper-1",
+                    file=audio_file
+                )
             
             return {
                 "video_id": video_id,
-                "transcript": result.get('text', ''),
-                "language": result.get('language', 'unknown')
+                "transcript": transcription.text,
+                "language": "unknown"
             }

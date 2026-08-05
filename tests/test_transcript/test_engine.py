@@ -16,7 +16,7 @@ class TestTranscriptEngine:
     def test_initialization(self, engine):
         """Test engine initialization."""
         assert engine.supadata_key == "test_key"
-        assert engine.whisper_model == "base"
+        assert getattr(engine, 'openai_client', None) is None
     
     @pytest.mark.asyncio
     async def test_get_transcript_tier1_success(self, engine):
