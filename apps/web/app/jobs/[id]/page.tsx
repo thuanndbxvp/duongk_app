@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { createBrowserClient } from '@supabase/ssr';
-import { SubProgressList } from '@/components/sub-progress-list';
+import { SubProgressList } from '../../../components/sub-progress-list';
 import { useRouter } from 'next/navigation';
 
 interface Job {

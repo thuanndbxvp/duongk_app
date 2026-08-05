@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { SceneTimeline } from '@/components/scene-timeline';
+import { SceneTimeline } from '../../../components/scene-timeline';
 
 interface Script {
   id: string;

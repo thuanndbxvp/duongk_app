@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
-import { apiFetch } from '@/lib/api-client';
-import { getAccessToken } from '@/lib/auth';
-import { JobCard } from '@/components/job-card';
+import { apiFetch } from '../../lib/api-client';
+import { getAccessToken } from '../../lib/auth';
+import { JobCard } from '../../components/job-card';
 
 export default async function DashboardPage() {
   const token = await getAccessToken();
