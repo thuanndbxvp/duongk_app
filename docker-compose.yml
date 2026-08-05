@@ -1,0 +1,80 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  api:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/1
+    depends_on:
+      - redis
+
+  worker_ml:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    command: celery -A apps.worker.celery_app worker -Q ml_queue --loglevel=info --concurrency=2
+    environment:
+      - CELERYD_MAX_TASKS_PER_CHILD=50
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/1
+    volumes:
+      - .:/app
+    depends_on:
+      - redis
+
+  worker_high:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    command: celery -A apps.worker.celery_app worker -Q high_queue --loglevel=info --concurrency=4
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/1
+    volumes:
+      - .:/app
+    depends_on:
+      - redis
+
+  worker_io:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    command: celery -A apps.worker.celery_app worker -Q io_queue --loglevel=info --concurrency=8
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/1
+    volumes:
+      - .:/app
+    depends_on:
+      - redis
+
+  worker_normal:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    command: celery -A apps.worker.celery_app worker -Q normal_queue --loglevel=info --concurrency=4
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/1
+    volumes:
+      - .:/app
+    depends_on:
+      - redis
+
+volumes:
+  redis_data:

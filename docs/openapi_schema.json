@@ -1,0 +1,635 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "YouTube AI SaaS API",
+    "description": "\n## API Overview\n\nThis API provides YouTube content intelligence capabilities for automated video content creation.\n\n### Modules\n\n- **Module 1 - Niche Validate**: Validates YouTube niche viability using Google Trends\n- **Module 2A - Deep Collection**: Collects video metadata from YouTube channels\n- **Transcript Engine**: 3-tier transcript retrieval (YouTube API → Supadata → Whisper)\n\n### Authentication\n\nAll endpoints require JWT Bearer token in the Authorization header (except `/health`).\n\n### Rate Limits\n\n- Anonymous: 10 requests/minute\n- Authenticated: 100 requests/minute\n\n### Errors\n\nAll errors return standard JSON format:\n\n```json\n{\n  \"detail\": \"Error message description\"\n}\n```\n\n### Status Codes\n\n| Code | Description |\n|------|-------------|\n| 200 | Success |\n| 400 | Bad Request |\n| 401 | Unauthorized |\n| 404 | Not Found |\n| 429 | Rate Limited |\n| 500 | Internal Server Error |\n",
+    "version": "1.0.0",
+    "contact": {
+      "name": "API Support",
+      "email": "api@appdk.vn",
+      "url": "https://appdk.vn"
+    },
+    "license": {
+      "name": "Proprietary",
+      "url": "https://appdk.vn/terms"
+    }
+  },
+  "paths": {
+    "/api/research/validate": {
+      "post": {
+        "tags": [
+          "Module 1 - Niche Validate"
+        ],
+        "summary": "Validate Niche",
+        "description": "Validate niche viability for YouTube content creation.\n\n- Checks Google Trends data\n- Analyzes competitor landscape\n- Estimates potential views\n\n**Note:** This endpoint uses Redis caching. Subsequent calls\nfor the same keyword return cached results.",
+        "operationId": "validate_niche_api_research_validate_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NicheValidationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NicheValidationResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/research/health": {
+      "get": {
+        "tags": [
+          "Module 1 - Niche Validate"
+        ],
+        "summary": "Health Check",
+        "description": "Health check endpoint for Module 1.",
+        "operationId": "health_check_api_research_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apps__api__modules__module_1__schemas__HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/collect/channel": {
+      "post": {
+        "tags": [
+          "Module 2A - Deep Collection"
+        ],
+        "summary": "Collect Channel Videos",
+        "description": "Collect videos from a YouTube channel.\n\n- Fetches up to max_videos (default 200)\n- Filters out Shorts, Live streams, low-engagement videos\n- Detects viral videos using MAD algorithm",
+        "operationId": "collect_channel_videos_api_collect_channel_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChannelCollectionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChannelCollectionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/collect/health": {
+      "get": {
+        "tags": [
+          "Module 2A - Deep Collection"
+        ],
+        "summary": "Health Check",
+        "description": "Health check for Module 2A.",
+        "operationId": "health_check_api_collect_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apps__api__modules__module_2a__schemas__HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/transcript/": {
+      "post": {
+        "tags": [
+          "Transcript Engine"
+        ],
+        "summary": "Get Transcript",
+        "description": "Get transcript for a YouTube video using 3-tier fallback.\n\nTier 1: youtube-transcript-api (fastest, free)\nTier 2: Supadata API (reliable, paid)\nTier 3: yt-dlp + Whisper (slowest, most expensive)",
+        "operationId": "get_transcript_api_transcript__post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TranscriptRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TranscriptResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/transcript/health": {
+      "get": {
+        "tags": [
+          "Transcript Engine"
+        ],
+        "summary": "Health Check",
+        "description": "Health check for Transcript Engine.",
+        "operationId": "health_check_api_transcript_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apps__api__modules__transcript__routes__HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ChannelCollectionRequest": {
+        "properties": {
+          "channel_id": {
+            "type": "string",
+            "title": "Channel Id",
+            "description": "YouTube channel ID"
+          },
+          "max_videos": {
+            "type": "integer",
+            "maximum": 200.0,
+            "minimum": 1.0,
+            "title": "Max Videos",
+            "default": 200
+          }
+        },
+        "type": "object",
+        "required": [
+          "channel_id"
+        ],
+        "title": "ChannelCollectionRequest",
+        "description": "Request to collect channel videos."
+      },
+      "ChannelCollectionResponse": {
+        "properties": {
+          "channel_id": {
+            "type": "string",
+            "title": "Channel Id"
+          },
+          "total_videos_collected": {
+            "type": "integer",
+            "title": "Total Videos Collected"
+          },
+          "quality_videos_count": {
+            "type": "integer",
+            "title": "Quality Videos Count"
+          },
+          "viral_videos_count": {
+            "type": "integer",
+            "title": "Viral Videos Count"
+          },
+          "quality_videos": {
+            "items": {
+              "$ref": "#/components/schemas/VideoMetadata"
+            },
+            "type": "array",
+            "title": "Quality Videos"
+          },
+          "viral_videos": {
+            "items": {
+              "$ref": "#/components/schemas/VideoMetadata"
+            },
+            "type": "array",
+            "title": "Viral Videos"
+          }
+        },
+        "type": "object",
+        "required": [
+          "channel_id",
+          "total_videos_collected",
+          "quality_videos_count",
+          "viral_videos_count",
+          "quality_videos",
+          "viral_videos"
+        ],
+        "title": "ChannelCollectionResponse",
+        "description": "Response for channel collection."
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "NicheValidationRequest": {
+        "properties": {
+          "keyword": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 2,
+            "title": "Keyword",
+            "description": "Keyword to validate"
+          },
+          "user_id": {
+            "type": "string",
+            "title": "User Id",
+            "description": "User ID for testing",
+            "default": "system"
+          },
+          "use_cache": {
+            "type": "boolean",
+            "title": "Use Cache",
+            "description": "Use cached results",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "keyword"
+        ],
+        "title": "NicheValidationRequest",
+        "description": "Request schema for niche validation."
+      },
+      "NicheValidationResponse": {
+        "properties": {
+          "keyword": {
+            "type": "string",
+            "title": "Keyword",
+            "description": "Original keyword"
+          },
+          "total_monthly_views": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Total Monthly Views",
+            "description": "Estimated monthly views"
+          },
+          "total_channels": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Total Channels",
+            "description": "Number of competing channels"
+          },
+          "avg_views_per_video": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Avg Views Per Video",
+            "description": "Average views per video"
+          },
+          "google_trends_interest": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Google Trends Interest",
+            "description": "Google Trends interest score"
+          },
+          "is_viable": {
+            "type": "boolean",
+            "title": "Is Viable",
+            "description": "Whether niche is viable"
+          },
+          "suggested_titles": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 10,
+            "minItems": 1,
+            "title": "Suggested Titles",
+            "description": "Suggested video titles"
+          }
+        },
+        "type": "object",
+        "required": [
+          "keyword",
+          "total_monthly_views",
+          "total_channels",
+          "avg_views_per_video",
+          "google_trends_interest",
+          "is_viable",
+          "suggested_titles"
+        ],
+        "title": "NicheValidationResponse",
+        "description": "Response schema for niche validation."
+      },
+      "TranscriptRequest": {
+        "properties": {
+          "video_id": {
+            "type": "string",
+            "title": "Video Id",
+            "description": "YouTube video ID"
+          },
+          "languages": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Languages",
+            "description": "Preferred languages",
+            "default": [
+              "vi",
+              "en"
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "video_id"
+        ],
+        "title": "TranscriptRequest"
+      },
+      "TranscriptResponse": {
+        "properties": {
+          "video_id": {
+            "type": "string",
+            "title": "Video Id"
+          },
+          "transcript": {
+            "type": "string",
+            "title": "Transcript"
+          },
+          "language": {
+            "type": "string",
+            "title": "Language"
+          },
+          "tier_used": {
+            "type": "integer",
+            "title": "Tier Used"
+          },
+          "cached": {
+            "type": "boolean",
+            "title": "Cached"
+          }
+        },
+        "type": "object",
+        "required": [
+          "video_id",
+          "transcript",
+          "language",
+          "tier_used",
+          "cached"
+        ],
+        "title": "TranscriptResponse"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "VideoMetadata": {
+        "properties": {
+          "video_id": {
+            "type": "string",
+            "title": "Video Id"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "views": {
+            "type": "integer",
+            "title": "Views",
+            "default": 0
+          },
+          "likes": {
+            "type": "integer",
+            "title": "Likes",
+            "default": 0
+          },
+          "comments": {
+            "type": "integer",
+            "title": "Comments",
+            "default": 0
+          },
+          "duration_seconds": {
+            "type": "integer",
+            "title": "Duration Seconds",
+            "default": 0
+          },
+          "published_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "video_id"
+        ],
+        "title": "VideoMetadata",
+        "description": "Video metadata schema."
+      },
+      "apps__api__modules__module_1__schemas__HealthResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "module": {
+            "type": "string",
+            "title": "Module"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "module",
+          "version"
+        ],
+        "title": "HealthResponse",
+        "description": "Health check response."
+      },
+      "apps__api__modules__module_2a__schemas__HealthResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "module": {
+            "type": "string",
+            "title": "Module"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "module",
+          "version"
+        ],
+        "title": "HealthResponse"
+      },
+      "apps__api__modules__transcript__routes__HealthResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "module": {
+            "type": "string",
+            "title": "Module"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "module",
+          "version"
+        ],
+        "title": "HealthResponse"
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8000",
+      "description": "Local Development"
+    },
+    {
+      "url": "https://api.staging.appdk.vn",
+      "description": "Staging"
+    },
+    {
+      "url": "https://api.appdk.vn",
+      "description": "Production"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Module 1 - Niche Validate",
+      "description": "Validates YouTube niche viability"
+    },
+    {
+      "name": "Module 2A - Deep Collection",
+      "description": "Collects video metadata from YouTube channels"
+    },
+    {
+      "name": "Transcript Engine",
+      "description": "3-tier transcript retrieval"
+    },
+    {
+      "name": "Documentation",
+      "description": "API documentation endpoints"
+    }
+  ]
+}
