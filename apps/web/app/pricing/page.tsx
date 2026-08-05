@@ -62,10 +62,10 @@ export default async function PricingPage() {
   return (
     <div className="min-h-screen flex flex-col">
       <TopBar />
-      <main className="flex-1 container mx-auto p-8 max-w-6xl">
+      <main className="flex-1 container mx-auto p-8 max-w-6xl text-[#f9fafb]">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold mb-2">Choose Your Plan</h1>
-          <p className="text-gray-600">
+          <p className="text-[#9ca3af]">
             Bắt đầu miễn phí, nâng cấp khi cần thiết
           </p>
         </div>

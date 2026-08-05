@@ -53,11 +53,9 @@ export async function TopBar() {
             ) : (
               <Link
                 href="/login"
-                className="btn-glow relative inline-flex items-center px-4 h-10 rounded-xl text-sm font-semibold text-white"
+                className="bg-[#3b82f6] hover:bg-[#2563eb] transition-colors h-10 px-6 rounded-lg text-sm font-semibold text-white flex items-center justify-center shadow-md"
               >
-                <span className="relative gradient-bg rounded-[10px] px-4 h-10 inline-flex items-center">
-                  Login
-                </span>
+                Login
               </Link>
             )}
           </div>

@@ -31,12 +31,12 @@ export function PricingCard({
 
   return (
     <div
-      className={`relative bg-white rounded-lg shadow border p-6 ${
-        popular ? 'border-blue-500 ring-2 ring-blue-200' : ''
+      className={`relative bg-[#1f2937] text-white rounded-xl shadow border p-6 transition-all ${
+        popular ? 'border-[#3b82f6] ring-2 ring-[#3b82f6]/30' : 'border-[#374151]'
       }`}
     >
       {popular && (
-        <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-bold">
+        <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#3b82f6] text-white px-4 py-1 rounded-full text-xs font-bold shadow-lg">
           ⭐ POPULAR
         </span>
       )}
@@ -44,40 +44,40 @@ export function PricingCard({
       <h3 className="text-2xl font-bold">{name}</h3>
       <p className="text-4xl font-bold mt-2">
         {price}
-        <span className="text-sm text-gray-500 font-normal">/tháng</span>
+        <span className="text-sm text-[#9ca3af] font-normal">/tháng</span>
       </p>
 
-      <p className="text-sm text-gray-600 mt-2">
+      <p className="text-sm text-[#9ca3af] mt-2">
         💰 {credits} credits/tháng
       </p>
 
-      <ul className="mt-4 space-y-2">
+      <ul className="mt-5 space-y-3">
         {features.map((f, i) => (
-          <li key={i} className="flex items-start gap-2 text-sm">
-            <span className="text-green-500">✓</span>
+          <li key={i} className="flex items-start gap-2 text-sm text-[#f9fafb]">
+            <span className="text-[#10b981]">✓</span>
             <span>{f}</span>
           </li>
         ))}
       </ul>
 
-      <div className="mt-6">
+      <div className="mt-8">
         {isCurrent ? (
           <button
             disabled
-            className="w-full bg-gray-200 text-gray-500 px-4 py-2 rounded cursor-not-allowed"
+            className="w-full bg-[#374151] text-[#9ca3af] px-4 py-3 rounded-lg cursor-not-allowed font-medium"
           >
             Plan hiện tại
           </button>
         ) : (
           <button
             onClick={handleUpgrade}
-            className={`w-full px-4 py-2 rounded font-medium ${
+            className={`w-full px-4 py-3 rounded-lg font-semibold transition-colors ${
               popular
-                ? 'bg-blue-600 text-white hover:bg-blue-700'
-                : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                ? 'bg-[#3b82f6] text-white hover:bg-[#2563eb]'
+                : 'bg-[#374151] text-white hover:bg-[#4b5563]'
             }`}
           >
-            {tier === 'enterprise' ? 'Liên hệ' : 'Upgrade'}
+            {tier === 'enterprise' ? 'Liên hệ' : 'Nâng cấp ngay'}
           </button>
         )}
       </div>
