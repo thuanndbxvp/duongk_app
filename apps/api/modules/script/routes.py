@@ -5,8 +5,10 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from uuid import UUID
 from apps.worker.tasks.script_generate import run as script_generate_task
+from apps.worker.tasks.scene_breakdown import run as scene_breakdown_task
 from supabase import create_client
 import os
+import json
 
 router = APIRouter(prefix="/api/scripts", tags=["Script Generation"])
 
@@ -62,4 +64,65 @@ async def generate_script(req: GenerateScriptRequest):
         job_id=job_id,
         status='pending',
         message=f'Script generation started. Track at /api/jobs/{job_id}',
+    )
+
+@router.post('/breakdown-scenes', response_model=ScriptResponse)
+async def breakdown_scenes(req: GenerateScriptRequest):
+    """
+    Trigger scene breakdown for latest generated script.
+    """
+    admin = create_client(
+        os.environ.get('NEXT_PUBLIC_SUPABASE_URL', 'https://xxx.supabase.co'),
+        os.environ.get('SUPABASE_SERVICE_ROLE_KEY', 'xxx')
+    )
+
+    # Get latest script for this assistant
+    existing_script = (
+        admin.table('generated_scripts')
+        .select('*')
+        .eq('assistant_id', str(req.assistant_id))
+        .order('created_at', desc=True)
+        .limit(1)
+        .execute()
+    )
+
+    if not existing_script.data:
+        raise HTTPException(400, 'No script found. Generate a script first.')
+
+    script_data = existing_script.data[0]
+    try:
+        script_json = json.loads(script_data['script_text'])
+    except Exception:
+        script_json = script_data['script_text']
+
+    # Create job
+    job_result = admin.table('jobs').insert({
+        'user_id': str(req.user_id),
+        'task_type': 'scene_breakdown',
+        'input_payload': {
+            'assistant_id': str(req.assistant_id),
+            'script_data': script_json,
+        },
+        'status': 'pending',
+    }).execute()
+
+    if not job_result.data:
+        raise HTTPException(500, 'Failed to create job')
+
+    job = job_result.data[0]
+    job_id = job['id']
+
+    # Enqueue task
+    task = scene_breakdown_task.delay(
+        job_id=job_id,
+        script_data=script_json,
+        assistant_id=str(req.assistant_id),
+    )
+
+    admin.table('jobs').update({'celery_task_id': task.id}).eq('id', job_id).execute()
+
+    return ScriptResponse(
+        job_id=job_id,
+        status='pending',
+        message=f'Scene breakdown started. Track at /api/jobs/{job_id}',
     )
