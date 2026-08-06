@@ -791,19 +791,25 @@ async def tts_by_voice_id(voice_id: str, request: Request):
     if language.lower() == "auto":
         language = None
 
-    # Xay generation_config tu registry
-    gen_kwargs = {
-        "num_step": int(meta.get("num_step", 32)),
-        "guidance_scale": float(meta.get("guidance_scale", 2.0)),
-        "denoise": bool(meta.get("denoise", True)),
-        "postprocess_output": bool(meta.get("postprocess_output", True)),
-        "pad_duration": float(meta.get("pad_duration", 0.15)),
-        "fade_duration": float(meta.get("fade_duration", 0.05)),
-    }
-    gen_cfg = OmniVoiceGenerationConfig(**gen_kwargs)
-
-    # Generation kwargs (theo type)
-    call_kwargs: dict = {"language": language, "generation_config": gen_cfg}
+    instruct = None
+    if meta.get("type") == "clone":
+        # Phase 4R.8: resolve dung extension (ref_audio_file co the khong co ext)
+        voices_dir = Path(__file__).resolve().parents[1] / "voices"
+        ref_resolved = resolve_voice_file(voices_dir, meta["ref_audio_file"])
+        if not ref_resolved:
+            raise HTTPException(
+                status_code=422,
+                detail={
+                    "code": "ref_audio_not_found",
+                    "message": f"ref_audio_file '{meta['ref_audio_file']}' not found in voices/",
+                },
+            )
+        ref_audio_path = str(ref_resolved.resolve())
+    elif meta.get("type") == "design":
+        instruct = meta.get("instruct", "female, young adult, moderate pitch")
+        ref_audio_path = None
+    else:
+        ref_audio_path = None
 
     if meta.get("type") == "clone":
         # Phase 4R.8: resolve dung extension (ref_audio_file co the khong co ext)
@@ -818,66 +824,48 @@ async def tts_by_voice_id(voice_id: str, request: Request):
                 },
             )
         call_kwargs["ref_audio"] = str(ref_resolved.resolve())
-    elif meta.get("type") == "design":
-        call_kwargs["instruct"] = meta.get("instruct", "female, young adult, moderate pitch")
-    # type == auto: khong truyen instruct/ref_audio
-
-    # Optional overrides tu query params (vd ?speed=1.2)
-    for key in ("speed", "duration", "pad_duration", "fade_duration"):
-        qp = request.query_params.get(key)
-        if qp is not None:
-            try:
-                val = float(qp)
-                if key in ("pad_duration", "fade_duration"):
-                    # Update gen_cfg thay vi call_kwargs
-                    setattr(gen_cfg, key, val)
-                else:
-                    call_kwargs[key] = val
-            except ValueError:
-                pass
-
-    emotion = body.get("emotion") or meta.get("default_emotion")
-    text_to_gen = text
-    if emotion and emotion.lower() != "normal":
-        emo = emotion.lower()
-        if not text_to_gen.startswith("["):
-            text_to_gen = f"[{emo}] {text_to_gen}"
-
-    request_id = _uuid.uuid4().hex[:12]
-    logger.info(
-        "[req=%s] Phase6 tts-by-voice-id: voice_id=%s type=%s language=%s text_len=%d",
-        request_id,
-        voice_id,
-        meta.get("type"),
-        language,
-        len(text_to_gen),
-    )
-
-    loop = asyncio.get_running_loop()
-
-    def _infer():
-        return model.generate(text=text_to_gen, **call_kwargs)
-
     try:
-        # Tier 2 Hotfix: dùng helper có lock+timeout thay vì run_in_executor trần.
+        def _infer():
+            import modal
+            import uuid
+            import boto3
+            import urllib.request
+            
+            ref_audio_url = None
+            if ref_audio_path:
+                s3 = boto3.client(
+                    "s3",
+                    endpoint_url=os.environ["R2_ENDPOINT"],
+                    aws_access_key_id=os.environ["R2_ACCESS_KEY_ID"],
+                    aws_secret_access_key=os.environ["R2_SECRET_ACCESS_KEY"],
+                    region_name="auto",
+                )
+                object_key = f"omnivoice_tmp/{uuid.uuid4().hex}.wav"
+                s3.upload_file(ref_audio_path, os.environ.get("R2_BUCKET_UPLOADS", "ai86-uploads"), object_key)
+                ref_audio_url = f"{os.environ['R2_PUBLIC_CDN']}/{object_key}"
+
+            synth_fn = modal.Function.lookup("ai-dubbing-pipeline", "synthesize_voice")
+            output_key = f"omnivoice_renders/{uuid.uuid4().hex}.wav"
+            
+            result = synth_fn.remote(
+                text=text_to_gen,
+                output_key=output_key,
+                reference_audio_url=ref_audio_url,
+                instruct=instruct if not ref_audio_path else None
+            )
+            
+            req = urllib.request.Request(result["audio_url"])
+            with urllib.request.urlopen(req) as response:
+                return response.read()
+
         audio_data = await _run_inference_serialized(_infer, request_id)
-        if isinstance(audio_data, list):
-            audio_data = audio_data[0]
-        elif isinstance(audio_data, (tuple, list)):
-            audio_data = audio_data[0]
 
-        buffer = io.BytesIO()
-        samplerate = getattr(model.config, "samplerate", 24000)
-        import soundfile as sf
-
-        sf.write(buffer, audio_data, samplerate, format="WAV")
-        buffer.seek(0)
+        buffer = io.BytesIO(audio_data)
 
         logger.info(
-            "[req=%s] Phase6 tts-by-voice-id done: duration=%.2fs bytes=%d",
+            "[req=%s] Phase6 tts-by-voice-id done: bytes=%d",
             request_id,
-            len(audio_data) / samplerate,
-            len(buffer.getvalue()),
+            len(audio_data),
         )
         return StreamingResponse(buffer, media_type="audio/wav")
     except HTTPException:
