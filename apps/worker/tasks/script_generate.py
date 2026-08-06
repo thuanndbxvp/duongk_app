@@ -82,9 +82,26 @@ def run(self: Task, job_id: str, assistant_id: str, topic: str) -> dict:
             await tracker.start('generate')
             await tracker.increment('generate', 10)
 
+            # Phase 9 wire: select LLM provider từ routing
+            provider = select_llm_provider()
             openai = OpenAI()
 
-            response = openai.chat.completions.create(
+            if provider == 'openai':
+                response = openai.chat.completions.create(
+                    model="gpt-4o-mini",
+                    messages=[{"role": "user", "content": prompt}],
+                    response_format={"type": "json_object"},
+                )
+            elif provider == 'stali':
+                # Phase 10+ implement stali, fallback OpenAI
+                response = openai.chat.completions.create(
+                    model="gpt-4o-mini",
+                    messages=[{"role": "user", "content": prompt}],
+                    response_format={"type": "json_object"},
+                )
+            else:
+                # fallback cứng
+                response = openai.chat.completions.create(
                 model="gpt-4o-mini",
                 messages=[{"role": "user", "content": prompt}],
                 response_format={"type": "json_object"},

@@ -322,12 +322,30 @@ def dub_srt(srt_text: str, output_key: str, merge_mode: str = "native", referenc
         if current_group:
             sentence_groups.append(current_group)
             
+        import re
+        def clean_text_for_tts(t):
+            # Remove sound tags like (Nhạc nền), [Tiếng cười]
+            t = re.sub(r"[\(\[].*?[\)\]]", "", t)
+            # Replace multiple dots (ellipsis) with a single comma to prevent severe stuttering
+            t = re.sub(r"\.{2,}", ",", t)
+            # Remove markdown/special chars
+            t = re.sub(r"[~*#_]+", " ", t)
+            # Collapse whitespace
+            t = " ".join(t.split())
+            return t
+            
         # Generate audio for each sentence
         audio_segments = []
         for group in sentence_groups:
             combined_text = " ".join([s.text.replace("\n", " ").strip() for s in group])
+            combined_text = clean_text_for_tts(combined_text)
+            
+            # Skip empty text after cleaning
+            if not combined_text:
+                continue
+                
             # If the combined text doesn't end with punctuation, append a period to force a natural stop
-            if not (combined_text.endswith('.') or combined_text.endswith('!') or combined_text.endswith('?')):
+            if not (combined_text.endswith('.') or combined_text.endswith('!') or combined_text.endswith('?') or combined_text.endswith(',')):
                 combined_text += "."
                 
             call_kwargs = {

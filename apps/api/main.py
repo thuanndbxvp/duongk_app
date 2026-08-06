@@ -34,9 +34,15 @@ from apps.api.routers.admin_pricing import router as admin_pricing_router
 from apps.api.routers.admin_api_keys import router as admin_api_keys_router
 from apps.api.routers.admin_alerts import router as admin_alerts_router
 from apps.api.routers.admin_routing import router as admin_routing_router
+from apps.api.services.ip_whitelist import IPWhitelistMiddleware
+from apps.api.routers.admin_audit import router as admin_audit_router
+from apps.api.routers.admin_mfa import router as admin_mfa_router
 
 sentry_sdk.init(dsn=os.getenv("SENTRY_DSN"))
 app = FastAPI(title="YouTube AI SaaS")
+
+# Register IP whitelist middleware (Phase 9)
+app.add_middleware(IPWhitelistMiddleware)
 
 # Include routers
 app.include_router(module_1_router)
@@ -62,6 +68,8 @@ app.include_router(admin_pricing_router)
 app.include_router(admin_api_keys_router)
 app.include_router(admin_alerts_router)
 app.include_router(admin_routing_router)
+app.include_router(admin_audit_router)
+app.include_router(admin_mfa_router)
 
 # Override default OpenAPI schema
 app.openapi = lambda: custom_openapi_schema(app)

@@ -9,15 +9,31 @@ class Embedder:
         self.router = EmbeddingRouter()
         self._cohere, self._openai = None, None
     
+    def _select_embedding_provider(self) -> str:
+        """Chọn embedding provider từ routing config."""
+        routing = get_routing_config('embedding')
+        primary = routing.get('primary_provider')
+        if primary and routing.get('enabled_providers', {}).get(primary, False):
+            return primary
+        return 'cohere'  # fallback cứng
+
     async def embed_texts(self, texts: List[str]) -> List[List[float]]:
-        """Generate embeddings with auto-routing."""
+        """Generate embeddings with auto-routing + Phase 9 config-driven provider."""
         if not texts:
             return []
-            
-        lang = self.router.detect_language(texts[0])
-        model, dims, provider = self.router.get_model_config(lang)
         
+        provider = self._select_embedding_provider()
+        lang = self.router.detect_language(texts[0])
+        model, dims, _ = self.router.get_model_config(lang)
+        
+        # Phase 9 wire: nếu provider từ routing khác default → dùng provider đó
         if provider == 'cohere':
+            return await self._embed_cohere(texts, model)
+        if provider == 'openai':
+            return await self._embed_openai(texts, model, dims)
+        
+        # Fallback về router default
+        if lang in ('vi', 'zh'):
             return await self._embed_cohere(texts, model)
         return await self._embed_openai(texts, model, dims)
     
