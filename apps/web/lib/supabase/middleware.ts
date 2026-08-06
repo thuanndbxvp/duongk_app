@@ -8,6 +8,13 @@ export async function updateSession(request: NextRequest) {
 
   // Dev mode: bypass auth when using placeholder URL
   const isDevMode = process.env.NEXT_PUBLIC_SUPABASE_URL?.includes('xxx');
+  
+  // Check custom dev auth cookie
+  const devToken = request.cookies.get('access_token');
+  if (isDevMode && devToken) {
+    return supabaseResponse;
+  }
+  
   if (isDevMode) {
     return supabaseResponse;
   }
