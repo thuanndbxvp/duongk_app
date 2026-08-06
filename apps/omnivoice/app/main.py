@@ -366,8 +366,13 @@ async def generate_tts(request: TTSRequest):
                     region_name="auto",
                 )
                 object_key = f"omnivoice_tmp/{uuid.uuid4().hex}.wav"
-                s3.upload_file(ref_audio_path, os.environ.get("R2_BUCKET_UPLOADS", "ai86-uploads"), object_key)
-                ref_audio_url = f"{os.environ['R2_PUBLIC_CDN']}/{object_key}"
+                bucket = os.environ.get("R2_BUCKET_UPLOADS", "ai86-uploads")
+                s3.upload_file(ref_audio_path, bucket, object_key)
+                ref_audio_url = s3.generate_presigned_url(
+                    'get_object',
+                    Params={'Bucket': bucket, 'Key': object_key},
+                    ExpiresIn=3600
+                )
 
             synth_fn = modal.Function.from_name("ai-dubbing-pipeline", "synthesize_voice")
             output_key = f"omnivoice_renders/{uuid.uuid4().hex}.wav"
