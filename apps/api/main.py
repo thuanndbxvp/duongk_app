@@ -2,6 +2,10 @@ from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
 import sentry_sdk
 import os
+from dotenv import load_dotenv
+
+# Load .env file for local development
+load_dotenv()
 
 # OpenAPI custom schema
 from apps.api.openapi import custom_openapi_schema

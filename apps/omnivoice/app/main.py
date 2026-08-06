@@ -402,7 +402,8 @@ async def generate_tts(request: TTSRequest):
                 output_key=output_key,
                 reference_audio_url=ref_audio_url,
                 reference_prompt_url=ref_prompt_url,
-                instruct=instruct if not (ref_audio_path or ref_prompt_key) else None
+                instruct=instruct,
+                speed=request.speed
             )
             
             # Use boto3 to download instead of CDN to avoid 404 mapping issues

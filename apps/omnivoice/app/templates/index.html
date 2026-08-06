@@ -158,20 +158,59 @@
                     <label class="form-label">Chế độ giọng</label>
                     <select id="voice-select" class="select-input" style="margin-bottom: 24px;"></select>
 
-                    <label class="form-label">Biểu cảm / Hiệu ứng</label>
-                    <div class="page-desc" style="margin-bottom: 12px; font-size: 0.8rem;">Biểu cảm, biểu hiệu ứng, tự làm biểu</div>
+                    <label class="form-label">Thẻ cảm xúc (Non-verbal symbols)</label>
+                    <div class="page-desc" style="margin-bottom: 12px; font-size: 0.8rem;">Chèn biểu cảm trực tiếp vào câu nói</div>
                     <div class="emotion-grid" style="margin-bottom: 24px;">
-                        <div class="emotion-btn" onclick="insertTag('[laugh]')"><span class="emotion-title">Vui vẻ</span><span class="emotion-sub">(Happy)</span></div>
-                        <div class="emotion-btn" onclick="insertTag('[sigh]')"><span class="emotion-title">Buồn</span><span class="emotion-sub">(Sad)</span></div>
-                        <div class="emotion-btn" onclick="insertTag('[uh]')"><span class="emotion-title">Chuyên nghiệp</span><span class="emotion-sub">(Professional)</span></div>
-                        <div class="emotion-btn" onclick="insertTag('[sigh]')"><span class="emotion-title">Thở dài</span><span class="emotion-sub">(Sighing)</span></div>
+                        <div class="emotion-btn" onclick="insertTag('[laughter]')"><span class="emotion-title">Cười</span><span class="emotion-sub">[laughter]</span></div>
+                        <div class="emotion-btn" onclick="insertTag('[sigh]')"><span class="emotion-title">Thở dài</span><span class="emotion-sub">[sigh]</span></div>
+                        <div class="emotion-btn" onclick="insertTag('[surprise-ah]')"><span class="emotion-title">Ngạc nhiên</span><span class="emotion-sub">[surprise-ah]</span></div>
+                        <div class="emotion-btn" onclick="insertTag('[dissatisfaction-hnn]')"><span class="emotion-title">Khó chịu</span><span class="emotion-sub">[dissatisfaction-hnn]</span></div>
                     </div>
 
-                    <label class="form-label">Tốc độ (Speed) <span id="speed-value" style="float: right; color: var(--text-muted);">1.0</span></label>
-                    <input type="range" id="speed-slider" min="0.5" max="2.0" step="0.1" value="1.0" style="width:100%; margin-bottom: 24px;" oninput="document.getElementById('speed-value').innerText = parseFloat(this.value).toFixed(1)">
-                    
-                    <label class="form-label">Cao độ (Pitch) <span id="pitch-value" style="float: right; color: var(--text-muted);">1.0</span></label>
-                    <input type="range" id="pitch-slider" min="0.5" max="2.0" step="0.1" value="1.0" style="width:100%" oninput="document.getElementById('pitch-value').innerText = parseFloat(this.value).toFixed(1)">
+                    <label class="form-label" style="border-top: 1px solid var(--border-color); padding-top: 16px;">Voice Design (Instruct)</label>
+                    <div class="page-desc" style="margin-bottom: 12px; font-size: 0.8rem;">Thiết kế chất giọng (Dùng cho cả giọng gốc và giọng Clone)</div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+                        <div>
+                            <label style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px; display: block;">Giới tính</label>
+                            <select id="instruct-gender" class="select-input" style="padding: 8px;">
+                                <option value="">Mặc định</option>
+                                <option value="female">Nữ (Female)</option>
+                                <option value="male">Nam (Male)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px; display: block;">Độ tuổi</label>
+                            <select id="instruct-age" class="select-input" style="padding: 8px;">
+                                <option value="">Mặc định</option>
+                                <option value="child">Trẻ em (Child)</option>
+                                <option value="teenager">Thiếu niên (Teenager)</option>
+                                <option value="young adult">Thanh niên (Young Adult)</option>
+                                <option value="middle-aged">Trung niên (Middle-aged)</option>
+                                <option value="elderly">Người già (Elderly)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px; display: block;">Cao độ</label>
+                            <select id="instruct-pitch" class="select-input" style="padding: 8px;">
+                                <option value="">Mặc định</option>
+                                <option value="very low pitch">Rất thấp</option>
+                                <option value="low pitch">Thấp</option>
+                                <option value="moderate pitch">Vừa</option>
+                                <option value="high pitch">Cao</option>
+                                <option value="very high pitch">Rất cao</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px; display: block;">Phong cách</label>
+                            <select id="instruct-style" class="select-input" style="padding: 8px;">
+                                <option value="">Bình thường</option>
+                                <option value="whisper">Thì thầm (Whisper)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <label class="form-label" style="border-top: 1px solid var(--border-color); padding-top: 16px;">Tốc độ (Speed) <span id="speed-value" style="float: right; color: var(--text-muted);">1.0</span></label>
+                    <input type="range" id="speed-slider" min="0.5" max="2.0" step="0.1" value="1.0" style="width:100%; margin-bottom: 8px;" oninput="document.getElementById('speed-value').innerText = parseFloat(this.value).toFixed(1)">
                 </div>
             </div>
 
@@ -346,10 +385,10 @@
 
             <div class="card">
                 <label class="form-label">Python (requests) Snippet</label>
-                <div class="snippet-box">
+                <div class="snippet-box" id="api-snippet">
 import requests
-url = "http://127.0.0.1:8088/v1/voices/YOUR_VOICE_ID/tts"
-res = requests.post(url, json={"text": "Xin chào"})
+url = "http://127.0.0.1:8088/v1/tts"
+res = requests.post(url, json={"text": "Xin chào", "voice_id": "YOUR_VOICE_ID"})
 with open("output.wav", "wb") as f:
     f.write(res.content)
                 </div>
@@ -490,6 +529,17 @@ with open("output.wav", "wb") as f:
         const text = document.getElementById('text-input').value;
         const voiceId = document.getElementById('voice-select').value;
         const speed = parseFloat(document.getElementById('speed-slider').value);
+        
+        const instructParts = [];
+        const gender = document.getElementById('instruct-gender').value;
+        const age = document.getElementById('instruct-age').value;
+        const pitch = document.getElementById('instruct-pitch').value;
+        const style = document.getElementById('instruct-style').value;
+        if (gender) instructParts.push(gender);
+        if (age) instructParts.push(age);
+        if (pitch) instructParts.push(pitch);
+        if (style) instructParts.push(style);
+        const instruct = instructParts.join(", ");
 
         if (!text.trim()) return alert("Vui lòng nhập văn bản!");
         if (!voiceId) return alert("Chưa có voice nào trong catalog!");
@@ -499,10 +549,13 @@ with open("output.wav", "wb") as f:
         const startTime = Date.now();
 
         try {
+            const payload = { text, voice_id: voiceId, speed };
+            if (instruct) payload.instruct = instruct;
+
             const res = await fetch('/v1/tts', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ text, voice_id: voiceId, speed })
+                body: JSON.stringify(payload)
             });
 
             if (!res.ok) throw new Error(await res.text());
@@ -641,6 +694,14 @@ with open("output.wav", "wb") as f:
     window.onload = () => {
         loadCatalog();
         loadVoiceRegistryTable();
+        
+        // Update API endpoint dynamically
+        const origin = window.location.origin;
+        document.getElementById('api-endpoint').value = origin;
+        const snippetBox = document.getElementById('api-snippet');
+        if (snippetBox) {
+            snippetBox.innerHTML = `import requests\nurl = "${origin}/v1/tts"\nres = requests.post(url, json={"text": "Xin chào", "voice_id": "YOUR_VOICE_ID"})\nwith open("output.wav", "wb") as f:\n    f.write(res.content)`;
+        }
     };
 </script>
 </body>

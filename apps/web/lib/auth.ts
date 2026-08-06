@@ -3,6 +3,7 @@
  */
 import { cookies } from 'next/headers';
 import { jwtDecode } from 'jwt-decode';
+import { apiFetch } from '@/lib/api-client';
 
 const ACCESS_TOKEN_COOKIE = 'sb-access-token';
 const REFRESH_TOKEN_COOKIE = 'sb-refresh-token';
@@ -29,6 +30,40 @@ export async function getUser(): Promise<User | null> {
   
   try {
     return jwtDecode<User>(token);
+  } catch {
+    return null;
+  }
+}
+
+export interface FullUser {
+  email: string;
+  full_name: string | null;
+  avatar_url: string | null;
+  tier: string;
+  credits: number;
+}
+
+export async function getFullUser(): Promise<FullUser | null> {
+  const token = await getAccessToken();
+  if (!token) return null;
+
+  const isDevMode = process.env.NEXT_PUBLIC_SUPABASE_URL?.includes('xxx');
+  
+  // In dev mode, return mock user from token
+  if (isDevMode) {
+    return {
+      email: 'dev@local.test',
+      full_name: 'Dev User',
+      avatar_url: null,
+      tier: 'pro',
+      credits: 999,
+    };
+  }
+
+  try {
+    const res = await apiFetch('/api/users/me', {}, token);
+    if (!res.ok) return null;
+    return await res.json();
   } catch {
     return null;
   }

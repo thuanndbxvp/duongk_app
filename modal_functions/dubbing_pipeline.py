@@ -159,7 +159,7 @@ def cache_voice_prompt(reference_audio_url: str, output_key: str) -> dict:
     secrets=[modal.Secret.from_name("r2-credentials")],
     timeout=1200
 )
-def synthesize_voice(text: str, output_key: str, reference_audio_url: str = None, reference_prompt_url: str = None, instruct: str = None) -> dict:
+def synthesize_voice(text: str, output_key: str, reference_audio_url: str = None, reference_prompt_url: str = None, instruct: str = None, speed: float = None) -> dict:
     import subprocess
     import tempfile
     import os
@@ -219,6 +219,9 @@ def synthesize_voice(text: str, output_key: str, reference_audio_url: str = None
             
         if instruct is not None:
             call_kwargs["instruct"] = instruct
+            
+        if speed is not None:
+            call_kwargs["speed"] = speed
 
         audio_data = model.generate(**call_kwargs)
         

@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { NAV_ITEMS, isActiveRoute } from '@/lib/navigation';
-import { IconLogout, IconSparkle } from '@/components/icons';
+import { IconSparkle } from '@/components/icons';
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -76,27 +76,6 @@ export function Sidebar() {
           249K/tháng — viral mỗi tuần.
         </p>
       </div>
-
-      <div className="mt-3 pt-3 border-t border-[var(--divider)]">
-        <LogoutButton />
-      </div>
     </nav>
-  );
-}
-
-function LogoutButton() {
-  async function handleLogout() {
-    await fetch('/api/auth/logout', { method: 'POST' });
-    window.location.href = '/login';
-  }
-
-  return (
-    <button
-      onClick={handleLogout}
-      className="group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-[var(--fg-secondary)] hover:text-[var(--danger)] hover:bg-[rgba(248,113,113,0.06)] transition-colors w-full"
-    >
-      <IconLogout size={18} className="text-[var(--fg-tertiary)] group-hover:text-[var(--danger)]" />
-      <span>Đăng xuất</span>
-    </button>
   );
 }

@@ -5,12 +5,28 @@ import { getAccessToken } from '@/lib/auth';
 import { JobCard } from '@/components/job-card';
 import { IconDashboard, IconPlus } from '@/components/icons';
 
+const isDevMode = process.env.NEXT_PUBLIC_SUPABASE_URL?.includes('xxx');
+
+async function getRecentJobs(token: string | null) {
+  if (!token) return [];
+
+  if (isDevMode) {
+    return [];
+  }
+
+  try {
+    const response = await apiFetch('/api/jobs/recent', {}, token);
+    return response.ok ? await response.json() : [];
+  } catch {
+    return [];
+  }
+}
+
 export default async function DashboardPage() {
   const token = await getAccessToken();
   if (!token) redirect('/login');
 
-  const response = await apiFetch('/api/jobs/recent', {}, token);
-  const jobs = response.ok ? await response.json() : [];
+  const jobs = await getRecentJobs(token);
 
   return (
     <div className="space-y-8 animate-fade-up">

@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { IconLogout, IconUser, IconBilling, IconChart } from '@/components/icons';
 
 interface User {
   email: string;
@@ -40,7 +41,7 @@ export function UserMenu({ user }: { user: User }) {
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 hover:bg-gray-100 rounded-full p-1 transition-colors"
+        className="flex items-center gap-2 rounded-full p-1 transition-all hover:bg-white/[0.06]"
         aria-label="User menu"
       >
         {user.avatar_url ? (
@@ -50,65 +51,87 @@ export function UserMenu({ user }: { user: User }) {
             className="w-8 h-8 rounded-full object-cover"
           />
         ) : (
-          <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-bold">
+          <span className="relative inline-flex h-8 w-8 items-center justify-center rounded-full gradient-bg text-white text-xs font-bold btn-glow">
             {initials}
-          </div>
+          </span>
         )}
-        <span className="hidden md:inline text-sm">▼</span>
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-2 w-64 bg-white border rounded-lg shadow-lg overflow-hidden z-50">
+        <div className="absolute right-0 mt-3 w-72 glass-strong rounded-2xl overflow-hidden z-50 animate-fade-up shadow-2xl">
+          {/* Glow accent */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -top-12 -right-12 h-32 w-32 rounded-full bg-[var(--brand-500)] opacity-20 blur-3xl"
+          />
+
           {/* User info */}
-          <div className="p-4 border-b bg-gray-50">
-            <p className="font-semibold truncate">
-              {user.full_name || user.email}
-            </p>
-            <p className="text-xs text-gray-500 truncate">{user.email}</p>
-            <div className="mt-2 flex items-center gap-2 text-xs">
-              <span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded uppercase">
+          <div className="relative px-4 py-4 border-b border-[var(--glass-border)]">
+            <div className="flex items-center gap-3">
+              {user.avatar_url ? (
+                <img
+                  src={user.avatar_url}
+                  alt={user.email}
+                  className="w-10 h-10 rounded-full object-cover"
+                />
+              ) : (
+                <span className="inline-flex h-10 w-10 items-center justify-center rounded-full gradient-bg text-white text-sm font-bold btn-glow">
+                  {initials}
+                </span>
+              )}
+              <div className="min-w-0 flex-1">
+                <p className="font-semibold text-white text-sm truncate">
+                  {user.full_name || user.email}
+                </p>
+                <p className="text-xs text-[var(--fg-tertiary)] truncate">{user.email}</p>
+              </div>
+            </div>
+            <div className="mt-3 flex items-center gap-2">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[rgba(196,181,253,0.12)] text-[#c4b5fd] text-[10px] font-semibold uppercase tracking-wider">
                 {user.tier}
               </span>
-              <span className="text-gray-500">{user.credits} credits</span>
+              <span className="text-xs text-[var(--fg-secondary)]">
+                {user.credits.toLocaleString()} credits
+              </span>
             </div>
           </div>
 
           {/* Menu items */}
-          <div className="py-1">
+          <div className="relative py-1.5">
             <Link
               href="/account/settings"
               onClick={() => setOpen(false)}
-              className="flex items-center gap-3 px-4 py-2 hover:bg-gray-100"
+              className="flex items-center gap-3 px-4 py-2.5 text-sm text-[var(--fg-secondary)] hover:text-white hover:bg-white/[0.05] transition-colors"
             >
-              <span>👤</span>
+              <IconUser size={16} className="text-[var(--fg-tertiary)]" />
               <span>Account Settings</span>
             </Link>
             <Link
               href="/billing"
               onClick={() => setOpen(false)}
-              className="flex items-center gap-3 px-4 py-2 hover:bg-gray-100"
+              className="flex items-center gap-3 px-4 py-2.5 text-sm text-[var(--fg-secondary)] hover:text-white hover:bg-white/[0.05] transition-colors"
             >
-              <span>💰</span>
+              <IconBilling size={16} className="text-[var(--fg-tertiary)]" />
               <span>Billing</span>
             </Link>
             <Link
               href="/pricing"
               onClick={() => setOpen(false)}
-              className="flex items-center gap-3 px-4 py-2 hover:bg-gray-100"
+              className="flex items-center gap-3 px-4 py-2.5 text-sm text-[var(--fg-secondary)] hover:text-white hover:bg-white/[0.05] transition-colors"
             >
-              <span>📈</span>
+              <IconChart size={16} className="text-[var(--fg-tertiary)]" />
               <span>Pricing</span>
             </Link>
           </div>
 
           {/* Logout */}
-          <div className="border-t">
+          <div className="relative border-t border-[var(--glass-border)] py-1.5">
             <button
               onClick={handleLogout}
-              className="flex items-center gap-3 px-4 py-2 hover:bg-red-50 text-red-600 w-full text-left"
+              className="flex items-center gap-3 px-4 py-2.5 text-sm text-[var(--fg-secondary)] hover:text-[var(--danger)] hover:bg-[rgba(248,113,113,0.06)] transition-colors w-full text-left"
             >
-              <span>🔓</span>
-              <span>Logout</span>
+              <IconLogout size={16} className="text-[var(--fg-tertiary)]" />
+              <span>Đăng xuất</span>
             </button>
           </div>
         </div>

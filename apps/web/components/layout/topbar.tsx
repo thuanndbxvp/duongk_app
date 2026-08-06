@@ -2,29 +2,11 @@ import Link from 'next/link';
 import { CreditsBadge } from '@/components/credits-badge';
 import { UserMenu } from './user-menu';
 import { MobileMenu } from './mobile-menu';
-import { apiFetch } from '@/lib/api-client';
-import { getAccessToken } from '@/lib/auth';
+import { getFullUser, type FullUser } from '@/lib/auth';
 import { IconSparkle } from '@/components/icons';
 
-interface User {
-  email: string;
-  full_name: string | null;
-  avatar_url: string | null;
-  tier: string;
-  credits: number;
-}
-
-async function getCurrentUser(): Promise<User | null> {
-  const token = await getAccessToken();
-  if (!token) return null;
-
-  try {
-    const res = await apiFetch('/api/users/me', {}, token);
-    if (!res.ok) return null;
-    return await res.json();
-  } catch {
-    return null;
-  }
+async function getCurrentUser(): Promise<FullUser | null> {
+  return await getFullUser();
 }
 
 export async function TopBar() {
