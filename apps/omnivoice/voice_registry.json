@@ -1,117 +1,6 @@
 {
   "version": "1.0",
   "voices": {
-    "narrator_vi_male": {
-      "type": "design",
-      "language": "vi",
-      "instruct": "male, young adult, moderate pitch",
-      "display_name": "Thuyết minh nam (VN)",
-      "description": "Giọng nam trẻ, vừa phải — phù hợp thuyết minh phim tài liệu tiếng Việt.",
-      "tags": [
-        "narration",
-        "documentary"
-      ]
-    },
-    "narrator_vi_female": {
-      "type": "design",
-      "language": "vi",
-      "instruct": "female, young adult, moderate pitch",
-      "display_name": "Thuyết minh nữ (VN)",
-      "description": "Giọng nữ trẻ — quảng cáo, audiobook tiếng Việt.",
-      "tags": [
-        "narration",
-        "advertisement",
-        "audiobook"
-      ]
-    },
-    "km_news_reader": {
-      "type": "design",
-      "language": "km",
-      "instruct": "female, young adult, moderate pitch",
-      "display_name": "Đọc báo Khmer (KM)",
-      "description": "Đọc tin tức tiếng Khmer — phù hợp cho news app Campuchia.",
-      "tags": [
-        "news",
-        "khmer"
-      ]
-    },
-    "my_narrator": {
-      "type": "design",
-      "language": "my",
-      "instruct": "female, young adult, moderate pitch",
-      "display_name": "Thuyết minh Myanmar (MM)",
-      "description": "Thuyết minh tiếng Myanmar (Burmese).",
-      "tags": [
-        "narration",
-        "myanmar"
-      ]
-    },
-    "en_narrator": {
-      "type": "design",
-      "language": "en",
-      "instruct": "female, young adult, moderate pitch, american accent",
-      "display_name": "Narrator (EN)",
-      "description": "English audiobook narrator — American accent.",
-      "tags": [
-        "audiobook",
-        "english"
-      ]
-    },
-    "zh_news": {
-      "type": "design",
-      "language": "zh",
-      "instruct": "female, young adult, moderate pitch, chinese accent",
-      "display_name": "Đọc tin Trung (ZH)",
-      "description": "Chinese news reader.",
-      "tags": [
-        "news",
-        "chinese"
-      ]
-    },
-    "es_hombre": {
-      "type": "design",
-      "language": "es",
-      "instruct": "female, young adult, moderate pitch",
-      "display_name": "Narrator Español (ES)",
-      "description": "Spanish audiobook — Latin neutral.",
-      "tags": [
-        "audiobook",
-        "spanish"
-      ]
-    },
-    "hi_anchal": {
-      "type": "design",
-      "language": "hi",
-      "instruct": "female, young adult, moderate pitch, indian accent",
-      "display_name": "Tin tức Hindi (HI)",
-      "description": "Hindi news reader.",
-      "tags": [
-        "news",
-        "hindi"
-      ]
-    },
-    "ar_male": {
-      "type": "design",
-      "language": "ar",
-      "instruct": "male, young adult, moderate pitch",
-      "display_name": "Thuyết minh Ả Rập (AR)",
-      "description": "Arabic MSA narrator — male voice.",
-      "tags": [
-        "narration",
-        "arabic"
-      ]
-    },
-    "clone1": {
-      "type": "clone",
-      "language": "vi",
-      "instruct": null,
-      "ref_audio_file": "voice_20260402_234050_459e9d",
-      "display_name": "Clone 1",
-      "description": "Saved from UI voice cloning",
-      "tags": null,
-      "default_speed": null,
-      "default_emotion": null
-    },
     "ban_mai": {
       "type": "clone",
       "language": "vi",
@@ -122,17 +11,6 @@
       "tags": [
         "vietnamese",
         "female"
-      ]
-    },
-    "injoyreel": {
-      "type": "clone",
-      "language": "vi",
-      "instruct": null,
-      "ref_audio_file": "injoyreel",
-      "display_name": "Injoyreel",
-      "description": "Giọng Injoyreel",
-      "tags": [
-        "vietnamese"
       ]
     },
     "lan_trinh": {
@@ -194,6 +72,28 @@
         "vietnamese",
         "female"
       ]
+    },
+    "minhquan_vb": {
+      "type": "clone",
+      "language": "vi",
+      "instruct": null,
+      "ref_audio_file": "minhquan_vb.mp3",
+      "display_name": "minhquan_vb",
+      "description": null,
+      "tags": null,
+      "default_speed": null,
+      "default_emotion": null
+    },
+    "ngochuyen_vb": {
+      "type": "clone",
+      "language": "vi",
+      "instruct": null,
+      "ref_audio_file": "ngochuyen_vb.mp3",
+      "display_name": "ngochuyen_vb",
+      "description": null,
+      "tags": null,
+      "default_speed": null,
+      "default_emotion": null
     }
   }
 }
