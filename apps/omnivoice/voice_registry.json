@@ -111,6 +111,89 @@
       "tags": null,
       "default_speed": null,
       "default_emotion": null
+    },
+    "ban_mai": {
+      "type": "clone",
+      "language": "vi",
+      "instruct": null,
+      "ref_audio_file": "ban_mai",
+      "display_name": "Ban Mai",
+      "description": "Giọng nữ truyền cảm",
+      "tags": [
+        "vietnamese",
+        "female"
+      ]
+    },
+    "injoyreel": {
+      "type": "clone",
+      "language": "vi",
+      "instruct": null,
+      "ref_audio_file": "injoyreel",
+      "display_name": "Injoyreel",
+      "description": "Giọng Injoyreel",
+      "tags": [
+        "vietnamese"
+      ]
+    },
+    "lan_trinh": {
+      "type": "clone",
+      "language": "vi",
+      "instruct": null,
+      "ref_audio_file": "lan_trinh",
+      "display_name": "Lan Trinh",
+      "description": "Giọng nữ Lan Trinh",
+      "tags": [
+        "vietnamese",
+        "female"
+      ]
+    },
+    "ngan_ha": {
+      "type": "clone",
+      "language": "vi",
+      "instruct": null,
+      "ref_audio_file": "ngan_ha",
+      "display_name": "Ngân Hà",
+      "description": "Giọng nữ Ngân Hà",
+      "tags": [
+        "vietnamese",
+        "female"
+      ]
+    },
+    "ngoc_huyen": {
+      "type": "clone",
+      "language": "vi",
+      "instruct": null,
+      "ref_audio_file": "ngoc_huyen",
+      "display_name": "Ngọc Huyền",
+      "description": "Giọng nữ Ngọc Huyền",
+      "tags": [
+        "vietnamese",
+        "female"
+      ]
+    },
+    "thao_trinh": {
+      "type": "clone",
+      "language": "vi",
+      "instruct": null,
+      "ref_audio_file": "thao_trinh",
+      "display_name": "Thảo Trinh",
+      "description": "Giọng nữ Thảo Trinh",
+      "tags": [
+        "vietnamese",
+        "female"
+      ]
+    },
+    "tuong_vy": {
+      "type": "clone",
+      "language": "vi",
+      "instruct": null,
+      "ref_audio_file": "tuong_vy",
+      "display_name": "Tường Vy",
+      "description": "Giọng nữ Tường Vy",
+      "tags": [
+        "vietnamese",
+        "female"
+      ]
     }
   }
 }
