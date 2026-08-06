@@ -140,3 +140,35 @@ Trả lời JSON theo schema:
   "broll_positions": ["vị trí 1", "vị trí 2"],
   "mimic_score": 8.5
 }}"""
+    def build_context_with_evidence(
+        self,
+        channel_persona: dict,
+        rag_context: str,
+        topic: str,
+        source_insight_ids: list[str] | None = None,
+    ) -> str:
+        """
+        Build script prompt with optional evidence injection from insights.
+
+        Phase 06: If source_insight_ids provided, load evidence snippets
+        and inject them into the prompt as [evidence] block.
+        """
+        prompt = self.build_script_prompt(channel_persona, rag_context, topic)
+
+        if source_insight_ids and len(source_insight_ids) > 0:
+            # Load evidence from insight_items
+            snippets = []
+            for iid in source_insight_ids[:5]:
+                insight = self.supabase.table('insight_items').select('body, evidence_comment_ids').eq('id', iid).maybe_single().execute()
+                if insight.data:
+                    # Escape prompt injection
+                    body = insight.data.get('body', '').replace('```', "'''")
+                    evidence_ids = insight.data.get('evidence_comment_ids', [])
+                    snippets.append(f"- {body} (evidence: {len(evidence_ids)} comments)")
+
+            if snippets:
+                evidence_block = "\n".join(snippets)
+                prompt += f"\n\n[evidence]\n{evidence_block}\n[evidence_end]\n"
+
+        return prompt
+

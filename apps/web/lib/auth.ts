@@ -41,6 +41,7 @@ export interface FullUser {
   avatar_url: string | null;
   tier: string;
   credits: number;
+  role: string;
 }
 
 export async function getFullUser(): Promise<FullUser | null> {
@@ -58,6 +59,7 @@ export async function getFullUser(): Promise<FullUser | null> {
         avatar_url: null,
         tier: payload.tier ?? 'free',
         credits: payload.credits ?? 0,
+        role: payload.role ?? 'user',
       };
     } catch {
       // fallthrough to legacy mock
@@ -74,6 +76,7 @@ export async function getFullUser(): Promise<FullUser | null> {
         avatar_url: null,
         tier: 'pro',
         credits: 999,
+        role: 'super_admin',
       };
     }
   } catch {

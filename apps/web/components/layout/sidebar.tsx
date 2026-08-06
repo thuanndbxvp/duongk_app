@@ -3,12 +3,13 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { NAV_ITEMS, isActiveRoute } from '@/lib/navigation';
-import { IconSparkle } from '@/components/icons';
+import { IconSparkle, IconShield } from '@/components/icons';
 
-export function Sidebar() {
+export function Sidebar({ userRole = 'user' }: { userRole?: string }) {
   const pathname = usePathname();
   const mainItems = NAV_ITEMS.filter((i) => i.group === 'main');
   const accountItems = NAV_ITEMS.filter((i) => i.group === 'account');
+  const isAdmin = userRole === 'admin' || userRole === 'super_admin';
 
   return (
     <nav className="h-full flex flex-col px-3 py-5">
@@ -41,6 +42,32 @@ export function Sidebar() {
             </Link>
           );
         })}
+
+        {isAdmin && (
+          <>
+            <div className="my-3 mx-2 border-t border-[var(--divider)]" />
+            <Link
+              href="/admin"
+              className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
+                pathname.startsWith('/admin')
+                  ? 'bg-[rgba(196,181,253,0.12)] text-white'
+                  : 'text-[#c4b5fd] hover:bg-[rgba(196,181,253,0.08)] hover:text-white'
+              }`}
+            >
+              {pathname.startsWith('/admin') && (
+                <span
+                  aria-hidden
+                  className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-[3px] rounded-r-full bg-gradient-to-b from-[#c4b5fd] via-[#8b5cf6] to-[#ec4899]"
+                />
+              )}
+              <IconShield size={18} className="text-[#c4b5fd]" />
+              <span>Admin Panel</span>
+              <span className="ml-auto text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-[#c4b5fd]/20 text-[#c4b5fd] font-semibold">
+                {userRole === 'super_admin' ? 'Super' : 'Admin'}
+              </span>
+            </Link>
+          </>
+        )}
       </div>
 
       <div className="mt-4 pt-4 border-t border-[var(--divider)] space-y-1">

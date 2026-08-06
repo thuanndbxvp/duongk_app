@@ -38,6 +38,15 @@ from apps.api.services.ip_whitelist import IPWhitelistMiddleware
 from apps.api.routers.admin_audit import router as admin_audit_router
 from apps.api.routers.admin_mfa import router as admin_mfa_router
 from apps.api.routers.admin_analytics import router as admin_analytics_router
+from apps.api.routers.admin_dashboard import router as admin_dashboard_router
+from apps.api.routers.assets import router as assets_router, scene_router as scenes_router
+from apps.api.routers.voice import router as voice_router
+from apps.api.routers.render import router as render_router
+from apps.api.routers.thumbnail import router as thumbnail_router
+from apps.api.routers.channel_intel import router as channel_intel_router
+from apps.api.routers.style_bible import router as style_bible_router
+from apps.api.routers.batch import router as batch_router
+from apps.api.routers.character_lab import router as character_lab_router
 
 sentry_sdk.init(dsn=os.getenv("SENTRY_DSN"))
 app = FastAPI(title="YouTube AI SaaS")
@@ -72,6 +81,16 @@ app.include_router(admin_routing_router)
 app.include_router(admin_audit_router)
 app.include_router(admin_mfa_router)
 app.include_router(admin_analytics_router)
+app.include_router(admin_dashboard_router)
+app.include_router(assets_router)
+app.include_router(scenes_router)
+app.include_router(voice_router)
+app.include_router(render_router)
+app.include_router(thumbnail_router)
+app.include_router(channel_intel_router)
+app.include_router(style_bible_router)
+app.include_router(batch_router)
+app.include_router(character_lab_router)
 
 # Override default OpenAPI schema
 app.openapi = lambda: custom_openapi_schema(app)

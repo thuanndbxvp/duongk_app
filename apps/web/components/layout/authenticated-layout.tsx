@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { getAccessToken } from '@/lib/auth';
+import { getAccessToken, getFullUser } from '@/lib/auth';
 import { Sidebar } from './sidebar';
 import { Breadcrumbs } from './breadcrumbs';
 
@@ -13,13 +13,16 @@ export async function AuthenticatedLayout({
   const token = await getAccessToken();
   if (!token) redirect('/login');
 
+  const user = await getFullUser();
+  const userRole = user?.role ?? 'user';
+
   const breadcrumbs: { label: string; href: string }[] = [];
 
   return (
     <div className="flex flex-1">
       <aside className="hidden lg:block w-64 shrink-0 sticky top-[68px] h-[calc(100dvh-68px)]">
         <div className="h-full glass border-r border-[var(--glass-border)]">
-          <Sidebar />
+          <Sidebar userRole={userRole} />
         </div>
       </aside>
 

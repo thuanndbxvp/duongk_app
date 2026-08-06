@@ -23,6 +23,7 @@ class UserResponse(BaseModel):
     avatar_url: str | None = None
     credits: int
     tier: str
+    role: str = 'user'
     created_at: str
 
 

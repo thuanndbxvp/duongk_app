@@ -122,6 +122,18 @@ export const IconArrowRight = (p: IconProps) => (
   </svg>
 );
 
+export const IconArrowLeft = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="M19 12H5M11 5l-7 7 7 7" />
+  </svg>
+);
+
+export const IconExternal = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="M14 3h7v7M21 3l-9 9M19 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h5" />
+  </svg>
+);
+
 export const IconCheck = (p: IconProps) => (
   <svg {...base(p)}>
     <path d="m5 12 5 5L20 7" />

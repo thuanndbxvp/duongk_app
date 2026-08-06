@@ -14,6 +14,7 @@ export async function POST(req: NextRequest) {
       full_name: body.full_name ?? null,
       tier: 'pro',
       credits: 999,
+      role: 'super_admin',
       exp: Math.floor(Date.now() / 1000) + 3600,
     });
     const mockToken = `dev.${Buffer.from(payload).toString('base64')}.mock`;
@@ -59,8 +60,32 @@ export async function POST(req: NextRequest) {
   // Set HttpOnly cookies
   await setAuthCookies(data.access_token, data.refresh_token);
 
+  // Look up role to choose redirect target (admin/super_admin -> /admin)
+  let role: string = 'user';
+  try {
+    const userRes = await fetch(
+      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/users?id=eq.${data.user.id}&select=role`,
+      {
+        headers: {
+          apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+          Authorization: `Bearer ${data.access_token}`,
+        },
+      }
+    );
+    if (userRes.ok) {
+      const rows = await userRes.json();
+      role = rows?.[0]?.role ?? 'user';
+    }
+  } catch {
+    /* keep default 'user' */
+  }
+
+  const redirect =
+    role === 'admin' || role === 'super_admin' ? '/admin' : '/dashboard';
+
   return NextResponse.json({
     user: data.user,
-    redirect: '/dashboard',
+    redirect,
+    role,
   });
 }

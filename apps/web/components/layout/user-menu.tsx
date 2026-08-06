@@ -2,8 +2,8 @@
 
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { IconLogout, IconUser, IconBilling, IconChart } from '@/components/icons';
+import { useRouter, usePathname } from 'next/navigation';
+import { IconLogout, IconUser, IconBilling, IconChart, IconShield, IconDashboard } from '@/components/icons';
 
 interface User {
   email: string;
@@ -11,12 +11,15 @@ interface User {
   avatar_url: string | null;
   tier: string;
   credits: number;
+  role: string;
 }
 
 export function UserMenu({ user }: { user: User }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const router = useRouter();
+  const pathname = usePathname();
+  const isAdminRoute = pathname?.startsWith('/admin') ?? false;
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -122,6 +125,35 @@ export function UserMenu({ user }: { user: User }) {
               <IconChart size={16} className="text-[var(--fg-tertiary)]" />
               <span>Pricing</span>
             </Link>
+            {(user.role === 'admin' || user.role === 'super_admin') && (
+              <>
+                <div className="my-1.5 mx-3 border-t border-[var(--glass-border)]" />
+                {isAdminRoute && (
+                  <Link
+                    href="/dashboard"
+                    onClick={() => setOpen(false)}
+                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-[var(--fg-secondary)] hover:text-white hover:bg-white/[0.05] transition-colors"
+                  >
+                    <IconDashboard size={16} className="text-[var(--fg-tertiary)]" />
+                    <span>Về Dashboard</span>
+                    <span className="ml-auto text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-white/5 text-[var(--fg-tertiary)]">
+                      {user.tier}
+                    </span>
+                  </Link>
+                )}
+                <Link
+                  href="/admin"
+                  onClick={() => setOpen(false)}
+                  className="flex items-center gap-3 px-4 py-2.5 text-sm text-[#c4b5fd] hover:bg-[rgba(196,181,253,0.1)] transition-colors"
+                >
+                  <IconShield size={16} className="text-[#c4b5fd]" />
+                  <span className="font-semibold">Admin Panel</span>
+                  <span className="ml-auto text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-[#c4b5fd]/20 text-[#c4b5fd]">
+                    {user.role === 'super_admin' ? 'Super' : 'Admin'}
+                  </span>
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Logout */}

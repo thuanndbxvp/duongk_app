@@ -1,5 +1,7 @@
 'use client';
 
+import { Select } from '@/components/select';
+
 interface Props {
   confidence: string;
   setConfidence: (v: string) => void;
@@ -37,32 +39,32 @@ export function IdeaFilters({
           <label className="block text-xs font-medium text-gray-500 mb-1">
             Confidence
           </label>
-          <select
+          <Select
             value={confidence}
-            onChange={(e) => setConfidence(e.target.value)}
-            className="w-full p-2 border rounded"
-          >
-            <option value="all">Tất cả</option>
-            <option value="high">High</option>
-            <option value="medium">Medium</option>
-            <option value="low">Low</option>
-          </select>
+            onChange={setConfidence}
+            options={[
+              { value: 'all', label: 'Tất cả' },
+              { value: 'high', label: 'High' },
+              { value: 'medium', label: 'Medium' },
+              { value: 'low', label: 'Low' },
+            ]}
+          />
         </div>
 
         <div>
           <label className="block text-xs font-medium text-gray-500 mb-1">
             Sắp xếp
           </label>
-          <select
+          <Select
             value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-            className="w-full p-2 border rounded"
-          >
-            <option value="gap_desc">Gap Score (cao → thấp)</option>
-            <option value="gap_asc">Gap Score (thấp → cao)</option>
-            <option value="date_desc">Mới nhất</option>
-            <option value="alpha">A-Z</option>
-          </select>
+            onChange={setSortBy}
+            options={[
+              { value: 'gap_desc', label: 'Gap Score (cao → thấp)' },
+              { value: 'gap_asc', label: 'Gap Score (thấp → cao)' },
+              { value: 'date_desc', label: 'Mới nhất' },
+              { value: 'alpha', label: 'A-Z' },
+            ]}
+          />
         </div>
       </div>
     </div>

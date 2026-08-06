@@ -11,6 +11,9 @@
   --bg-base: #07060d;
   --bg-elevated: #0e0b1a;
   --bg-surface: #14101f;
+  /* Aliases (used as `bg-[var(--surface)]` and `bg-[var(--muted)]` in JSX) */
+  --surface: var(--bg-surface);
+  --muted: var(--bg-elevated);
 
   /* Glass */
   --glass-bg: rgba(255, 255, 255, 0.04);

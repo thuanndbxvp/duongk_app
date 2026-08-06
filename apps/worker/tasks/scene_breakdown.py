@@ -1,6 +1,7 @@
 """
 Celery task for scene breakdown.
 """
+from typing import Literal
 from celery import Task
 from apps.worker.celery_app import celery_app
 from apps.worker.services.scene_breaker import SceneBreaker
@@ -10,6 +11,28 @@ from openai import OpenAI
 import json
 import os
 import asyncio
+
+
+SCENE_CONTRACT_VERSION: Literal[1] = 1
+
+
+def wrap_scene_contract(scene: dict, scene_index: int, scene_id: str) -> dict:
+    """Wrap raw scene dict into versioned scene contract (v1)."""
+    return {
+        "schema_version": SCENE_CONTRACT_VERSION,
+        "scene_id": scene_id,
+        "scene_index": scene_index,
+        "narration": scene.get("narration", ""),
+        "visual_description": scene.get("visual_description", ""),
+        "image_prompt": scene.get("image_prompt", ""),
+        "video_prompt": scene.get("video_prompt", ""),
+        "asset_type": scene.get("asset_type", "image"),
+        "estimated_duration": scene.get("estimated_duration", 0.0),
+        "characters": scene.get("characters", []),
+        "background": scene.get("background", ""),
+        "continuity_references": scene.get("continuity_references", []),
+        "status": "draft",
+    }
 
 
 @celery_app.task(

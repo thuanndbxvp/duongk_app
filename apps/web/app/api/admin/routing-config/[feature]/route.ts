@@ -1,0 +1,37 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { apiFetch } from '@/lib/api-client';
+import { getAccessToken } from '@/lib/auth';
+
+export async function GET(
+  req: NextRequest,
+  { params }: { params: Promise<{ feature: string }> }
+) {
+  const token = await getAccessToken();
+  if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const { feature } = await params;
+  try {
+    const response = await apiFetch(`/api/admin/routing-config/${feature}`, {}, token);
+    return NextResponse.json(await response.json(), { status: response.status });
+  } catch {
+    return NextResponse.json({ error: 'Internal error' }, { status: 500 });
+  }
+}
+
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: Promise<{ feature: string }> }
+) {
+  const token = await getAccessToken();
+  if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const { feature } = await params;
+  const body = await req.json();
+  try {
+    const response = await apiFetch(`/api/admin/routing-config/${feature}`, {
+      method: 'PATCH',
+      body: JSON.stringify(body),
+    }, token);
+    return NextResponse.json(await response.json(), { status: response.status });
+  } catch {
+    return NextResponse.json({ error: 'Internal error' }, { status: 500 });
+  }
+}
