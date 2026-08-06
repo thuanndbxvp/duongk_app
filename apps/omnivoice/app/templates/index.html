@@ -558,20 +558,22 @@ with open("output.wav", "wb") as f:
 
     async function generateTTS() {
         const btn = document.getElementById('btn-generate');
-        const text = document.getElementById('text-input').value;
-        const voiceId = document.getElementById('voice-select').value;
-        const speed = parseFloat(document.getElementById('speed-slider').value);
+        const textInput = document.getElementById('text-input');
+        const text = textInput ? textInput.value : '';
+        const voiceSelect = document.getElementById('voice-select');
+        const voiceId = voiceSelect ? voiceSelect.value : '';
+        const speedInput = document.getElementById('speed-slider');
+        const speed = speedInput ? parseFloat(speedInput.value) : 1.0;
         
-        const instructParts = [];
-        const style = document.getElementById('instruct-style').value;
-        if (style) instructParts.push(style);
-        const instruct = instructParts.join(", ");
+        const instructEl = document.getElementById('instruct-style');
+        const instruct = instructEl && instructEl.value ? instructEl.value.trim() : null;
 
         if (!text.trim()) return alert("Vui lòng nhập văn bản!");
         if (!voiceId) return alert("Chưa có voice nào trong catalog!");
 
         btn.disabled = true;
-        btn.innerText = "⏳ Đang tạo...";
+        const origBtnText = btn.innerHTML;
+        btn.innerHTML = "⏳ Đang tạo...";
         const startTime = Date.now();
 
         try {
@@ -584,20 +586,20 @@ with open("output.wav", "wb") as f:
                 body: JSON.stringify(payload)
             });
 
-            if (!res.ok) throw new Error(await res.text());
+            if (!res.ok) {
+                const errText = await res.text();
+                throw new Error(errText);
+            }
 
             const blob = await res.blob();
             const url = URL.createObjectURL(blob);
 
-            const snippet = text.length > 80 ? text.substring(0, 80) + '...' : text;
             const now = new Date();
-            const dateStr = now.toLocaleDateString('vi-VN');
             const timeStr = now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
             const filename = `tts_${Date.now()}.wav`;
             
             const duration = ((Date.now() - startTime) / 1000).toFixed(1);
-            const voiceSelect = document.getElementById('voice-select');
-            const voiceName = voiceSelect.options[voiceSelect.selectedIndex].text;
+            const voiceName = voiceSelect.options[voiceSelect.selectedIndex] ? voiceSelect.options[voiceSelect.selectedIndex].text : voiceId;
 
             const item = document.createElement('div');
             item.className = 'history-item';
@@ -621,17 +623,19 @@ with open("output.wav", "wb") as f:
             `;
 
             const list = document.getElementById('history-list');
-            list.insertBefore(item, list.firstChild);
+            if (list) list.insertBefore(item, list.firstChild);
 
-            document.getElementById('empty-state').style.display = 'none';
+            const emptyState = document.getElementById('empty-state');
+            if (emptyState) emptyState.style.display = 'none';
+            
             // Play the audio automatically
             const audioInItem = item.querySelector('audio');
-            audioInItem.play();
+            if (audioInItem) audioInItem.play().catch(e => console.log('Autoplay prevented:', e));
         } catch (e) {
             alert("Lỗi khi tạo TTS: " + e.message);
         } finally {
             btn.disabled = false;
-            btn.innerText = "✨ Tạo";
+            btn.innerHTML = origBtnText;
         }
     }
 
