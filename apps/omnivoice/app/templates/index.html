@@ -33,8 +33,8 @@
 
         .view-panel { display: none; width: 100%; padding: 32px; }
 
-        /* LAYOUT CHO VIEW TTS (3 Cot) */
-        .view-panel.active.tts-layout { display: grid; grid-template-columns: 1fr 340px 380px; gap: 24px; min-height: 100vh; align-items: start; }
+        /* LAYOUT CHO VIEW TTS (2 Cot, giong Dubbing) */
+        .view-panel.active.tts-layout { display: grid; grid-template-columns: 1fr 400px; gap: 24px; min-height: 100vh; align-items: start; }
         
         /* LAYOUT CHO DUBBING & CLONING (Khác nhau chút) */
         .view-panel.active.dubbing-layout { display: grid; grid-template-columns: 1fr 400px; gap: 24px; min-height: 100vh; align-items: start; }
@@ -141,19 +141,18 @@
                 <div class="page-title">Text to Speech</div>
             </div>
 
-            <!-- Column 1 -->
-            <div class="card" style="height: 100%; display: flex; flex-direction: column;">
-                <label class="form-label">Văn bản</label>
-                <textarea id="text-input" class="text-input" style="flex: 1; min-height: 200px; resize: none; margin-bottom: 8px;" placeholder="Nhập văn bản tại đây..." oninput="document.getElementById('char-count').innerText = this.value.length + '/2000 ký tự'"></textarea>
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <span style="font-size:0.8rem; color:var(--text-muted);">Nhập văn bản trơn vào tự</span>
-                    <span id="char-count" style="font-size:0.8rem; color:var(--text-muted);">0/2000 ký tự</span>
+            <!-- Column 1 (Văn bản + Cài đặt) -->
+            <div style="display:flex; flex-direction:column; gap:24px;">
+                <div class="card" style="margin-bottom:0; display: flex; flex-direction: column;">
+                    <label class="form-label">Văn bản</label>
+                    <textarea id="text-input" class="text-input" style="flex: 1; min-height: 200px; resize: none; margin-bottom: 8px;" placeholder="Nhập văn bản tại đây..." oninput="document.getElementById('char-count').innerText = this.value.length + '/2000 ký tự'"></textarea>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size:0.8rem; color:var(--text-muted);">Nhập văn bản trơn vào tự</span>
+                        <span id="char-count" style="font-size:0.8rem; color:var(--text-muted);">0/2000 ký tự</span>
+                    </div>
                 </div>
-            </div>
 
-            <!-- Column 2 -->
-            <div>
-                <div class="card">
+                <div class="card" style="margin-bottom:0; background: rgba(0,0,0,0.2);">
                     <div class="card-title">Cài đặt giọng nói</div>
                     <label class="form-label">Chế độ giọng</label>
                     <select id="voice-select" class="select-input" style="margin-bottom: 24px;"></select>
@@ -181,22 +180,20 @@
                     <label class="form-label" style="border-top: 1px solid var(--border-color); padding-top: 16px;">Tốc độ (Speed) <span id="speed-value" style="float: right; color: var(--text-muted);">1.0</span></label>
                     <input type="range" id="speed-slider" min="0.5" max="2.0" step="0.1" value="1.0" style="width:100%; margin-bottom: 8px;" oninput="document.getElementById('speed-value').innerText = parseFloat(this.value).toFixed(1)">
                 </div>
+                <button class="btn-blue" id="btn-generate" onclick="generateTTS()" style="padding:16px; font-size:1.1rem; margin-top:24px; width:100%;">🎤 Tạo</button>
             </div>
 
-            <!-- Column 3 -->
-            <div>
-                <button class="btn-blue" id="btn-generate" onclick="generateTTS()" style="padding:16px; font-size:1.1rem; margin-bottom:24px; width:100%;">🎤 Tạo</button>
-                <div class="card" style="padding: 16px;">
-                    <div class="card-title">Kết quả & Xem trước</div>
-                    <div class="page-desc" style="margin-bottom: 16px; font-size: 0.85rem;">Gần đây</div>
-                    
-                    <div class="result-box" id="result-box">
-                        <div class="empty-state" id="empty-state">
-                            <div class="empty-icon">🎧</div>
-                            <div>Chưa có audio nào.</div>
-                        </div>
-                        <div class="history-list" id="history-list"></div>
+            <!-- Column 2 (Kết quả) -->
+            <div class="card" style="height: 100%; display: flex; flex-direction: column;">
+                <div class="card-title">Kết quả & Xem trước</div>
+                <div class="page-desc" style="margin-bottom: 16px; font-size: 0.85rem;">Gần đây</div>
+                
+                <div class="result-box" id="result-box" style="flex: 1; display:flex; flex-direction:column;">
+                    <div class="empty-state" id="empty-state" style="flex:1; display:flex; flex-direction:column; justify-content:center;">
+                        <div class="empty-icon">🎧</div>
+                        <div>Chưa có audio nào.</div>
                     </div>
+                    <div class="history-list" id="history-list" style="flex:1;"></div>
                 </div>
             </div>
         </div>
@@ -348,7 +345,7 @@
                     </div>
                 </div>
 
-                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 12px; margin-bottom: 16px;">
                     <div>
                         <label style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px; display: block;">Giới tính</label>
                         <select id="design-gender" class="select-input" style="padding: 8px;">
@@ -377,6 +374,13 @@
                             <option value="moderate pitch">Vừa</option>
                             <option value="high pitch">Cao</option>
                             <option value="very high pitch">Rất cao</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px; display: block;">Phong cách</label>
+                        <select id="design-style" class="select-input" style="padding: 8px;">
+                            <option value="">Bình thường</option>
+                            <option value="whisper">Thì thầm (Whisper)</option>
                         </select>
                     </div>
                 </div>
@@ -678,11 +682,13 @@ with open("output.wav", "wb") as f:
         const gender = document.getElementById('design-gender').value;
         const age = document.getElementById('design-age').value;
         const pitch = document.getElementById('design-pitch').value;
+        const style = document.getElementById('design-style').value;
         
         const instructParts = [];
         if (gender) instructParts.push(gender);
         if (age) instructParts.push(age);
         if (pitch) instructParts.push(pitch);
+        if (style) instructParts.push(style);
         const instruct = instructParts.join(", ");
 
         try {
