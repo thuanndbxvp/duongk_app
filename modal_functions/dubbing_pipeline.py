@@ -324,12 +324,21 @@ def dub_srt(srt_text: str, output_key: str, merge_mode: str = "native", referenc
             
         import re
         def clean_text_for_tts(t):
+            import unicodedata
+            t = unicodedata.normalize("NFC", t)
+            # Remove HTML tags
+            t = re.sub(r"<[^>]+>", " ", t)
             # Remove sound tags like (Nhạc nền), [Tiếng cười]
-            t = re.sub(r"[\(\[].*?[\)\]]", "", t)
+            t = re.sub(r"[\(\[].*?[\)\]]", " ", t)
             # Replace multiple dots (ellipsis) with a single comma to prevent severe stuttering
-            t = re.sub(r"\.{2,}", ",", t)
+            t = re.sub(r"\.{2,}", ", ", t)
+            # Replace multiple question/exclamation marks
+            t = re.sub(r"\?{2,}", "? ", t)
+            t = re.sub(r"!{2,}", "! ", t)
             # Remove markdown/special chars
-            t = re.sub(r"[~*#_]+", " ", t)
+            t = re.sub(r"[~*#_\-`]+", " ", t)
+            # Replace weird isolated punctuation
+            t = re.sub(r"\s+[,;:?!]\s+", " ", t)
             # Collapse whitespace
             t = " ".join(t.split())
             return t
@@ -361,8 +370,8 @@ def dub_srt(srt_text: str, output_key: str, merge_mode: str = "native", referenc
             if instruct is not None:
                 call_kwargs["instruct"] = instruct
                 
-            # Set a fixed seed to prevent the model from drifting into hallucinated acoustic states (e.g. echo, closed room)
-            torch.manual_seed(1234)
+            # Do not use manual_seed here! Fixing the seed in a loop for an autoregressive TTS model 
+            # causes severe hallucinations, looping, and word repetitions across sentences.
             audio_data = model.generate(**call_kwargs)
             if isinstance(audio_data, list) or isinstance(audio_data, tuple):
                 audio_data = audio_data[0]
