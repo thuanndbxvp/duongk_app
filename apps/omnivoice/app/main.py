@@ -303,13 +303,13 @@ async def generate_tts(request: TTSRequest):
             "female_vi",
             "female-vi",
         }:
-            instruct = "female, young adult, moderate pitch"
+            instruct = "female, mature adult, warm voice, deep pitch"
         elif voice_id_lower in {"vi_male", "vi_male_1", "vi-male-1", "male_vi", "male-vi"}:
-            instruct = "male, young adult, moderate pitch"
+            instruct = "male, mature adult, deep voice, low pitch"
         elif "female" in voice_id_lower or "default" in voice_id_lower:
-            instruct = "female, young adult, moderate pitch"
+            instruct = "female, mature adult, warm voice, deep pitch"
         elif "male" in voice_id_lower:
-            instruct = "male, young adult, moderate pitch"
+            instruct = "male, mature adult, deep voice, low pitch"
         elif _is_valid_english_instruct(request.voice_id):
             instruct = request.voice_id
         else:
