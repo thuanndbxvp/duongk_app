@@ -12,7 +12,7 @@ from typing import Any
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Request, BackgroundTasks, File, UploadFile, Form
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
+from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse, FileResponse
 from pydantic import BaseModel
 
 # Top-level OmniVoice import removed as we use Modal.
@@ -203,6 +203,12 @@ async def get_index():
     if not index_path.exists():
         raise HTTPException(status_code=404, detail="Web playground template not found")
     return HTMLResponse(content=index_path.read_text(encoding="utf-8"))
+
+
+@app.get("/favicon.ico", include_in_schema=False)
+async def get_favicon():
+    favicon_path = Path(__file__).resolve().parent / "static" / "favicon.ico"
+    return FileResponse(favicon_path)
 
 
 class TTSRequest(BaseModel):
