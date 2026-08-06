@@ -23,14 +23,24 @@ export default function LoginPage() {
       body: JSON.stringify({ email, password }),
     });
 
-    if (response.ok) {
-      const data = await response.json();
+    try {
+      const text = await response.text();
+      if (!response.ok) {
+        try {
+          const err = JSON.parse(text);
+          setError(err.error || 'Đăng nhập thất bại');
+        } catch {
+          setError(text || `Lỗi máy chủ (${response.status})`);
+        }
+        return;
+      }
+      const data = JSON.parse(text);
       router.push(data.redirect || '/dashboard');
-    } else {
-      const err = await response.json();
-      setError(err.error || 'Đăng nhập thất bại');
+    } catch {
+      setError('Không thể kết nối đến máy chủ');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }
 
   return (

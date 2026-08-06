@@ -4,6 +4,23 @@ import { setAuthCookies } from '@/lib/auth';
 export async function POST(req: NextRequest) {
   const body = await req.json();
 
+  // Dev mode: bypass Supabase when using placeholder URL
+  if (process.env.NEXT_PUBLIC_SUPABASE_URL?.includes('xxx')) {
+    console.warn('[DEV] Supabase URL is placeholder — using mock login');
+    const mockToken = Buffer.from('dev-mock-token').toString('base64');
+    return NextResponse.json(
+      {
+        user: { id: 'dev-user', email: body.email },
+        redirect: '/dashboard',
+      },
+      {
+        headers: {
+          'Set-Cookie': `access_token=${mockToken}; Path=/; HttpOnly; SameSite=Lax`,
+        },
+      }
+    );
+  }
+
   // Call Supabase Auth API
   const response = await fetch(
     `${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/token?grant_type=password`,
