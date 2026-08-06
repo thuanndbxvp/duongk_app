@@ -15,8 +15,19 @@ from apps.api.modules.rag.embedder import Embedder
 from apps.api.modules.rag.storage import RAGStorage
 from apps.api.dependencies.supabase import get_supabase_admin
 from apps.api.modules.transcript.engine import TranscriptEngine
+from apps.api.services.routing import get_routing_config
 
 celery_app = Celery('tasks', broker=os.environ.get('REDIS_URL', 'redis://localhost:6379/0'))
+
+
+def select_emotion_provider() -> str:
+    """Chọn emotion classifier từ routing config. Fallback 'openai'."""
+    routing = get_routing_config('emotion_classifier')
+    primary = routing.get('primary_provider')
+    if primary and routing.get('enabled_providers', {}).get(primary, False):
+        return primary
+    return 'openai'  # fallback cứng
+
 
 @celery_app.task(bind=True)
 def analyze_channel_task(self, job_id: str, channel_id: str):

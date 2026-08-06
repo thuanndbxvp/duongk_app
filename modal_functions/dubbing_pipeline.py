@@ -267,9 +267,7 @@ def dub_srt(srt_text: str, output_key: str, merge_mode: str = "native", referenc
     import boto3
     import pysrt
     import torch
-    import librosa
     import soundfile as sf
-    import numpy as np
     
     with tempfile.TemporaryDirectory() as tmp:
         ref_audio_path = None
@@ -352,77 +350,76 @@ def dub_srt(srt_text: str, output_key: str, merge_mode: str = "native", referenc
                 audio_data = audio_data[0]
             
             start_time = group[0].start.ordinal / 1000.0  # seconds
-            end_time = group[-1].end.ordinal / 1000.0
-            duration_allowed = end_time - start_time
+            
+            # Save the raw chunk to disk immediately
+            chunk_path = f"{tmp}/chunk_{len(audio_segments)}.wav"
+            import soundfile as sf
+            sf.write(chunk_path, audio_data, samplerate, format="WAV")
             
             audio_segments.append({
-                "audio": audio_data,
-                "start": start_time,
-                "end": end_time,
-                "allowed": duration_allowed
+                "file": chunk_path,
+                "start": start_time
             })
             
-        # Merge mode logic
         if not audio_segments:
             return {"status": "error", "message": "No subtitles found"}
             
-        last_end = audio_segments[-1]["start"] + (len(audio_segments[-1]["audio"]) / samplerate)
-        total_samples = int(max(subs[-1].end.ordinal / 1000.0 + 2.0, last_end + 2.0) * samplerate)
-        final_audio = np.zeros(total_samples, dtype=np.float32)
+        # Determine total duration needed
+        total_dur = subs[-1].end.ordinal / 1000.0 + 2.0
         
-        current_time = 0.0
+        # Assemble using FFmpeg (amix + adelay)
+        import subprocess
         
-        for seg in audio_segments:
-            y = seg["audio"]
-            dur = len(y) / samplerate
-            
-            if merge_mode == "cascade":
-                # Wait until current_time is at least seg["start"], but push forward if overlap
-                start_sec = max(current_time, seg["start"])
-            elif merge_mode == "strict":
-                start_sec = seg["start"]
-                if dur > seg["allowed"]:
-                    # Cut
-                    y = y[:int(seg["allowed"] * samplerate)]
-            elif merge_mode == "fit":
-                start_sec = seg["start"]
-                if abs(dur - seg["allowed"]) > 0.1:
-                    # Time stretch
-                    y = librosa.effects.time_stretch(y, rate=(dur / seg["allowed"]))
-            else:
-                # "native" (default): allow slight crossfade if slightly overlapping, stretch if severely overlapping
-                start_sec = seg["start"]
-                if current_time > start_sec + 0.1:
-                    # Mild stretch to fit up to 1.1x speed
-                    overlap = current_time - start_sec
-                    if overlap < dur * 0.1:
-                        # Just start later or stretch slightly
-                        y = librosa.effects.time_stretch(y, rate=1.1)
-                    else:
-                        start_sec = current_time # fallback to cascade
-            
-            start_idx = int(start_sec * samplerate)
-            end_idx = start_idx + len(y)
-            
-            # Ensure buffer is large enough
-            if end_idx > len(final_audio):
-                final_audio = np.pad(final_audio, (0, end_idx - len(final_audio) + samplerate))
-                
-            # Simple mix by addition (to allow crossfade), or overwrite
-            # Since final_audio is initialized to zeros, addition is safe.
-            # To prevent clipping if they overlap, we can average them in the overlap region, 
-            # but simple addition is standard for mixing if they don't overlap much.
-            final_audio[start_idx:end_idx] += y
-            
-            current_time = start_sec + (len(y) / samplerate)
-            
-        # Prevent clipping distortion (rè) caused by amplitude exceeding [-1.0, 1.0] when overlapping
-        max_amp = np.max(np.abs(final_audio))
-        if max_amp > 1.0:
-            final_audio = final_audio / max_amp
-            
+        base_silence = f"{tmp}/silence.wav"
+        subprocess.run([
+            "ffmpeg", "-y", "-f", "lavfi", "-i", f"anullsrc=r={samplerate}:cl=mono", 
+            "-t", str(total_dur), base_silence
+        ], check=True, capture_output=True)
+        
         out_audio_path = f"{tmp}/dubbed_output.wav"
-        sf.write(out_audio_path, final_audio, samplerate, format="WAV")
+        
+        MAX_INPUTS = 100
+        
+        def merge_batch(batch_chunks, out_file):
+            inputs = []
+            filter_parts = []
+            labels = []
+            for idx, c in enumerate(batch_chunks):
+                inputs.extend(["-i", c["file"]])
+                delay_ms = int(float(c["start"]) * 1000)
+                if delay_ms > 0:
+                    filter_parts.append(f"[{idx}:a]adelay={delay_ms}|{delay_ms}[v{idx}]")
+                    labels.append(f"[v{idx}]")
+                else:
+                    labels.append(f"[{idx}:a]")
+                    
+            n = len(batch_chunks)
+            filter_parts.append(f"{''.join(labels)}amix=inputs={n}:duration=longest:normalize=0[out]")
+            filter_graph = ";".join(filter_parts)
+            
+            try:
+                subprocess.run([
+                    "ffmpeg", "-y"
+                ] + inputs + [
+                    "-filter_complex", filter_graph,
+                    "-map", "[out]", "-c:a", "pcm_s16le", "-ar", str(samplerate), out_file
+                ], check=True, capture_output=True)
+            except subprocess.CalledProcessError as e:
+                print("FFmpeg error output:", e.stderr.decode("utf-8", errors="ignore"))
+                raise
+
+        valid_chunks = [{"file": base_silence, "start": 0.0}] + audio_segments
+        
+        if len(valid_chunks) <= MAX_INPUTS:
+            merge_batch(valid_chunks, out_audio_path)
+        else:
+            intermediates = []
+            for i in range(0, len(valid_chunks), MAX_INPUTS):
+                batch = valid_chunks[i:i + MAX_INPUTS]
+                inter_file = f"{tmp}/inter_{i}.wav"
+                merge_batch(batch, inter_file)
+                intermediates.append({"file": inter_file, "start": 0.0})
+            merge_batch(intermediates, out_audio_path)
         
         s3 = boto3.client(
             "s3",

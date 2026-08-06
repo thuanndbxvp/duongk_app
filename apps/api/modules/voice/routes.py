@@ -5,10 +5,21 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from supabase import create_client
 from apps.api.dependencies.auth import get_supabase_user
 from apps.api.modules.voice.schemas import VoiceSynthesizeRequest
+from apps.api.services.routing import get_routing_config
 
 router = APIRouter(prefix="/voice", tags=["Voice Cloning"])
 
 sb = create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_SERVICE_ROLE_KEY"])
+
+def select_tts_provider() -> str:
+    """Chọn TTS provider từ routing config. Fallback env MODAL_TOKEN_ID."""
+    routing = get_routing_config('tts')
+    primary = routing.get('primary_provider')
+    if primary and routing.get('enabled_providers', {}).get(primary, False):
+        return primary
+    # Graceful fallback
+    return os.environ.get('DEFAULT_TTS_PROVIDER', 'modal_omnivoice')
+
 
 def get_s3_client():
     return boto3.client(

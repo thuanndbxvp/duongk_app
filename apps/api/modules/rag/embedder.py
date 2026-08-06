@@ -2,6 +2,7 @@
 import os
 from typing import List
 from .embedding_router import EmbeddingRouter
+from apps.api.services.routing import get_routing_config
 
 class Embedder:
     def __init__(self):

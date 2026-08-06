@@ -12,9 +12,22 @@ from openai import OpenAI
 import json
 import os
 import asyncio
+import sys
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../..')))
+
+from apps.api.services.routing import get_routing_config
 
 
 DEFAULT_BUDGET_USD = 0.10
+
+
+def select_llm_provider() -> str:
+    """Chọn LLM provider từ routing config. Fallback 'openai'."""
+    routing = get_routing_config('llm_text')
+    primary = routing.get('primary_provider')
+    if primary and routing.get('enabled_providers', {}).get(primary, False):
+        return primary
+    return 'openai'  # fallback cứng
 
 
 @celery_app.task(
