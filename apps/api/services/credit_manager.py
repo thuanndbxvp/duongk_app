@@ -17,6 +17,29 @@ PRICING = {
 }
 
 
+def get_user_role(user_id: str) -> str:
+    """
+    Lấy role của user từ bảng users.
+    
+    Args:
+        user_id: UUID string của user.
+    
+    Returns:
+        'user' | 'admin' | 'super_admin'. Default 'user' nếu user không tồn tại.
+    """
+    admin = get_supabase_admin()
+    result = (
+        admin.table('users')
+        .select('role')
+        .eq('id', user_id)
+        .single()
+        .execute()
+    )
+    if result.data and 'role' in result.data:
+        return result.data['role']
+    return 'user'
+
+
 class CreditManager:
     """Service for managing user credits."""
     

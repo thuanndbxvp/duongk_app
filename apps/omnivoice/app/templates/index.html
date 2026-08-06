@@ -504,7 +504,6 @@ with open("output.wav", "wb") as f:
             const url = URL.createObjectURL(blob);
             
             document.getElementById('dub-empty-state').style.display = 'none';
-            document.getElementById('dub-history-section').style.display = 'block';
             
             const durationMs = Date.now() - startTime;
             const durationSec = (durationMs / 1000).toFixed(1);
