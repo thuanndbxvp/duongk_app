@@ -68,11 +68,10 @@
         .snippet-box { background: var(--bg-input); padding: 20px; border-radius: var(--radius-md); font-family: 'Consolas', monospace; font-size: 0.9rem; color: #a5b4fc; white-space: pre-wrap; line-height: 1.6; border: 1px solid var(--border-color); }
 
         /* EMOTIONS */
-        .emotion-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
-        .emotion-btn { background-color: var(--bg-input); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 12px; cursor: pointer; color: var(--text-main); text-align: center; transition: all 0.2s; }
-        .emotion-btn:hover { border-color: var(--accent-blue); background-color: rgba(47, 129, 247, 0.05); }
-        .emotion-title { display: block; font-weight: 600; font-size: 0.95rem; margin-bottom: 4px; color: white;} 
-        .emotion-sub { font-size: 0.8rem; color: var(--text-muted); }
+        .emotion-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+        .emotion-chip { background-color: var(--bg-input); border: 1px solid var(--border-color); border-radius: 16px; padding: 6px 12px; cursor: pointer; color: var(--text-main); font-size: 0.85rem; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; }
+        .emotion-chip:hover { border-color: var(--accent-blue); color: white; background-color: rgba(47, 129, 247, 0.1); }
+        .emotion-tag { color: var(--text-muted); font-size: 0.75rem; font-family: monospace; }
 
         /* TTS Player & History */
         .result-box { display: flex; flex-direction: column; gap: 16px; }
@@ -159,26 +158,32 @@
 
                     <label class="form-label">Thẻ cảm xúc (Non-verbal symbols)</label>
                     <div class="page-desc" style="margin-bottom: 12px; font-size: 0.8rem;">Chèn biểu cảm trực tiếp vào câu nói</div>
-                    <div class="emotion-grid" style="margin-bottom: 24px;">
-                        <div class="emotion-btn" onclick="insertTag('[laughter]')"><span class="emotion-title">Cười</span><span class="emotion-sub">[laughter]</span></div>
-                        <div class="emotion-btn" onclick="insertTag('[sigh]')"><span class="emotion-title">Thở dài</span><span class="emotion-sub">[sigh]</span></div>
-                        <div class="emotion-btn" onclick="insertTag('[surprise-ah]')"><span class="emotion-title">Ngạc nhiên</span><span class="emotion-sub">[surprise-ah]</span></div>
-                        <div class="emotion-btn" onclick="insertTag('[dissatisfaction-hnn]')"><span class="emotion-title">Khó chịu</span><span class="emotion-sub">[dissatisfaction-hnn]</span></div>
-                        <div class="emotion-btn" onclick="insertTag('[confirmation-en]')"><span class="emotion-title">Đồng ý</span><span class="emotion-sub">[confirmation-en]</span></div>
-                        <div class="emotion-btn" onclick="insertTag('[question-en]')"><span class="emotion-title">Hỏi (En)</span><span class="emotion-sub">[question-en]</span></div>
-                        <div class="emotion-btn" onclick="insertTag('[question-ah]')"><span class="emotion-title">Hỏi (Ah)</span><span class="emotion-sub">[question-ah]</span></div>
-                        <div class="emotion-btn" onclick="insertTag('[surprise-wa]')"><span class="emotion-title">Ồ (Wa)</span><span class="emotion-sub">[surprise-wa]</span></div>
+                    <div class="emotion-chips" style="margin-bottom: 24px;">
+                        <div class="emotion-chip" onclick="insertTag('[laughter]')">Cười <span class="emotion-tag">[laughter]</span></div>
+                        <div class="emotion-chip" onclick="insertTag('[sigh]')">Thở dài <span class="emotion-tag">[sigh]</span></div>
+                        <div class="emotion-chip" onclick="insertTag('[surprise-ah]')">Ngạc nhiên <span class="emotion-tag">[surprise-ah]</span></div>
+                        <div class="emotion-chip" onclick="insertTag('[dissatisfaction-hnn]')">Khó chịu <span class="emotion-tag">[dissatisfaction-hnn]</span></div>
+                        <div class="emotion-chip" onclick="insertTag('[confirmation-en]')">Đồng ý <span class="emotion-tag">[confirmation-en]</span></div>
+                        <div class="emotion-chip" onclick="insertTag('[question-en]')">Hỏi (En) <span class="emotion-tag">[question-en]</span></div>
+                        <div class="emotion-chip" onclick="insertTag('[question-ah]')">Hỏi (Ah) <span class="emotion-tag">[question-ah]</span></div>
+                        <div class="emotion-chip" onclick="insertTag('[surprise-wa]')">Ồ (Wa) <span class="emotion-tag">[surprise-wa]</span></div>
                     </div>
 
-                    <label class="form-label" style="border-top: 1px solid var(--border-color); padding-top: 16px;">Phong cách (Style)</label>
-                    <div class="page-desc" style="margin-bottom: 12px; font-size: 0.8rem;">Ép phong cách nói (dành cho mọi giọng)</div>
-                    <select id="instruct-style" class="select-input" style="padding: 8px; margin-bottom: 16px;">
-                        <option value="">Bình thường</option>
-                        <option value="whisper">Thì thầm (Whisper)</option>
-                    </select>
-
-                    <label class="form-label" style="border-top: 1px solid var(--border-color); padding-top: 16px;">Tốc độ (Speed) <span id="speed-value" style="float: right; color: var(--text-muted);">1.0</span></label>
-                    <input type="range" id="speed-slider" min="0.5" max="2.0" step="0.1" value="1.0" style="width:100%; margin-bottom: 8px;" oninput="document.getElementById('speed-value').innerText = parseFloat(this.value).toFixed(1)">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding-top: 16px; border-top: 1px solid var(--border-color);">
+                        <div>
+                            <label class="form-label">Phong cách</label>
+                            <div class="page-desc" style="margin-bottom: 8px; font-size: 0.8rem;">Ép phong cách nói</div>
+                            <select id="instruct-style" class="select-input" style="padding: 8px;">
+                                <option value="">Bình thường</option>
+                                <option value="whisper">Thì thầm (Whisper)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="form-label">Tốc độ <span id="speed-value" style="float: right; color: var(--text-muted);">1.0</span></label>
+                            <div class="page-desc" style="margin-bottom: 8px; font-size: 0.8rem;">Nhanh / chậm</div>
+                            <input type="range" id="speed-slider" min="0.5" max="2.0" step="0.1" value="1.0" style="width:100%; margin-top:4px;" oninput="document.getElementById('speed-value').innerText = parseFloat(this.value).toFixed(1)">
+                        </div>
+                    </div>
                 </div>
                 <button class="btn-blue" id="btn-generate" onclick="generateTTS()" style="padding:16px; font-size:1.1rem; margin-top:24px; width:100%;">🎤 Tạo</button>
             </div>
