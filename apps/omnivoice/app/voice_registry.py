@@ -68,11 +68,16 @@ class VoiceRegistry:
     # ─── Public API ────────────────────────────────────────────────
     def list(self, include_instruct: bool = False) -> list[dict[str, Any]]:
         """Tra ve danh sach voice (mac dinh KHONG bao gom instruct de giam leak)."""
+        system_voices = {'ban_mai', 'lan_trinh', 'minhquan_vb', 'ngan_ha', 'ngoc_huyen', 'ngochuyen_vb', 'thao_trinh', 'tuong_vy'}
         out = []
         for vid, meta in self._data["voices"].items():
             entry = {"id": vid, **{k: v for k, v in meta.items() if k != "instruct"}}
             if include_instruct:
                 entry["instruct"] = meta.get("instruct")
+            if vid in system_voices:
+                entry["is_system"] = True
+            else:
+                entry["is_system"] = False
             out.append(entry)
         # Sort by id de stable order
         return sorted(out, key=lambda x: x["id"])

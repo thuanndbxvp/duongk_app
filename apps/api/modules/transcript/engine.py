@@ -1,9 +1,10 @@
 """
-Transcript Engine - 3-Tier Fallback Strategy.
+Transcript Engine - 4-Tier Fallback Strategy.
 
 Tier 1: youtube-transcript-api (FREE)
 Tier 2: Supadata API ($0.001/min)
-Tier 3: OpenAI Whisper API ($0.006/min)
+Tier 3a: Groq Whisper API ($0.04/hr — FREE 2,000 req/day, MAIN ASR)
+Tier 3b: OpenAI Whisper API ($0.36/hr — fallback only)
 """
 import os
 import io
@@ -30,11 +31,15 @@ class TranscriptEngine:
     def __init__(
         self,
         supadata_api_key: Optional[str] = None,
-        openai_api_key: Optional[str] = None
+        openai_api_key: Optional[str] = None,
+        groq_api_key: Optional[str] = None,
     ):
-        self.supadata_key = supadata_api_key or os.environ.get("SUPADATA_API_KEY")
-        self.openai_key = openai_api_key or os.environ.get("OPENAI_API_KEY")
+        # Resolve keys: DB first → env fallback
+        self.supadata_key = supadata_api_key or resolve_key('supadata') or os.environ.get("SUPADATA_API_KEY")
+        self.openai_key = openai_api_key or resolve_key('openai') or os.environ.get("OPENAI_API_KEY")
+        self.groq_key = groq_api_key or resolve_key('groq') or os.environ.get("GROQ_API_KEY")
         self._openai_client = None
+        self._groq_client = None
 
     async def get_transcript(
         self,
@@ -42,7 +47,7 @@ class TranscriptEngine:
         preferred_languages: List[str] = ['vi', 'en']
     ) -> Optional[Dict[str, Any]]:
         """
-        Get transcript with 3-tier fallback.
+        Get transcript with 4-tier fallback (Groq main + OpenAI fallback).
         """
         # Tier 1: youtube-transcript-api (FREE)
         try:
@@ -60,13 +65,21 @@ class TranscriptEngine:
         except Exception as e:
             print(f"Tier 2 (Supadata) failed: {e}")
 
-        # Tier 3: OpenAI Whisper API ($0.006/min)
+        # Tier 3a: Groq Whisper API ($0.04/hr) — MAIN ASR
+        try:
+            result = await self._fetch_groq_whisper(video_id)
+            if result:
+                return {**result, "tier_used": 3, "estimated_cost_usd": 0.001}
+        except Exception as e:
+            print(f"Tier 3a (Groq Whisper) failed: {e}")
+
+        # Tier 3b: OpenAI Whisper API ($0.36/hr) — FALLBACK
         try:
             result = await self._fetch_openai_whisper(video_id)
             if result:
-                return {**result, "tier_used": 3, "estimated_cost_usd": 0.06}
+                return {**result, "tier_used": 4, "estimated_cost_usd": 0.06}
         except Exception as e:
-            print(f"Tier 3 (OpenAI Whisper) failed: {e}")
+            print(f"Tier 3b (OpenAI Whisper) failed: {e}")
 
         return None
 
@@ -119,9 +132,57 @@ class TranscriptEngine:
 
         return None
 
+    async def _fetch_groq_whisper(self, video_id: str) -> Optional[Dict[str, Any]]:
+        """
+        Tier 3a: Use Groq Whisper API ($0.04/hr — FREE 2,000 req/day).
+
+        Groq cung cấp OpenAI-compatible endpoint, dùng Whisper Large v3 Turbo:
+        - Nhanh nhất: ~3s cho 1 phút audio (so với 14s của OpenAI)
+        - Rẻ nhất: $0.04/hr (so với $0.36/hr OpenAI)
+        - FREE tier: 2000 requests/day + 28800 audio seconds/day
+        - Max file: 25 MB
+
+        Docs: https://console.groq.com/docs/speech-to-text
+        """
+        if not self.groq_key:
+            return None
+
+        # Get audio bytes from YouTube
+        audio_bytes = await self._get_audio_bytes(video_id)
+        if not audio_bytes:
+            return None
+
+        # Init Groq client (OpenAI-compatible)
+        if self._groq_client is None:
+            import openai  # Groq uses openai SDK
+            self._groq_client = openai.AsyncOpenAI(
+                api_key=self.groq_key,
+                base_url='https://api.groq.com/openai/v1'
+            )
+
+        audio_file = io.BytesIO(audio_bytes)
+        audio_file.name = f"{video_id}.mp3"
+
+        try:
+            response = await self._groq_client.audio.transcriptions.create(
+                model='whisper-large-v3-turbo',
+                file=audio_file,
+                response_format='text'
+            )
+
+            return {
+                'video_id': video_id,
+                'transcript': response.text,
+                'language': 'auto',
+                'provider': 'groq',
+            }
+        except Exception as e:
+            print(f"Groq Whisper API error: {e}")
+            return None
+
     async def _fetch_openai_whisper(self, video_id: str) -> Optional[Dict[str, Any]]:
         """
-        Tier 3: Use OpenAI Whisper API ($0.006/min).
+        Tier 3b: Use OpenAI Whisper API ($0.36/hr).
 
         KHÔNG cần chạy Whisper local!
         Chỉ cần gọi OpenAI API.
