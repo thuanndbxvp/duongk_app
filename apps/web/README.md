@@ -34,3 +34,16 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+---
+
+## Environment Variables
+
+Web app cần các biến `NEXT_PUBLIC_SUPABASE_URL` và `NEXT_PUBLIC_SUPABASE_ANON_KEY` trong `.env` (root repo).
+
+Xem chi tiết từng biến tại [`docs/ENV-VARS.md`](../../docs/ENV-VARS.md) và hướng dẫn setup tại [`docs/SETUP.md`](../../docs/SETUP.md).
+
+Để verify env:
+```bash
+python scripts/check-env.py
+```

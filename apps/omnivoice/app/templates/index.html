@@ -81,7 +81,7 @@
         .empty-state .empty-icon { font-size: 2rem; margin-bottom: 12px; opacity: 0.6; }
         
         .history-list { display: flex; flex-direction: column; gap: 12px; max-height: 500px; overflow-y: auto; padding-right: 4px; }
-        .history-item { background-color: var(--bg-body); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+        .history-item { background-color: var(--bg-body); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 16px; display: flex; flex-direction: column; gap: 12px; position: relative; overflow: hidden; }
         
         .history-meta { display: flex; justify-content: space-between; align-items: flex-start; }
         .history-title { color: white; font-weight: 600; font-size: 0.95rem; display: block; margin-bottom: 4px; }
@@ -90,11 +90,13 @@
         .status-tag { padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; }
         .status-success { background-color: rgba(35, 134, 54, 0.15); color: var(--accent-green); border: 1px solid rgba(35, 134, 54, 0.3); }
         .status-processing { background-color: rgba(218, 165, 32, 0.15); color: #daa520; border: 1px solid rgba(218, 165, 32, 0.3); }
+        .stamp-success { position: absolute; top: 15px; right: 20px; transform: rotate(-15deg); color: #4ade80; border: 2px dashed #4ade80; border-radius: 6px; padding: 4px 12px; font-weight: 800; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; opacity: 0.7; pointer-events: none; background-color: rgba(74, 222, 128, 0.05); }
         
         .history-player { display: flex; align-items: center; gap: 12px; background: var(--bg-card); padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border-color); }
         .play-btn { width: 36px; height: 36px; border-radius: 50%; background-color: var(--accent-blue); color: white; border: none; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: 0.2s; flex-shrink: 0; }
         .play-btn:hover { background-color: var(--accent-blue-hover); transform: scale(1.05); }
-        .waveform-mock { flex: 1; height: 24px; background: repeating-linear-gradient(90deg, var(--border-color) 0px, var(--border-color) 2px, transparent 2px, transparent 4px); opacity: 0.5; border-radius: 2px; }
+        .waveform-mock { flex: 1; height: 24px; background: repeating-linear-gradient(90deg, var(--border-color) 0px, var(--border-color) 2px, transparent 2px, transparent 4px); opacity: 0.5; border-radius: 2px; position: relative; cursor: pointer; overflow: hidden; }
+        .waveform-progress { position: absolute; left: 0; top: 0; bottom: 0; width: 0%; background: var(--accent-blue); opacity: 0.4; pointer-events: none; transition: width 0.1s linear; }
         .duration-text { font-size: 0.8rem; color: var(--text-muted); font-variant-numeric: tabular-nums; }
         
         .action-btn { background: transparent; color: var(--text-muted); border: none; font-size: 1.2rem; cursor: pointer; padding: 4px; border-radius: 4px; transition: 0.2s; }
@@ -531,12 +533,14 @@ with open("output.wav", "wb") as f:
                         <span class="history-title">${filename}</span>
                         <span class="history-subtitle">🗣️ ${selectedVoiceName} (${mergeMode}) | ⏱️ ${durationSec}s | ${timeStr}</span>
                     </div>
-                    <span class="status-tag status-success">Hoàn thành</span>
+                    <span class="stamp-success">Hoàn thành</span>
                 </div>
                 <div class="history-player">
                     <button class="play-btn" onclick="const audio = this.nextElementSibling; if(audio.paused){audio.play();}else{audio.pause();}">▶</button>
-                    <audio src="${url}" style="display:none;" onplay="this.previousElementSibling.innerText='⏸'" onpause="this.previousElementSibling.innerText='▶'" onended="this.previousElementSibling.innerText='▶'" onloadedmetadata="this.nextElementSibling.nextElementSibling.innerText = new Date(this.duration * 1000).toISOString().substr(14, 5)"></audio>
-                    <div class="waveform-mock"></div>
+                    <audio src="${url}" style="display:none;" onplay="this.previousElementSibling.innerText='⏸'" onpause="this.previousElementSibling.innerText='▶'" onended="this.previousElementSibling.innerText='▶'" onloadedmetadata="this.nextElementSibling.nextElementSibling.innerText = new Date(this.duration * 1000).toISOString().substr(14, 5)" ontimeupdate="this.nextElementSibling.querySelector('.waveform-progress').style.width = (this.currentTime / this.duration * 100) + '%'"></audio>
+                    <div class="waveform-mock" onclick="const audio = this.previousElementSibling; const rect = this.getBoundingClientRect(); audio.currentTime = (event.clientX - rect.left) / rect.width * audio.duration;">
+                        <div class="waveform-progress"></div>
+                    </div>
                     <span class="duration-text">00:00</span>
                     <a href="${url}" download="${filename}" class="action-btn" title="Download" style="text-decoration:none;">⬇</a>
                 </div>
@@ -603,12 +607,14 @@ with open("output.wav", "wb") as f:
                         <span class="history-title">${filename}</span>
                         <span class="history-subtitle">🗣️ ${voiceName} | ⏱️ ${duration}s | ${timeStr}</span>
                     </div>
-                    <span class="status-tag status-success">Hoàn thành</span>
+                    <span class="stamp-success">Hoàn thành</span>
                 </div>
                 <div class="history-player">
                     <button class="play-btn" onclick="const audio = this.nextElementSibling; if(audio.paused){audio.play();}else{audio.pause();}">▶</button>
-                    <audio src="${url}" style="display:none;" onplay="this.previousElementSibling.innerText='⏸'" onpause="this.previousElementSibling.innerText='▶'" onended="this.previousElementSibling.innerText='▶'" onloadedmetadata="this.nextElementSibling.nextElementSibling.innerText = new Date(this.duration * 1000).toISOString().substr(14, 5)"></audio>
-                    <div class="waveform-mock"></div>
+                    <audio src="${url}" style="display:none;" onplay="this.previousElementSibling.innerText='⏸'" onpause="this.previousElementSibling.innerText='▶'" onended="this.previousElementSibling.innerText='▶'" onloadedmetadata="this.nextElementSibling.nextElementSibling.innerText = new Date(this.duration * 1000).toISOString().substr(14, 5)" ontimeupdate="this.nextElementSibling.querySelector('.waveform-progress').style.width = (this.currentTime / this.duration * 100) + '%'"></audio>
+                    <div class="waveform-mock" onclick="const audio = this.previousElementSibling; const rect = this.getBoundingClientRect(); audio.currentTime = (event.clientX - rect.left) / rect.width * audio.duration;">
+                        <div class="waveform-progress"></div>
+                    </div>
                     <span class="duration-text">00:00</span>
                     <a href="${url}" download="${filename}" class="action-btn" title="Download" style="text-decoration:none;">⬇</a>
                 </div>
