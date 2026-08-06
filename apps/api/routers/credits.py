@@ -36,3 +36,17 @@ def _get_user_tier(user_id: str) -> str:
     admin = get_supabase_admin()
     user = admin.table('users').select('tier').eq('id', user_id).single().execute()
     return user.data['tier'] if user.data else 'free'
+
+
+@router.get('/credits/pricing')
+async def get_pricing():
+    """Lấy bảng giá credit (public — không cần auth)."""
+    admin = get_supabase_admin()
+    result = (
+        admin.table('credit_pricing')
+        .select('job_type, credits, description, enabled')
+        .eq('enabled', True)
+        .order('credits')
+        .execute()
+    )
+    return result.data or []

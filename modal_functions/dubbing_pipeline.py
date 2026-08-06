@@ -388,9 +388,11 @@ def dub_srt(srt_text: str, output_key: str, merge_mode: str = "native", referenc
             if end_idx > len(final_audio):
                 final_audio = np.pad(final_audio, (0, end_idx - len(final_audio) + samplerate))
                 
-            # Mix / overwrite
-            # For crossfade, we'd add, but for simplicity we overwrite non-zero or just add.
-            final_audio[start_idx:end_idx] = np.where(y > 0.0001, y, final_audio[start_idx:end_idx])
+            # Simple mix by addition (to allow crossfade), or overwrite
+            # Since final_audio is initialized to zeros, addition is safe.
+            # To prevent clipping if they overlap, we can average them in the overlap region, 
+            # but simple addition is standard for mixing if they don't overlap much.
+            final_audio[start_idx:end_idx] += y
             
             current_time = start_sec + (len(y) / samplerate)
             

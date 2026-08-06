@@ -44,7 +44,7 @@ export default function JobProgressPage({ params }: { params: { id: string } }) 
     };
   }, [params.id]);
 
-  if (!job) return <div>Loading...</div>;
+  if (!job) return <div className="min-h-screen flex items-center justify-center text-[var(--fg-secondary)]">Loading…</div>;
 
   return (
     <main className="container mx-auto p-8">
@@ -54,9 +54,9 @@ export default function JobProgressPage({ params }: { params: { id: string } }) 
           <span>Tiến trình tổng</span>
           <span>{job.progress}%</span>
         </div>
-        <div className="w-full bg-gray-200 rounded-full h-2">
+        <div className="w-full bg-[var(--surface)] rounded-full h-2">
           <div
-            className="bg-blue-600 h-2 rounded-full transition-all"
+            className="bg-[var(--brand-500)] h-2 rounded-full transition-all"
             style={{ width: `${job.progress}%` }}
           />
         </div>

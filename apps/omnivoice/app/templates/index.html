@@ -484,6 +484,15 @@ with open("output.wav", "wb") as f:
         btn.innerText = "🎬 Đang xử lý lồng tiếng (vui lòng đợi vài phút)...";
         const startTime = Date.now();
         
+        const dubTimerEl = document.getElementById('dub-timer');
+        dubTimerEl.innerText = "00:00";
+        const timerInterval = setInterval(() => {
+            const elapsed = Math.floor((Date.now() - startTime) / 1000);
+            const m = String(Math.floor(elapsed / 60)).padStart(2, '0');
+            const s = String(elapsed % 60).padStart(2, '0');
+            dubTimerEl.innerText = `${m}:${s}`;
+        }, 1000);
+        
         const formData = new FormData();
         formData.append("srt_file", srtFile);
         formData.append("voice_id", voiceId);
@@ -537,6 +546,7 @@ with open("output.wav", "wb") as f:
         } catch(e) {
             alert("Lỗi tạo dubbing: " + e.message);
         } finally {
+            clearInterval(timerInterval);
             btn.disabled = false;
             btn.innerText = "🎬 Bắt đầu lồng tiếng";
         }

@@ -23,6 +23,11 @@ from apps.api.routers.users import router as user_router
 from apps.api.routers.credits import router as credits_router
 from apps.api.routers.projects import router as projects_router
 from apps.api.modules.voice.routes import router as voice_router
+from apps.api.routers.assistants import router as assistants_router
+from apps.api.routers.jobs import router as jobs_router
+from apps.api.routers.analysis import router as analysis_api_router
+from apps.api.routers.ideas import router as ideas_router
+from apps.api.routers.channels import router as channels_router
 
 sentry_sdk.init(dsn=os.getenv("SENTRY_DSN"))
 app = FastAPI(title="YouTube AI SaaS")
@@ -40,6 +45,11 @@ app.include_router(user_router)
 app.include_router(credits_router)
 app.include_router(projects_router)
 app.include_router(voice_router)
+app.include_router(assistants_router)
+app.include_router(jobs_router)
+app.include_router(analysis_api_router)
+app.include_router(ideas_router)
+app.include_router(channels_router)
 
 # Override default OpenAPI schema
 app.openapi = lambda: custom_openapi_schema(app)

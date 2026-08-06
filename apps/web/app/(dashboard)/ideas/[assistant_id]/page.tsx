@@ -48,7 +48,7 @@ export default async function IdeasPage({
     <main className="container mx-auto p-8 max-w-5xl">
       <Link
         href={`/assistants/${assistant_id}`}
-        className="text-blue-600 hover:underline"
+        className="text-[var(--brand-300)] hover:text-[var(--brand-400)]"
       >
         ← Quay lại Assistant
       </Link>
@@ -58,7 +58,7 @@ export default async function IdeasPage({
           <h1 className="text-3xl font-bold">
             Ideas: {assistant.channel_name}
           </h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-[var(--fg-tertiary)] mt-1">
             {stats.total} ideas • Top: {stats.topScore} • Avg: {stats.avgScore} •{' '}
             {stats.highCount} HIGH confidence
           </p>
@@ -67,12 +67,12 @@ export default async function IdeasPage({
       </div>
 
       {ideas.length === 0 ? (
-        <div className="text-center py-16 bg-white rounded-lg border">
+        <div className="text-center py-16 glass rounded-2xl">
           <div className="text-6xl mb-4">💡</div>
           <h2 className="text-xl font-semibold mb-2">
             Chưa có Idea nào cho kênh này
           </h2>
-          <p className="text-gray-500 mb-6">
+          <p className="text-[var(--fg-tertiary)] mb-6">
             Generate Ideas từ Deep Analysis sẽ charge 5 credits
           </p>
           <RegenerateButton assistantId={assistant_id} />

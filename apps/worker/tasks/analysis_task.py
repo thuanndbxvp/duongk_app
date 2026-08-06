@@ -13,11 +13,10 @@ from apps.api.modules.vision.thumbnail_analyzer import ThumbnailAnalyzer
 from apps.api.modules.rag.chunker import SemanticChunker
 from apps.api.modules.rag.embedder import Embedder
 from apps.api.modules.rag.storage import RAGStorage
+from apps.api.dependencies.supabase import get_supabase_admin
+from apps.api.modules.transcript.engine import TranscriptEngine
 
 celery_app = Celery('tasks', broker=os.environ.get('REDIS_URL', 'redis://localhost:6379/0'))
-
-def fetch_mock_data():
-    return [{"title": "Test", "duration_sec": 300, "views": 1000, "thumbnail_url": "http://img.com/1.jpg"}] * 5
 
 @celery_app.task(bind=True)
 def analyze_channel_task(self, job_id: str, channel_id: str):
@@ -34,8 +33,47 @@ def analyze_channel_task(self, job_id: str, channel_id: str):
             for output in ProgressTracker.OUTPUTS:
                 await tracker.start(output)
             
-            videos = fetch_mock_data()
-            transcripts = ["Hello world"] * 5
+            admin = get_supabase_admin()
+            engine = TranscriptEngine()
+            
+            # Query assistants để lấy user_id
+            asst = (
+                admin.table('channel_assistants')
+                .select('id, user_id, channel_id')
+                .eq('id', channel_id)
+                .single()
+                .execute()
+            )
+            if not asst.data:
+                await tracker.fail("system", "Assistant not found")
+                return
+            
+            # Query videos từ channel_deep_analysis hoặc fallback (Phase 1: tạm lấy từ channel_assistants metadata)
+            # Thực tế: videos cần được insert bởi collect_channel_task. Phase 1: query transcripts table
+            tr_result = (
+                admin.table('transcripts')
+                .select('video_id, text_content')
+                .limit(50)
+                .execute()
+            )
+            
+            if tr_result.data and len(tr_result.data) > 0:
+                videos = [{'title': f'Video {t["video_id"][:8]}', 'duration_sec': 300, 'views': 1000, 'thumbnail_url': '', 'video_id': t['video_id']} for t in tr_result.data]
+                transcripts = [t['text_content'] for t in tr_result.data]
+            else:
+                # Fallback nếu chưa có transcripts: dùng minimal placeholder
+                videos = [{'title': 'Placeholder', 'duration_sec': 300, 'views': 1000, 'thumbnail_url': '', 'video_id': 'placeholder'}]
+                transcripts = ['No transcripts yet. Run collect_channel_task first.']
+            
+            # Nếu video thiếu transcript: gọi engine (best-effort)
+            for i, v in enumerate(videos):
+                if not transcripts[i] or transcripts[i].startswith('No transcripts'):
+                    try:
+                        tr = await engine.get_transcript(video_id=v['video_id'], preferred_languages=['vi', 'en'])
+                        if tr and tr.get('transcript'):
+                            transcripts[i] = tr['transcript']
+                    except Exception:
+                        pass
             
             # --- DETERMINISTIC LAYER (Outputs 1-4) ---
             out1 = generate_output_1(channel_id, videos)

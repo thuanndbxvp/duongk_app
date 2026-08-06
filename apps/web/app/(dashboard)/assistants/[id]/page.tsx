@@ -57,13 +57,13 @@ export default async function AssistantDetailPage({
   return (
     <main className="container mx-auto p-8 max-w-5xl">
       <div className="flex items-center mb-6">
-        <Link href="/assistants" className="text-blue-600 hover:underline">
+        <Link href="/assistants" className="text-[var(--brand-300)] hover:text-[var(--brand-400)]">
           ← Quay lại danh sách
         </Link>
       </div>
 
       {/* Header */}
-      <div className="bg-white rounded-lg shadow border p-6 mb-6">
+      <div className="glass rounded-2xl p-6 mb-6">
         <div className="flex items-start gap-6">
           <img
             src={assistant.channel_thumbnail || '/placeholder.png'}
@@ -74,25 +74,25 @@ export default async function AssistantDetailPage({
             <h1 className="text-3xl font-bold mb-2">{assistant.channel_name}</h1>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
               <div>
-                <div className="text-gray-500">Subscribers</div>
+                <div className="text-[var(--fg-tertiary)]">Subscribers</div>
                 <div className="font-semibold">
                   {formatSubs(assistant.channel_subscribers)}
                 </div>
               </div>
               <div>
-                <div className="text-gray-500">Videos</div>
+                <div className="text-[var(--fg-tertiary)]">Videos</div>
                 <div className="font-semibold">
                   {assistant.total_videos_collected}
                 </div>
               </div>
               <div>
-                <div className="text-gray-500">Viral</div>
-                <div className="font-semibold text-orange-600">
+                <div className="text-[var(--fg-tertiary)]">Viral</div>
+                <div className="font-semibold text-[var(--brand-400)]">
                   {assistant.viral_videos_count}
                 </div>
               </div>
               <div>
-                <div className="text-gray-500">Status</div>
+                <div className="text-[var(--fg-tertiary)]">Status</div>
                 <div className="font-semibold capitalize">{assistant.status}</div>
               </div>
             </div>
@@ -101,7 +101,7 @@ export default async function AssistantDetailPage({
       </div>
 
       {/* Actions */}
-      <div className="bg-white rounded-lg shadow border p-6 mb-6">
+      <div className="glass rounded-2xl p-6 mb-6">
         <h2 className="text-lg font-semibold mb-4">Hành động</h2>
         <AssistantActions
           assistantId={assistant.id}
@@ -111,29 +111,29 @@ export default async function AssistantDetailPage({
       </div>
 
       {/* Recent Jobs */}
-      <div className="bg-white rounded-lg shadow border p-6">
+      <div className="glass rounded-2xl p-6">
         <h2 className="text-lg font-semibold mb-4">Jobs gần đây</h2>
         {recentJobs.length === 0 ? (
-          <p className="text-gray-500 italic">Chưa có job nào.</p>
+          <p className="text-[var(--fg-tertiary)] italic">Chưa có job nào.</p>
         ) : (
           <div className="space-y-2">
             {recentJobs.map((job) => (
               <Link
                 key={job.id}
                 href={`/jobs/${job.id}`}
-                className="block p-3 border rounded hover:bg-gray-50"
+                className="block p-3 border border-[var(--glass-border)] rounded-lg hover:bg-[var(--surface-hover)]"
               >
                 <div className="flex justify-between items-center">
                   <div>
                     <div className="font-medium capitalize">
                       {job.task_type.replace(/_/g, ' ')}
                     </div>
-                    <div className="text-xs text-gray-500">
+                    <div className="text-xs text-[var(--fg-tertiary)]">
                       {new Date(job.created_at).toLocaleString('vi-VN')}
                     </div>
                   </div>
                   <div className="text-sm">
-                    <span className="px-2 py-1 bg-gray-100 rounded-full capitalize">
+                    <span className="px-2 py-1 bg-[var(--surface)] rounded-full capitalize">
                       {job.status} ({job.progress}%)
                     </span>
                   </div>

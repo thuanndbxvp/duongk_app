@@ -29,16 +29,16 @@ export default async function AnalysisPage({
       <main className="container mx-auto p-8 max-w-3xl">
         <Link
           href={`/assistants/${assistant_id}`}
-          className="text-blue-600 hover:underline"
+          className="text-[var(--brand-300)] hover:text-[var(--brand-400)]"
         >
           ← Quay lại Assistant
         </Link>
-        <div className="text-center py-16 bg-white rounded-lg border mt-6">
+        <div className="text-center py-16 glass rounded-2xl mt-6">
           <div className="text-6xl mb-4">🧠</div>
           <h1 className="text-2xl font-bold mb-2">
             Chưa chạy Deep Analysis cho {assistant.channel_name}
           </h1>
-          <p className="text-gray-500 mb-6">
+          <p className="text-[var(--fg-tertiary)] mb-6">
             Phân tích 14 outputs sẽ charge 50 credits (~2-3 phút)
           </p>
           <ReanalyzeButton assistantId={assistant_id} />
@@ -50,7 +50,7 @@ export default async function AnalysisPage({
   if (!res.ok) {
     return (
       <main className="container mx-auto p-8">
-        <p className="text-red-600">Failed to load analysis.</p>
+        <p className="text-red-400">Failed to load analysis.</p>
       </main>
     );
   }
@@ -61,7 +61,7 @@ export default async function AnalysisPage({
     <main className="container mx-auto p-8 max-w-6xl">
       <Link
         href={`/assistants/${assistant_id}`}
-        className="text-blue-600 hover:underline"
+        className="text-[var(--brand-300)] hover:text-[var(--brand-400)]"
       >
         ← Quay lại Assistant
       </Link>

@@ -19,31 +19,31 @@ export default function ScriptEditorPage({ params }: { params: { id: string } })
       .then(setScript);
   }, [params.id]);
 
-  if (!script) return <div>Loading...</div>;
+  if (!script) return <div className="min-h-screen flex items-center justify-center text-[var(--fg-secondary)]">Loading…</div>;
 
   return (
     <main className="container mx-auto p-8">
       <h1 className="text-3xl font-bold mb-4">{script.script.title}</h1>
-      <p className="text-gray-600 mb-6">Chủ đề: {script.topic}</p>
+      <p className="text-[var(--fg-tertiary)] mb-6">Chủ đề: {script.topic}</p>
 
       <div className="grid lg:grid-cols-2 gap-6">
         <div>
           <h2 className="text-xl font-semibold mb-2">Hook (30 giây)</h2>
           <textarea
             value={script.script.hook}
-            className="w-full p-3 border rounded h-32"
+            className="w-full p-3 border border-[var(--glass-border)] rounded-lg bg-[var(--surface)]/50 text-white focus:outline-none focus:border-[var(--brand-400)] h-32"
           />
 
           <h2 className="text-xl font-semibold mt-4 mb-2">Body</h2>
           <textarea
             value={script.script.body}
-            className="w-full p-3 border rounded h-96"
+            className="w-full p-3 border border-[var(--glass-border)] rounded-lg bg-[var(--surface)]/50 text-white focus:outline-none focus:border-[var(--brand-400)] h-96"
           />
 
           <h2 className="text-xl font-semibold mt-4 mb-2">CTA</h2>
           <textarea
             value={script.script.cta}
-            className="w-full p-3 border rounded h-24"
+            className="w-full p-3 border border-[var(--glass-border)] rounded-lg bg-[var(--surface)]/50 text-white focus:outline-none focus:border-[var(--brand-400)] h-24"
           />
         </div>
 
