@@ -150,13 +150,17 @@ def synthesize_voice(text: str, output_key: str, reference_audio_url: str = None
         )
         
         # Generate audio
-        audio_data = model.generate(
-            text=text,
-            language="vi",
-            ref_audio=ref_audio_path,
-            instruct=instruct,
-            generation_config=gen_cfg,
-        )
+        call_kwargs = {
+            "text": text,
+            "language": "vi",
+            "generation_config": gen_cfg,
+        }
+        if ref_audio_path is not None:
+            call_kwargs["ref_audio"] = ref_audio_path
+        if instruct is not None:
+            call_kwargs["instruct"] = instruct
+
+        audio_data = model.generate(**call_kwargs)
         
         # Handle upstream return signature (list vs single array)
         if isinstance(audio_data, list):
