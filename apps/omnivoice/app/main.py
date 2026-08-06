@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Any
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, BackgroundTasks, File, UploadFile, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
 from pydantic import BaseModel
@@ -272,22 +272,32 @@ async def generate_tts(request: TTSRequest):
 
     # Model check removed
 
-    # 1. Resolve Voice Cloning (Reference Audio)
+    # 1. Resolve Voice Cloning (Reference Audio and Prompt Cache)
     ref_audio_path = None
+    ref_prompt_key = None
     if request.ref_audio:
         ref_audio_path = request.ref_audio
     elif request.voice_id:
-        # Check in the local voices directory (tim tat ca ext, khong chi .wav)
-        voices_dir = Path(__file__).resolve().parents[1] / "voices"
-        resolved = resolve_voice_file(voices_dir, request.voice_id)
-        if resolved:
-            ref_audio_path = str(resolved.resolve())
-            logger.info(
-                "[req=%s] Matched voice_id '%s' to local reference file: %s",
-                request_id,
-                request.voice_id,
-                ref_audio_path,
-            )
+        # Check registry first for prompt cache
+        meta = registry.get(request.voice_id)
+        if meta:
+            if "ref_prompt_key" in meta:
+                ref_prompt_key = meta["ref_prompt_key"]
+            if "ref_audio_file" in meta:
+                ref_audio_path = str((Path(__file__).resolve().parents[1] / "voices" / meta["ref_audio_file"]).resolve())
+        
+        # Fallback to checking local voices directory if not in registry or no ref_audio_file in meta
+        if not ref_audio_path:
+            voices_dir = Path(__file__).resolve().parents[1] / "voices"
+            resolved = resolve_voice_file(voices_dir, request.voice_id)
+            if resolved:
+                ref_audio_path = str(resolved.resolve())
+                logger.info(
+                    "[req=%s] Matched voice_id '%s' to local reference file: %s",
+                    request_id,
+                    request.voice_id,
+                    ref_audio_path,
+                )
 
     # 2. Resolve Voice Design (Instructions)
     instruct = request.instruct
@@ -357,14 +367,24 @@ async def generate_tts(request: TTSRequest):
             import urllib.request
             
             ref_audio_url = None
-            if ref_audio_path:
-                s3 = boto3.client(
-                    "s3",
-                    endpoint_url=os.environ["R2_ENDPOINT"],
-                    aws_access_key_id=os.environ["R2_ACCESS_KEY_ID"],
-                    aws_secret_access_key=os.environ["R2_SECRET_ACCESS_KEY"],
-                    region_name="auto",
+            ref_prompt_url = None
+            
+            s3 = boto3.client(
+                "s3",
+                endpoint_url=os.environ["R2_ENDPOINT"],
+                aws_access_key_id=os.environ["R2_ACCESS_KEY_ID"],
+                aws_secret_access_key=os.environ["R2_SECRET_ACCESS_KEY"],
+                region_name="auto",
+            )
+            
+            if ref_prompt_key:
+                bucket = os.environ.get("R2_BUCKET_UPLOADS", "ai86-uploads")
+                ref_prompt_url = s3.generate_presigned_url(
+                    'get_object',
+                    Params={'Bucket': bucket, 'Key': ref_prompt_key},
+                    ExpiresIn=3600
                 )
+            elif ref_audio_path:
                 object_key = f"omnivoice_tmp/{uuid.uuid4().hex}.wav"
                 bucket = os.environ.get("R2_BUCKET_UPLOADS", "ai86-uploads")
                 s3.upload_file(ref_audio_path, bucket, object_key)
@@ -381,7 +401,8 @@ async def generate_tts(request: TTSRequest):
                 text=text_to_gen,
                 output_key=output_key,
                 reference_audio_url=ref_audio_url,
-                instruct=instruct if not ref_audio_path else None
+                reference_prompt_url=ref_prompt_url,
+                instruct=instruct if not (ref_audio_path or ref_prompt_key) else None
             )
             
             # Use boto3 to download instead of CDN to avoid 404 mapping issues
@@ -414,7 +435,109 @@ async def generate_tts(request: TTSRequest):
         raise HTTPException(status_code=500, detail=f"Generation failed: {str(e)}") from e
 
 
-from fastapi import File, UploadFile
+from fastapi import Form
+
+@app.post("/v1/dubbing")
+async def generate_dubbing(
+    srt_file: UploadFile = File(...),
+    voice_id: str = Form(...),
+    merge_mode: str = Form("native"),
+    instruct: str = Form(None)
+):
+    """Generates dubbed audio from an SRT file using OmniVoice."""
+    global model
+    request_id = uuid.uuid4().hex[:12]
+    
+    srt_text = (await srt_file.read()).decode("utf-8")
+
+    # 1. Resolve Voice Cloning (Reference Audio and Prompt Cache)
+    ref_audio_path = None
+    ref_prompt_key = None
+    
+    meta = registry.get(voice_id)
+    if meta:
+        if "ref_prompt_key" in meta:
+            ref_prompt_key = meta["ref_prompt_key"]
+        if "ref_audio_file" in meta:
+            ref_audio_path = str((Path(__file__).resolve().parents[1] / "voices" / meta["ref_audio_file"]).resolve())
+    
+    if not ref_audio_path:
+        voices_dir = Path(__file__).resolve().parents[1] / "voices"
+        resolved = resolve_voice_file(voices_dir, voice_id)
+        if resolved:
+            ref_audio_path = str(resolved.resolve())
+
+    logger.info(
+        "[req=%s] Dubbing SRT: voice_id=%s merge_mode=%s",
+        request_id,
+        voice_id,
+        merge_mode,
+    )
+    
+    def _infer_dub():
+        import modal
+        import boto3
+        
+        ref_audio_url = None
+        ref_prompt_url = None
+        
+        s3 = boto3.client(
+            "s3",
+            endpoint_url=os.environ["R2_ENDPOINT"],
+            aws_access_key_id=os.environ["R2_ACCESS_KEY_ID"],
+            aws_secret_access_key=os.environ["R2_SECRET_ACCESS_KEY"],
+            region_name="auto",
+        )
+        
+        bucket = os.environ.get("R2_BUCKET_UPLOADS", "ai86-uploads")
+        if ref_prompt_key:
+            ref_prompt_url = s3.generate_presigned_url(
+                'get_object',
+                Params={'Bucket': bucket, 'Key': ref_prompt_key},
+                ExpiresIn=3600
+            )
+        elif ref_audio_path:
+            object_key = f"omnivoice_tmp/{uuid.uuid4().hex}.wav"
+            s3.upload_file(ref_audio_path, bucket, object_key)
+            ref_audio_url = s3.generate_presigned_url(
+                'get_object',
+                Params={'Bucket': bucket, 'Key': object_key},
+                ExpiresIn=3600
+            )
+
+        dub_fn = modal.Function.from_name("ai-dubbing-pipeline", "dub_srt")
+        output_key = f"omnivoice_renders/{uuid.uuid4().hex}.wav"
+        
+        result = dub_fn.remote(
+            srt_text=srt_text,
+            output_key=output_key,
+            merge_mode=merge_mode,
+            reference_audio_url=ref_audio_url,
+            reference_prompt_url=ref_prompt_url,
+            instruct=instruct if not (ref_audio_path or ref_prompt_key) else None
+        )
+        
+        if result.get("status") != "ok":
+            raise Exception(result.get("message", "Unknown error in dubbing pipeline"))
+            
+        s3_down = boto3.client(
+            "s3",
+            endpoint_url=os.environ["R2_ENDPOINT"],
+            aws_access_key_id=os.environ["R2_ACCESS_KEY_ID"],
+            aws_secret_access_key=os.environ["R2_SECRET_ACCESS_KEY"],
+            region_name="auto",
+        )
+        audio_obj = s3_down.get_object(Bucket=os.environ.get("R2_BUCKET_RENDERS", "appdk-renders"), Key=output_key)
+        return audio_obj["Body"].read()
+
+    try:
+        audio_data = await _run_inference_serialized(_infer_dub, request_id)
+        buffer = io.BytesIO(audio_data)
+        logger.info("[req=%s] Dubbing successful. audio_bytes=%d", request_id, len(audio_data))
+        return StreamingResponse(buffer, media_type="audio/wav")
+    except Exception as e:
+        logger.error("[req=%s] Dubbing failed: %s", request_id, e, exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Dubbing failed: {str(e)}") from e
 
 
 @app.post("/api/upload-ref")
@@ -633,8 +756,45 @@ def get_voice(voice_id: str):
     return {"id": voice_id, **meta}
 
 
+def _cache_prompt_background(voice_id: str, ref_audio_path: str):
+    import modal
+    import boto3
+    import uuid
+    import os
+    import logging
+    logger = logging.getLogger("omnivoice.cache")
+    try:
+        s3 = boto3.client(
+            "s3",
+            endpoint_url=os.environ["R2_ENDPOINT"],
+            aws_access_key_id=os.environ["R2_ACCESS_KEY_ID"],
+            aws_secret_access_key=os.environ["R2_SECRET_ACCESS_KEY"],
+            region_name="auto",
+        )
+        wav_key = f"omnivoice_refs/{uuid.uuid4().hex}.wav"
+        bucket = os.environ.get("R2_BUCKET_UPLOADS", "ai86-uploads")
+        s3.upload_file(str(ref_audio_path), bucket, wav_key)
+        
+        presigned_url = s3.generate_presigned_url(
+            'get_object',
+            Params={'Bucket': bucket, 'Key': wav_key},
+            ExpiresIn=3600
+        )
+        
+        pt_key = f"omnivoice_prompts/{uuid.uuid4().hex}.pt"
+        cache_fn = modal.Function.from_name("ai-dubbing-pipeline", "cache_voice_prompt")
+        cache_fn.remote(reference_audio_url=presigned_url, output_key=pt_key)
+        
+        meta = registry.get(voice_id)
+        if meta:
+            meta["ref_prompt_key"] = pt_key
+            registry.upsert(voice_id, meta)
+            logger.info("Successfully cached prompt for %s", voice_id)
+    except Exception as e:
+        logger.error("Failed to cache prompt for %s: %s", voice_id, e)
+
 @app.post("/v1/voices")
-def upsert_voice(req: _VoiceUpsertRequest):
+def upsert_voice(req: _VoiceUpsertRequest, background_tasks: BackgroundTasks):
     """Tao hoac cap nhat voiceID (admin). Body theo _VoiceUpsertRequest."""
     meta = req.model_dump(exclude={"id"})
     # Validate
@@ -642,6 +802,7 @@ def upsert_voice(req: _VoiceUpsertRequest):
     if not is_valid:
         raise HTTPException(status_code=422, detail={"code": "invalid_meta", "message": err})
     # Clone type: check ref_audio_file co ton tai trong voices/ (R11 + R8 resolve dung ext)
+    ref_path = None
     if meta.get("type") == "clone":
         voices_dir = Path(__file__).resolve().parents[1] / "voices"
         ref_path = resolve_voice_file(voices_dir, meta["ref_audio_file"])
@@ -654,6 +815,11 @@ def upsert_voice(req: _VoiceUpsertRequest):
                 },
             )
     registry.upsert(req.id, meta)
+    
+    # Neu la clone voice, dua vao background de tinh toan file .pt tren Modal
+    if meta.get("type") == "clone" and ref_path:
+        background_tasks.add_task(_cache_prompt_background, req.id, ref_path)
+        
     return {"id": req.id, **meta}
 
 
