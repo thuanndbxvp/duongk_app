@@ -345,6 +345,8 @@ def dub_srt(srt_text: str, output_key: str, merge_mode: str = "native", referenc
             if instruct is not None:
                 call_kwargs["instruct"] = instruct
                 
+            # Set a fixed seed to prevent the model from drifting into hallucinated acoustic states (e.g. echo, closed room)
+            torch.manual_seed(1234)
             audio_data = model.generate(**call_kwargs)
             if isinstance(audio_data, list) or isinstance(audio_data, tuple):
                 audio_data = audio_data[0]
@@ -413,6 +415,11 @@ def dub_srt(srt_text: str, output_key: str, merge_mode: str = "native", referenc
             final_audio[start_idx:end_idx] += y
             
             current_time = start_sec + (len(y) / samplerate)
+            
+        # Prevent clipping distortion (rè) caused by amplitude exceeding [-1.0, 1.0] when overlapping
+        max_amp = np.max(np.abs(final_audio))
+        if max_amp > 1.0:
+            final_audio = final_audio / max_amp
             
         out_audio_path = f"{tmp}/dubbed_output.wav"
         sf.write(out_audio_path, final_audio, samplerate, format="WAV")

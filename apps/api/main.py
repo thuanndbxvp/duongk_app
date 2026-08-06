@@ -31,6 +31,8 @@ from apps.api.routers.channels import router as channels_router
 from apps.api.routers.admin_users import router as admin_users_router
 from apps.api.routers.admin_credit import router as admin_credit_router
 from apps.api.routers.admin_pricing import router as admin_pricing_router
+from apps.api.routers.admin_api_keys import router as admin_api_keys_router
+from apps.api.routers.admin_alerts import router as admin_alerts_router
 
 sentry_sdk.init(dsn=os.getenv("SENTRY_DSN"))
 app = FastAPI(title="YouTube AI SaaS")
@@ -56,6 +58,8 @@ app.include_router(channels_router)
 app.include_router(admin_users_router)
 app.include_router(admin_credit_router)
 app.include_router(admin_pricing_router)
+app.include_router(admin_api_keys_router)
+app.include_router(admin_alerts_router)
 
 # Override default OpenAPI schema
 app.openapi = lambda: custom_openapi_schema(app)
