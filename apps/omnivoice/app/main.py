@@ -379,12 +379,18 @@ async def generate_tts(request: TTSRequest):
                 instruct=instruct if not ref_audio_path else None
             )
             
-            req = urllib.request.Request(
-                result["audio_url"],
-                headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
+            # Use boto3 to download instead of CDN to avoid 404 mapping issues
+            import boto3
+            s3_down = boto3.client(
+                "s3",
+                endpoint_url=os.environ["R2_ENDPOINT"],
+                aws_access_key_id=os.environ["R2_ACCESS_KEY_ID"],
+                aws_secret_access_key=os.environ["R2_SECRET_ACCESS_KEY"],
+                region_name="auto",
             )
-            with urllib.request.urlopen(req) as response:
-                return response.read()
+            # Fetch object from R2 directly (object_key is same as output_key)
+            audio_obj = s3_down.get_object(Bucket=os.environ.get("R2_BUCKET_RENDERS", "appdk-renders"), Key=output_key)
+            return audio_obj["Body"].read()
 
         # Tier 2 Hotfix: thay loop.run_in_executor(None, _infer) bằng helper có lock+timeout.
         audio_data = await _run_inference_serialized(_infer, request_id)
@@ -857,12 +863,17 @@ async def tts_by_voice_id(voice_id: str, request: Request):
                 instruct=instruct if not ref_audio_path else None
             )
             
-            req = urllib.request.Request(
-                result["audio_url"],
-                headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
+            # Use boto3 to download instead of CDN to avoid 404 mapping issues
+            import boto3
+            s3_down = boto3.client(
+                "s3",
+                endpoint_url=os.environ["R2_ENDPOINT"],
+                aws_access_key_id=os.environ["R2_ACCESS_KEY_ID"],
+                aws_secret_access_key=os.environ["R2_SECRET_ACCESS_KEY"],
+                region_name="auto",
             )
-            with urllib.request.urlopen(req) as response:
-                return response.read()
+            audio_obj = s3_down.get_object(Bucket=os.environ.get("R2_BUCKET_RENDERS", "appdk-renders"), Key=output_key)
+            return audio_obj["Body"].read()
 
         audio_data = await _run_inference_serialized(_infer, request_id)
 
