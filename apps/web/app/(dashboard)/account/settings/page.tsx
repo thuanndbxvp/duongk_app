@@ -32,20 +32,20 @@ export default async function AccountSettingsPage() {
   const user = await getUserData();
 
   return (
-    <div className="space-y-8 animate-fade-up">
-      <div className="space-y-3">
+    <div className="max-w-2xl mx-auto space-y-8 animate-fade-up">
+      <div className="space-y-3 text-center">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg glass text-xs font-semibold text-[var(--brand-300)] uppercase tracking-wider">
           <IconUser size={14} /> Tài khoản
         </div>
         <h1 className="text-3xl lg:text-4xl font-bold tracking-tight">
           <span className="gradient-text">Cài đặt tài khoản</span>
         </h1>
-        <p className="text-[var(--fg-secondary)] max-w-xl">
+        <p className="text-[var(--fg-secondary)] max-w-md mx-auto">
           Cập nhật thông tin cá nhân và bảo mật cho tài khoản của bạn.
         </p>
       </div>
 
-      <div className="max-w-2xl space-y-6">
+      <div className="space-y-6">
         <section className="relative glass-strong rounded-2xl p-7 overflow-hidden">
           <div
             aria-hidden
