@@ -231,3 +231,23 @@ GPU_WORKER_TOKEN=
 - [ ] Realtime subscription hay polling?
 - [ ] File output đi R2 hay local disk?
 - [ ] Credit hold/commit/release đầy đủ chưa?
+
+
+Quy trình:
+
+
+ssh deploy@161.248.4.99
+pass :
+hJ%ExH;V_#|6
+
+cd /opt/duongk
+
+# Build images lần đầu (sẽ mất ~5-10 phút)
+docker compose -f docker-compose.prod.yml build
+
+# Khởi động
+docker compose -f docker-compose.prod.yml up -d
+
+# Kiểm tra
+docker compose -f docker-compose.prod.yml ps
+docker compose -f docker-compose.prod.yml logs -f --tail=50

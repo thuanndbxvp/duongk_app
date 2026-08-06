@@ -23,8 +23,19 @@ export default async function AssistantsPage() {
   const token = await getAccessToken();
   if (!token) redirect('/login');
 
-  const response = await apiFetch('/api/assistants', {}, token);
-  const assistants: Assistant[] = response.ok ? await response.json() : [];
+  let assistants: Assistant[] = [];
+  let fetchError: string | null = null;
+  try {
+    const response = await apiFetch('/api/assistants', {}, token);
+    if (response.ok) {
+      const data = await response.json();
+      assistants = Array.isArray(data) ? data : [];
+    } else {
+      fetchError = `Backend ${response.status}: ${response.statusText || 'request failed'}`;
+    }
+  } catch (err) {
+    fetchError = err instanceof Error ? err.message : 'Network error';
+  }
 
   return (
     <div className="space-y-8 animate-fade-up">
@@ -49,7 +60,11 @@ export default async function AssistantsPage() {
         </Link>
       </div>
 
-      {assistants.length === 0 ? (
+      {fetchError ? (
+        <div className="px-4 py-3 rounded-xl bg-[rgba(248,113,113,0.08)] border border-[rgba(248,113,113,0.2)] text-sm text-[var(--danger)]">
+          Không tải được danh sách assistants: {fetchError}
+        </div>
+      ) : assistants.length === 0 ? (
         <EmptyState />
       ) : (
         <>

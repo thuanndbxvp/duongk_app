@@ -284,17 +284,19 @@ async def generate_tts(request: TTSRequest):
     if request.ref_audio:
         ref_audio_path = request.ref_audio
     elif request.voice_id:
+        voices_dir = Path(__file__).resolve().parents[1] / "voices"
         # Check registry first for prompt cache
         meta = registry.get(request.voice_id)
         if meta:
             if "ref_prompt_key" in meta:
                 ref_prompt_key = meta["ref_prompt_key"]
-            if "ref_audio_file" in meta:
-                ref_audio_path = str((Path(__file__).resolve().parents[1] / "voices" / meta["ref_audio_file"]).resolve())
+            if "ref_audio_file" in meta and meta["ref_audio_file"]:
+                resolved = resolve_voice_file(voices_dir, meta["ref_audio_file"])
+                if resolved:
+                    ref_audio_path = str(resolved.resolve())
         
         # Fallback to checking local voices directory if not in registry or no ref_audio_file in meta
         if not ref_audio_path:
-            voices_dir = Path(__file__).resolve().parents[1] / "voices"
             resolved = resolve_voice_file(voices_dir, request.voice_id)
             if resolved:
                 ref_audio_path = str(resolved.resolve())
@@ -1032,7 +1034,7 @@ async def tts_by_voice_id(voice_id: str, request: Request):
             output_key = f"omnivoice_renders/{uuid.uuid4().hex}.wav"
             
             result = synth_fn.remote(
-                text=text_to_gen,
+                text=text,
                 output_key=output_key,
                 reference_audio_url=ref_audio_url,
                 instruct=instruct if not ref_audio_path else None

@@ -5,7 +5,7 @@
       "type": "clone",
       "language": "vi",
       "instruct": null,
-      "ref_audio_file": "ban_mai",
+      "ref_audio_file": "ban_mai.mp3",
       "display_name": "Ban Mai",
       "description": "Giọng nữ truyền cảm",
       "tags": [
@@ -17,7 +17,7 @@
       "type": "clone",
       "language": "vi",
       "instruct": null,
-      "ref_audio_file": "lan_trinh",
+      "ref_audio_file": "lan_trinh.wav",
       "display_name": "Lan Trinh",
       "description": "Giọng nữ Lan Trinh",
       "tags": [
@@ -29,7 +29,7 @@
       "type": "clone",
       "language": "vi",
       "instruct": null,
-      "ref_audio_file": "ngan_ha",
+      "ref_audio_file": "ngan_ha.wav",
       "display_name": "Ngân Hà",
       "description": "Giọng nữ Ngân Hà",
       "tags": [
@@ -41,7 +41,7 @@
       "type": "clone",
       "language": "vi",
       "instruct": null,
-      "ref_audio_file": "ngoc_huyen",
+      "ref_audio_file": "ngoc_huyen.mp3",
       "display_name": "Ngọc Huyền",
       "description": "Giọng nữ Ngọc Huyền",
       "tags": [
@@ -53,7 +53,7 @@
       "type": "clone",
       "language": "vi",
       "instruct": null,
-      "ref_audio_file": "thao_trinh",
+      "ref_audio_file": "thao_trinh.wav",
       "display_name": "Thảo Trinh",
       "description": "Giọng nữ Thảo Trinh",
       "tags": [
@@ -65,7 +65,7 @@
       "type": "clone",
       "language": "vi",
       "instruct": null,
-      "ref_audio_file": "tuong_vy",
+      "ref_audio_file": "tuong_vy.wav",
       "display_name": "Tường Vy",
       "description": "Giọng nữ Tường Vy",
       "tags": [
