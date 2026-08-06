@@ -6,6 +6,12 @@ export async function updateSession(request: NextRequest) {
     request,
   })
 
+  // Dev mode: bypass auth when using placeholder URL
+  const isDevMode = process.env.NEXT_PUBLIC_SUPABASE_URL?.includes('xxx');
+  if (isDevMode) {
+    return supabaseResponse;
+  }
+
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
