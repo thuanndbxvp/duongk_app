@@ -524,7 +524,7 @@ async def generate_dubbing(
             merge_mode=merge_mode,
             reference_audio_url=ref_audio_url,
             reference_prompt_url=ref_prompt_url,
-            instruct=instruct if not (ref_audio_path or ref_prompt_key) else None
+            instruct=instruct
         )
         
         if result.get("status") != "ok":
@@ -981,7 +981,7 @@ async def tts_by_voice_id(voice_id: str, request: Request):
     if language.lower() == "auto":
         language = None
 
-    instruct = None
+    instruct = body.get("instruct")
     if meta.get("type") == "clone":
         # Phase 4R.8: resolve dung extension (ref_audio_file co the khong co ext)
         voices_dir = Path(__file__).resolve().parents[1] / "voices"
@@ -996,24 +996,13 @@ async def tts_by_voice_id(voice_id: str, request: Request):
             )
         ref_audio_path = str(ref_resolved.resolve())
     elif meta.get("type") == "design":
-        instruct = meta.get("instruct", "female, young adult, moderate pitch")
+        if not instruct:
+            instruct = meta.get("instruct", "female, young adult, moderate pitch")
         ref_audio_path = None
     else:
         ref_audio_path = None
 
-    if meta.get("type") == "clone":
-        # Phase 4R.8: resolve dung extension (ref_audio_file co the khong co ext)
-        voices_dir = Path(__file__).resolve().parents[1] / "voices"
-        ref_resolved = resolve_voice_file(voices_dir, meta["ref_audio_file"])
-        if not ref_resolved:
-            raise HTTPException(
-                status_code=422,
-                detail={
-                    "code": "ref_audio_not_found",
-                    "message": f"ref_audio_file '{meta['ref_audio_file']}' not found in voices/",
-                },
-            )
-        call_kwargs["ref_audio"] = str(ref_resolved.resolve())
+
     try:
         def _infer():
             import modal

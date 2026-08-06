@@ -47,17 +47,37 @@ export async function getFullUser(): Promise<FullUser | null> {
   const token = await getAccessToken();
   if (!token) return null;
 
-  const isDevMode = process.env.NEXT_PUBLIC_SUPABASE_URL?.includes('xxx');
-  
-  // In dev mode, return mock user from token
-  if (isDevMode) {
-    return {
-      email: 'dev@local.test',
-      full_name: 'Dev User',
-      avatar_url: null,
-      tier: 'pro',
-      credits: 999,
-    };
+  // Dev mode: try decoding our own mock JWT first (carries email/name directly)
+  if (token.startsWith('dev.') && token.endsWith('.mock')) {
+    try {
+      const payloadB64 = token.split('.')[1];
+      const payload = JSON.parse(Buffer.from(payloadB64, 'base64').toString());
+      return {
+        email: payload.email,
+        full_name: payload.full_name ?? null,
+        avatar_url: null,
+        tier: payload.tier ?? 'free',
+        credits: payload.credits ?? 0,
+      };
+    } catch {
+      // fallthrough to legacy mock
+    }
+  }
+
+  // Also handle legacy base64 mock token
+  try {
+    const decoded = Buffer.from(token, 'base64').toString();
+    if (decoded.includes('dev-mock-token')) {
+      return {
+        email: 'dev@local.test',
+        full_name: 'Dev User',
+        avatar_url: null,
+        tier: 'pro',
+        credits: 999,
+      };
+    }
+  } catch {
+    // ignore
   }
 
   try {

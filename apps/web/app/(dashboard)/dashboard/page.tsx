@@ -31,8 +31,8 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-8 animate-fade-up">
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-        <div className="space-y-2">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full glass text-xs font-medium text-[var(--brand-300)]">
+        <div className="space-y-3">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg glass text-xs font-semibold text-[var(--brand-300)] uppercase tracking-wider">
             <IconDashboard size={14} /> Dashboard
           </div>
           <h1 className="text-3xl lg:text-4xl font-bold tracking-tight">
@@ -44,11 +44,9 @@ export default async function DashboardPage() {
         </div>
         <Link
           href="/projects/new"
-          className="btn-glow relative inline-flex items-center gap-2 px-5 h-11 rounded-xl text-sm font-semibold text-white"
+          className="btn-glow relative inline-flex items-center gap-2 px-5 h-11 rounded-xl text-sm font-semibold text-white shadow-lg shadow-[var(--brand-500)]/25 hover:shadow-[var(--brand-500)]/40 hover:-translate-y-px transition-all"
         >
-          <span className="relative inline-flex items-center gap-2 gradient-bg rounded-[10px] px-5 h-11">
-            <IconPlus size={16} /> Dự án mới
-          </span>
+          <IconPlus size={16} /> Dự án mới
         </Link>
       </div>
 
