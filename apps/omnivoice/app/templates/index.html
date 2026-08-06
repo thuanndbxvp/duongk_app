@@ -250,6 +250,7 @@ with open("output.wav", "wb") as f:
 
         btn.disabled = true;
         btn.innerText = "⏳ Đang tạo...";
+        const startTime = Date.now();
 
         try {
             const res = await fetch('/v1/tts', {
@@ -265,14 +266,19 @@ with open("output.wav", "wb") as f:
 
             const snippet = text.length > 80 ? text.substring(0, 80) + '...' : text;
             const now = new Date();
-            const time = now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            const dateStr = now.toLocaleDateString('vi-VN');
+            const timeStr = now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
             const filename = `tts_${Date.now()}.wav`;
+            
+            const duration = ((Date.now() - startTime) / 1000).toFixed(1);
+            const voiceSelect = document.getElementById('voice-select');
+            const voiceName = voiceSelect.options[voiceSelect.selectedIndex].text;
 
             const item = document.createElement('div');
             item.className = 'history-item';
             item.innerHTML = `
                 <div class="history-meta">
-                    <span class="history-time">${time}</span>
+                    <span class="history-time">${timeStr} - ${dateStr} | 🗣️ ${voiceName} | ⏱️ ${duration}s</span>
                     <span>${(blob.size / 1024).toFixed(1)} KB</span>
                 </div>
                 <div class="history-text">${escapeHtml(snippet)}</div>
