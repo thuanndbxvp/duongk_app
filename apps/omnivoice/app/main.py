@@ -349,6 +349,7 @@ async def generate_tts(request: TTSRequest):
     )
     loop = asyncio.get_running_loop()
 
+    try:
         def _infer():
             import modal
             import uuid
