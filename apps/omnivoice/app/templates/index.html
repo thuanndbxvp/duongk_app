@@ -7,9 +7,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-body: #0b0f19; --bg-sidebar: #111827; --bg-card: #1f2937; --bg-input: #111827;
-            --border-color: #374151; --text-main: #f9fafb; --text-muted: #9ca3af;
-            --accent-blue: #3b82f6; --accent-blue-hover: #2563eb; --accent-green: #10b981; --danger: #ef4444;
+            --bg-body: #0d1117; --bg-sidebar: #161b22; --bg-card: #1c2128; --bg-input: #0d1117;
+            --border-color: #30363d; --text-main: #c9d1d9; --text-muted: #8b949e;
+            --accent-blue: #2f81f7; --accent-blue-hover: #1f6feb; --accent-green: #238636; --danger: #da3633;
             --radius-md: 8px; --radius-lg: 12px;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
@@ -21,70 +21,104 @@
         .app-container { display: grid; grid-template-columns: 260px 1fr; width: 100%; min-height: 100vh; }
 
         /* SIDEBAR */
-        .sidebar { background-color: var(--bg-sidebar); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; padding: 20px; z-index: 10; height: 100vh; position: sticky; top: 0; overflow-y: auto; }
-        .logo { font-size: 1.2rem; font-weight: 700; color: white; margin-bottom: 30px; display: flex; align-items: center; gap: 10px; }
-        .logo-box { width: 24px; height: 24px; background-color: var(--accent-blue); border-radius: 6px; }
-        .nav-item { padding: 12px 16px; margin-bottom: 8px; border-radius: var(--radius-md); color: var(--text-muted); cursor: pointer; font-weight: 500; font-size: 0.95rem; transition: 0.2s; }
+        .sidebar { background-color: var(--bg-sidebar); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; padding: 24px 16px; z-index: 10; height: 100vh; position: sticky; top: 0; overflow-y: auto; }
+        .logo { font-size: 1.25rem; font-weight: 700; color: white; margin-bottom: 32px; display: flex; align-items: center; gap: 12px; padding: 0 8px; }
+        .logo-box { width: 28px; height: 28px; background-color: var(--accent-blue); border-radius: 8px; }
+        .nav-item { padding: 12px 16px; margin-bottom: 8px; border-radius: var(--radius-md); color: var(--text-muted); cursor: pointer; font-weight: 500; font-size: 0.95rem; transition: all 0.2s; display: flex; align-items: center; gap: 10px; }
         .nav-item:hover { background-color: rgba(255,255,255,0.05); color: var(--text-main); }
-        .nav-item.active { background-color: rgba(59, 130, 246, 0.15); color: var(--accent-blue); }
+        .nav-item.active { background-color: var(--accent-blue); color: white; box-shadow: 0 4px 12px rgba(47, 129, 247, 0.2); }
 
         /* MAIN CONTENT AREA */
         .main-wrapper { display: flex; flex-direction: column; min-height: 100vh; background-color: var(--bg-body); }
 
         .view-panel { display: none; width: 100%; }
-        .view-panel.active { display: block; }
+        .view-panel.active { display: block; padding: 32px; }
 
-        /* LAYOUT CHO VIEW TTS (3 Cot cu) */
-        .tts-layout { display: grid; grid-template-columns: 1fr 380px; min-height: 100vh; width: 100%; }
-        .center-content { overflow-y: auto; padding: 30px; }
-        .right-panel { background-color: var(--bg-sidebar); border-left: 1px solid var(--border-color); padding: 30px 24px; display: flex; flex-direction: column; overflow-y: auto; height: 100vh; position: sticky; top: 0; }
+        /* LAYOUT CHO VIEW TTS (3 Cot) */
+        .tts-layout { display: grid; grid-template-columns: 1fr 340px 380px; gap: 24px; min-height: 100vh; align-items: start; }
+        
+        /* LAYOUT CHO DUBBING & CLONING (Khác nhau chút) */
+        .dubbing-layout { display: grid; grid-template-columns: 1fr 400px; gap: 24px; min-height: 100vh; align-items: start; }
+        .cloning-layout { display: grid; grid-template-columns: 1fr 1fr 1fr 280px; gap: 24px; min-height: 100vh; align-items: start; }
 
         /* LAYOUT CHO CAC VIEW CON LAI (1 Cot rong) */
-        .single-layout { padding: 30px; width: 100%; max-width: 1200px; margin: 0 auto; }
+        .single-layout { width: 100%; max-width: 1200px; margin: 0 auto; }
 
         /* SHARED COMPONENTS */
-        .page-title { font-size: 1.5rem; font-weight: 700; margin-bottom: 6px; }
+        .page-header { grid-column: 1 / -1; margin-bottom: 8px; }
+        .page-title { font-size: 1.75rem; font-weight: 700; color: white; margin-bottom: 8px; letter-spacing: -0.02em; }
         .page-desc { color: var(--text-muted); font-size: 0.95rem; margin-bottom: 24px;}
-        .card { background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 24px; margin-bottom: 24px; }
-        .form-label { display: block; font-size: 0.95rem; font-weight: 600; margin-bottom: 12px; color: var(--text-main); }
-        .text-input, .select-input { width: 100%; background-color: var(--bg-input); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 12px 16px; color: var(--text-main); font-size: 0.95rem; outline: none; font-family: inherit; }
-        .text-input:focus, .select-input:focus { border-color: var(--accent-blue); }
-        .btn-blue { background-color: var(--accent-blue); color: white; border: none; padding: 12px 20px; border-radius: var(--radius-md); font-weight: 600; cursor: pointer; }
-        .btn-blue:hover { background-color: var(--accent-blue-hover); }
-        .btn-blue:disabled { opacity: 0.6; cursor: not-allowed; }
+        .card { background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 24px; margin-bottom: 24px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .card-title { font-size: 1.1rem; font-weight: 600; color: white; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+        .form-label { display: block; font-size: 0.9rem; font-weight: 600; margin-bottom: 8px; color: var(--text-main); }
+        .text-input, .select-input { width: 100%; background-color: var(--bg-input); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 12px 16px; color: var(--text-main); font-size: 0.95rem; outline: none; font-family: inherit; transition: border-color 0.2s; }
+        .text-input:focus, .select-input:focus { border-color: var(--accent-blue); box-shadow: 0 0 0 2px rgba(47, 129, 247, 0.2); }
+        
+        .btn-blue { background-color: var(--accent-blue); color: white; border: none; padding: 12px 20px; border-radius: var(--radius-md); font-weight: 600; cursor: pointer; transition: all 0.2s; display: inline-flex; justify-content: center; align-items: center; gap: 8px; }
+        .btn-blue:hover { background-color: var(--accent-blue-hover); transform: translateY(-1px); }
+        .btn-blue:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        
+        .btn-outline { background-color: transparent; color: var(--text-main); border: 1px solid var(--border-color); padding: 12px 20px; border-radius: var(--radius-md); font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .btn-outline:hover { border-color: var(--accent-blue); color: var(--accent-blue); }
 
         /* TABLE & SNIPPETS */
-        .registry-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
-        .registry-table th { text-align: left; padding: 12px; border-bottom: 1px solid var(--border-color); color: var(--text-muted); }
-        .registry-table td { padding: 12px; border-bottom: 1px solid var(--border-color); }
-        .registry-table code { background: var(--bg-input); padding: 2px 6px; border-radius: 4px; font-size: 0.85rem; }
-        .snippet-box { background: #000; padding: 16px; border-radius: var(--radius-md); font-family: monospace; font-size: 0.85rem; color: #a5b4fc; white-space: pre-wrap; margin-bottom: 16px; line-height: 1.5;}
+        .registry-table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+        .registry-table th { text-align: left; padding: 16px; border-bottom: 1px solid var(--border-color); color: var(--text-muted); font-weight: 600; }
+        .registry-table td { padding: 16px; border-bottom: 1px solid var(--border-color); vertical-align: middle; }
+        .registry-table code { background: var(--bg-input); padding: 4px 8px; border-radius: 6px; font-size: 0.85rem; color: #a5b4fc; }
+        .snippet-box { background: var(--bg-input); padding: 20px; border-radius: var(--radius-md); font-family: 'Consolas', monospace; font-size: 0.9rem; color: #a5b4fc; white-space: pre-wrap; line-height: 1.6; border: 1px solid var(--border-color); }
 
-        /* EMOTIONS (Tu code cu) */
-        .emotion-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-        .emotion-btn { background-color: var(--bg-input); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 10px; cursor: pointer; color: var(--text-main); text-align: left; }
-        .emotion-btn:hover { border-color: var(--accent-blue); }
-        .emotion-title { display: block; font-weight: 600; font-size: 0.9rem;} .emotion-sub { font-size: 0.75rem; color: var(--text-muted); }
+        /* EMOTIONS */
+        .emotion-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+        .emotion-btn { background-color: var(--bg-input); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 12px; cursor: pointer; color: var(--text-main); text-align: center; transition: all 0.2s; }
+        .emotion-btn:hover { border-color: var(--accent-blue); background-color: rgba(47, 129, 247, 0.05); }
+        .emotion-title { display: block; font-weight: 600; font-size: 0.95rem; margin-bottom: 4px; color: white;} 
+        .emotion-sub { font-size: 0.8rem; color: var(--text-muted); }
 
         /* TTS Player & History */
-        .result-box { border: 1px dashed var(--border-color); border-radius: var(--radius-lg); padding: 20px; min-height: 120px; display: flex; flex-direction: column; justify-content: center; }
-        .empty-state { text-align: center; color: var(--text-muted); font-size: 0.85rem; }
-        .empty-state .empty-icon { font-size: 1.6rem; margin-bottom: 6px; opacity: 0.6; }
-        audio { width: 100%; height: 36px; outline: none; }
-
-        .history-section { margin-top: 20px; }
-        .history-header { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 10px; font-weight: 600; }
-        .history-list { display: flex; flex-direction: column; gap: 8px; max-height: 320px; overflow-y: auto; }
-        .history-item { background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
-        .history-meta { display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem; color: var(--text-muted); }
-        .history-meta .history-time { color: var(--text-main); font-weight: 500; }
-        .history-text { font-size: 0.82rem; color: var(--text-muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.4; }
-        .history-controls { display: flex; align-items: center; gap: 8px; }
-        .history-controls audio { flex: 1; height: 32px; margin: 0; }
-        .history-download { color: var(--accent-blue); text-decoration: none; font-size: 0.8rem; padding: 4px 10px; border: 1px solid var(--accent-blue); border-radius: 6px; white-space: nowrap; }
-        .history-download:hover { background-color: rgba(59, 130, 246, 0.15); }
+        .result-box { display: flex; flex-direction: column; gap: 16px; }
+        .empty-state { text-align: center; color: var(--text-muted); font-size: 0.9rem; padding: 40px 20px; border: 1px dashed var(--border-color); border-radius: var(--radius-lg); }
+        .empty-state .empty-icon { font-size: 2rem; margin-bottom: 12px; opacity: 0.6; }
+        
+        .history-list { display: flex; flex-direction: column; gap: 12px; max-height: 500px; overflow-y: auto; padding-right: 4px; }
+        .history-item { background-color: var(--bg-body); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+        
+        .history-meta { display: flex; justify-content: space-between; align-items: flex-start; }
+        .history-title { color: white; font-weight: 600; font-size: 0.95rem; display: block; margin-bottom: 4px; }
+        .history-subtitle { color: var(--text-muted); font-size: 0.8rem; }
+        
+        .status-tag { padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; }
+        .status-success { background-color: rgba(35, 134, 54, 0.15); color: var(--accent-green); border: 1px solid rgba(35, 134, 54, 0.3); }
+        .status-processing { background-color: rgba(218, 165, 32, 0.15); color: #daa520; border: 1px solid rgba(218, 165, 32, 0.3); }
+        
+        .history-player { display: flex; align-items: center; gap: 12px; background: var(--bg-card); padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border-color); }
+        .play-btn { width: 36px; height: 36px; border-radius: 50%; background-color: var(--accent-blue); color: white; border: none; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: 0.2s; flex-shrink: 0; }
+        .play-btn:hover { background-color: var(--accent-blue-hover); transform: scale(1.05); }
+        .waveform-mock { flex: 1; height: 24px; background: repeating-linear-gradient(90deg, var(--border-color) 0px, var(--border-color) 2px, transparent 2px, transparent 4px); opacity: 0.5; border-radius: 2px; }
+        .duration-text { font-size: 0.8rem; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+        
+        .action-btn { background: transparent; color: var(--text-muted); border: none; font-size: 1.2rem; cursor: pointer; padding: 4px; border-radius: 4px; transition: 0.2s; }
+        .action-btn:hover { color: white; background: rgba(255,255,255,0.1); }
 
         input[type="range"] { accent-color: var(--accent-blue); }
+        
+        /* File Upload Zone */
+        .upload-zone { border: 2px dashed var(--border-color); border-radius: var(--radius-lg); padding: 40px 20px; text-align: center; background-color: rgba(255,255,255,0.02); transition: all 0.2s; cursor: pointer; }
+        .upload-zone:hover { border-color: var(--accent-blue); background-color: rgba(47, 129, 247, 0.05); }
+        .upload-icon { font-size: 2.5rem; color: var(--text-muted); margin-bottom: 16px; }
+        
+        /* Progress Bar */
+        .progress-track { width: 100%; height: 6px; background-color: var(--border-color); border-radius: 3px; overflow: hidden; margin-top: 16px; }
+        .progress-fill { height: 100%; background-color: var(--accent-blue); width: 0%; transition: width 0.3s; }
+        
+        .steps-tracker { display: flex; justify-content: space-between; position: relative; margin: 40px 0; }
+        .steps-tracker::before { content: ''; position: absolute; top: 12px; left: 0; width: 100%; height: 2px; background: var(--border-color); z-index: 0; }
+        .step-item { display: flex; flex-direction: column; align-items: center; gap: 8px; position: relative; z-index: 1; }
+        .step-circle { width: 26px; height: 26px; border-radius: 50%; background: var(--bg-card); border: 2px solid var(--border-color); display: flex; justify-content: center; align-items: center; font-size: 0.75rem; color: var(--text-muted); font-weight: 600; }
+        .step-item.active .step-circle { border-color: var(--accent-blue); color: var(--accent-blue); }
+        .step-item.completed .step-circle { background: var(--accent-blue); border-color: var(--accent-blue); color: white; }
+        .step-label { font-size: 0.8rem; color: var(--text-muted); }
+        .step-item.active .step-label { color: white; font-weight: 500; }
     </style>
 </head>
 <body>
@@ -104,45 +138,56 @@
 
         <!-- 1. VIEW: TẠO GIỌNG NÓI -->
         <div id="view-tts" class="view-panel active tts-layout">
-            <div class="center-content">
-                <div class="page-title">✨ Tạo giọng nói</div>
-                <div class="page-desc">Nhập văn bản, chọn chế độ giọng, đổ bóng sáng tạo.</div>
+            <div class="page-header">
+                <div class="page-title">Create Voice</div>
+            </div>
 
-                <div class="card">
-                    <label class="form-label">Văn bản</label>
-                    <textarea id="text-input" class="text-input" style="height:120px" placeholder="Xin chào, đây là bản demo của TTS Voice Studio." oninput="document.getElementById('char-count').innerText = this.value.length + ' ký tự'"></textarea>
-                    <div id="char-count" style="font-size:0.8rem; color:gray; margin-top:5px;">0 ký tự</div>
-
-                    <label class="form-label" style="margin-top:20px;">Biểu cảm / Hiệu ứng</label>
-                    <div class="emotion-grid">
-                        <div class="emotion-btn" onclick="insertTag('[sigh]')"><span class="emotion-title">Thở dài</span><span class="emotion-sub">Sighing</span></div>
-                        <div class="emotion-btn" onclick="insertTag('[uh]')"><span class="emotion-title">Xác nhận</span><span class="emotion-sub">Uh sound</span></div>
-                        <div class="emotion-btn" onclick="insertTag('[laugh]')"><span class="emotion-title">Cười</span><span class="emotion-sub">Laughter</span></div>
-                    </div>
-                </div>
-
-                <div class="card">
-                    <label class="form-label">Chế độ giọng</label>
-                    <select id="voice-select" class="select-input"></select>
-                </div>
-
-                <div class="card">
-                    <label class="form-label">Tốc độ (Speed): <span id="speed-value">1.0</span></label>
-                    <input type="range" id="speed-slider" min="0.5" max="2.0" step="0.1" value="1.0" style="width:100%" oninput="document.getElementById('speed-value').innerText = parseFloat(this.value).toFixed(1)">
+            <!-- Column 1 -->
+            <div class="card" style="height: 100%; display: flex; flex-direction: column;">
+                <label class="form-label">Văn bản</label>
+                <textarea id="text-input" class="text-input" style="flex: 1; min-height: 200px; resize: none; margin-bottom: 8px;" placeholder="Nhập văn bản tại đây..." oninput="document.getElementById('char-count').innerText = this.value.length + '/2000 ký tự'"></textarea>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-size:0.8rem; color:var(--text-muted);">Nhập văn bản trơn vào tự</span>
+                    <span id="char-count" style="font-size:0.8rem; color:var(--text-muted);">0/2000 ký tự</span>
                 </div>
             </div>
 
-            <div class="right-panel">
-                <div class="page-title">Tạo giọng nói</div>
-                <div class="page-desc">Audio sẽ truyền về sau khi server xử lý xong.</div>
-                <button class="btn-blue" id="btn-generate" onclick="generateTTS()" style="padding:16px; font-size:1.1rem; margin-bottom:20px; width:100%;">✨ Tạo</button>
-                <div class="result-box" id="result-box" style="margin-bottom:20px;">
-                    <div class="empty-state" id="empty-state">
-                        <div class="empty-icon">🎧</div>
-                        <div>Chưa có audio nào.</div>
+            <!-- Column 2 -->
+            <div>
+                <div class="card">
+                    <div class="card-title">Cài đặt giọng nói</div>
+                    <label class="form-label">Chế độ giọng</label>
+                    <select id="voice-select" class="select-input" style="margin-bottom: 24px;"></select>
+
+                    <label class="form-label">Biểu cảm / Hiệu ứng</label>
+                    <div class="page-desc" style="margin-bottom: 12px; font-size: 0.8rem;">Biểu cảm, biểu hiệu ứng, tự làm biểu</div>
+                    <div class="emotion-grid" style="margin-bottom: 24px;">
+                        <div class="emotion-btn" onclick="insertTag('[laugh]')"><span class="emotion-title">Vui vẻ</span><span class="emotion-sub">(Happy)</span></div>
+                        <div class="emotion-btn" onclick="insertTag('[sigh]')"><span class="emotion-title">Buồn</span><span class="emotion-sub">(Sad)</span></div>
+                        <div class="emotion-btn" onclick="insertTag('[uh]')"><span class="emotion-title">Chuyên nghiệp</span><span class="emotion-sub">(Professional)</span></div>
+                        <div class="emotion-btn" onclick="insertTag('[sigh]')"><span class="emotion-title">Thở dài</span><span class="emotion-sub">(Sighing)</span></div>
                     </div>
-                    <div class="history-section" id="history-section" style="display: none;">
-                        <div class="history-header">Lịch sử audio</div>
+
+                    <label class="form-label">Tốc độ (Speed) <span id="speed-value" style="float: right; color: var(--text-muted);">1.0</span></label>
+                    <input type="range" id="speed-slider" min="0.5" max="2.0" step="0.1" value="1.0" style="width:100%; margin-bottom: 24px;" oninput="document.getElementById('speed-value').innerText = parseFloat(this.value).toFixed(1)">
+                    
+                    <label class="form-label">Cao độ (Pitch) <span id="pitch-value" style="float: right; color: var(--text-muted);">1.0</span></label>
+                    <input type="range" id="pitch-slider" min="0.5" max="2.0" step="0.1" value="1.0" style="width:100%" oninput="document.getElementById('pitch-value').innerText = parseFloat(this.value).toFixed(1)">
+                </div>
+            </div>
+
+            <!-- Column 3 -->
+            <div>
+                <button class="btn-blue" id="btn-generate" onclick="generateTTS()" style="padding:16px; font-size:1.1rem; margin-bottom:24px; width:100%;">🎤 Tạo</button>
+                <div class="card" style="padding: 16px;">
+                    <div class="card-title">Kết quả & Xem trước</div>
+                    <div class="page-desc" style="margin-bottom: 16px; font-size: 0.85rem;">Gần đây</div>
+                    
+                    <div class="result-box" id="result-box">
+                        <div class="empty-state" id="empty-state">
+                            <div class="empty-icon">🎧</div>
+                            <div>Chưa có audio nào.</div>
+                        </div>
                         <div class="history-list" id="history-list"></div>
                     </div>
                 </div>
@@ -150,64 +195,129 @@
         </div>
 
         <!-- 2. VIEW: LỒNG TIẾNG SRT -->
-        <div id="view-dubbing" class="view-panel tts-layout">
-            <div class="center-content">
-                <div class="page-title">🎬 Lồng tiếng SRT (Dubbing)</div>
-                <div class="page-desc">Đồng bộ giọng đọc với phụ đề SRT cho video.</div>
+        <div id="view-dubbing" class="view-panel dubbing-layout">
+            <div class="page-header">
+                <div class="page-title">SRT Dubbing Professional Dashboard</div>
+            </div>
 
-                <div class="card">
-                    <label class="form-label">Tải lên phụ đề (.srt)</label>
-                    <input type="file" id="srt-upload" accept=".srt" class="file-input" style="width:100%; padding:10px; border:1px dashed var(--border-color); border-radius:var(--radius-md);">
+            <!-- Column 1 -->
+            <div style="display:flex; flex-direction:column; gap:24px;">
+                <div class="card" style="margin-bottom:0;">
+                    <label class="form-label" style="font-size:1.05rem; margin-bottom:16px;">Tải lên phụ đề (.srt)</label>
+                    <div class="upload-zone" style="padding: 24px 20px; border-style:dashed;" onclick="document.getElementById('srt-upload').click()" ondragover="event.preventDefault(); this.style.borderColor='var(--accent-blue)';" ondragleave="this.style.borderColor='var(--border-color)';" ondrop="event.preventDefault(); this.style.borderColor='var(--border-color)'; document.getElementById('srt-upload').files = event.dataTransfer.files; updateSrtUI();">
+                        <div class="upload-icon" style="font-size:2rem; margin-bottom:8px;">📄</div>
+                        <div style="font-size:0.9rem; color:var(--text-muted);">Kéo và thả tệp .srt vào đây hoặc Nhấp để chọn tệp</div>
+                        <input type="file" id="srt-upload" accept=".srt" style="display:none" onchange="updateSrtUI()">
+                    </div>
                     
-                    <label class="form-label" style="margin-top:20px;">Chế độ ghép nối (Merge Mode)</label>
-                    <select id="dub-merge-mode" class="select-input">
-                        <option value="native">Native (Tự nhiên, căn chuẩn timeline)</option>
-                        <option value="cascade">Cascade (Đọc nối tiếp không khoảng nghỉ)</option>
-                        <option value="fit">Fit (Ép tốc độ khớp 100% timeline)</option>
-                        <option value="strict">Strict (Cắt bỏ nếu đọc lố giờ)</option>
-                    </select>
+                    <!-- Fake progress bar for UI -->
+                    <div id="srt-progress-container" style="display:none;">
+                        <div class="progress-track">
+                            <div class="progress-fill" style="width: 100%;"></div>
+                        </div>
+                        <div style="font-size:0.8rem; color:var(--text-muted); margin-top:8px;" id="srt-filename-display">Đã tải lên: file.srt</div>
+                    </div>
+                    
+                    <div style="display:flex; gap:16px; margin-top:24px;">
+                        <div style="flex:1;">
+                            <label class="form-label">Chế độ ghép nối (Merge Mode) <span title="Chế độ này giữ nguyên thời gian của phụ đề gốc, đảm bảo giọng nói khớp hoàn toàn với video." style="cursor:help; display:inline-block; margin-left:4px; color:var(--text-muted); font-size:1.1rem;">ⓘ</span></label>
+                            <select id="dub-merge-mode" class="select-input">
+                                <option value="native">Native (Tự nhiên, căn chuẩn timeline)</option>
+                                <option value="cascade">Cascade (Đọc nối tiếp không khoảng nghỉ)</option>
+                                <option value="fit">Fit (Ép tốc độ khớp 100% timeline)</option>
+                                <option value="strict">Strict (Cắt bỏ nếu đọc lố giờ)</option>
+                            </select>
+                        </div>
+                        <div style="flex:1;">
+                            <label class="form-label">Chế độ giọng</label>
+                            <div style="display:flex; gap:8px;">
+                                <select id="dub-voice-select" class="select-input"></select>
+                                <button class="play-btn" style="border-radius:var(--radius-md); padding:0 16px; background-color:var(--bg-input); border:1px solid var(--border-color); color:var(--text-main);">▶</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="card">
-                    <label class="form-label">Chế độ giọng</label>
-                    <select id="dub-voice-select" class="select-input"></select>
+                <div class="card" style="margin-bottom:0; background: rgba(0,0,0,0.2);">
+                    <div class="card-title">Dubbing Progress <span style="float:right; color:var(--text-muted); font-size:0.9rem; font-weight:normal;" id="dub-timer">00:00</span></div>
+                    
+                    <div class="steps-tracker" id="dub-steps">
+                        <div class="step-item active" id="step-1"><div class="step-circle">1</div><div class="step-label">Chuẩn bị</div></div>
+                        <div class="step-item" id="step-2"><div class="step-circle">2</div><div class="step-label">Xử lý SRT</div></div>
+                        <div class="step-item" id="step-3"><div class="step-circle">3</div><div class="step-label">Tạo giọng nói</div></div>
+                        <div class="step-item" id="step-4"><div class="step-circle">4</div><div class="step-label">Hoàn tất</div></div>
+                    </div>
+                    
+                    <button class="btn-blue" id="btn-dubbing" onclick="generateDubbing()" style="padding:16px; font-size:1.1rem; width:100%;">Bắt đầu lồng tiếng</button>
                 </div>
             </div>
 
-            <div class="right-panel">
-                <div class="page-title">Lồng tiếng SRT</div>
-                <div class="page-desc">Âm thanh lồng tiếng sẽ được trả về dạng .wav</div>
-                <button class="btn-blue" id="btn-dubbing" onclick="generateDubbing()" style="padding:16px; font-size:1.1rem; margin-bottom:20px; width:100%;">🎬 Bắt đầu lồng tiếng</button>
-                <div class="result-box" id="dub-result-box" style="margin-bottom:20px;">
-                    <div class="empty-state" id="dub-empty-state">
+            <!-- Column 2 -->
+            <div class="card" style="height: 100%; display: flex; flex-direction: column;">
+                <div class="card-title">Kết quả lồng tiếng</div>
+                <div class="result-box" id="dub-result-box" style="flex: 1; display:flex; flex-direction:column;">
+                    <div class="empty-state" id="dub-empty-state" style="flex:1; display:flex; flex-direction:column; justify-content:center;">
                         <div class="empty-icon">🎧</div>
                         <div>Chưa có audio nào.</div>
                     </div>
-                    <div class="history-section" id="dub-history-section" style="display: none;">
-                        <div class="history-header">Lịch sử Lồng tiếng</div>
-                        <div class="history-list" id="dub-history-list"></div>
-                    </div>
+                    <div class="history-list" id="dub-history-list" style="flex:1;"></div>
                 </div>
             </div>
         </div>
 
         <!-- 3. VIEW: NHÂN BẢN GIỌNG NÓI -->
-        <div id="view-clone" class="view-panel single-layout">
-            <div class="page-title">👤 Nhân bản giọng nói</div>
-            <div class="page-desc">Tải lên file audio gốc để hệ thống AI học và nhân bản giọng nói.</div>
-
-            <div class="card">
-                <label class="form-label">1. Tải lên file giọng mẫu (.wav, .mp3)</label>
-                <input type="file" id="file-uploader" class="select-input" accept=".wav,.mp3,.ogg,.flac">
-                <button class="btn-blue" style="margin-top:10px;" onclick="uploadRefFile()">Tải lên Server</button>
-                <div id="upload-status" style="margin-top:10px; color:var(--accent-green);"></div>
+        <div id="view-clone" class="view-panel cloning-layout">
+            <div class="page-header">
+                <div class="page-title">AI Voice Cloning Dashboard</div>
             </div>
 
+            <!-- Panel 1: Upload Sample -->
+            <div class="card" style="display:flex; flex-direction:column; justify-content:space-between;">
+                <div class="card-title">1. Upload Sample</div>
+                <div class="upload-zone" onclick="document.getElementById('file-uploader').click()" ondragover="event.preventDefault(); this.style.borderColor='var(--accent-blue)';" ondragleave="this.style.borderColor='var(--border-color)';" ondrop="event.preventDefault(); this.style.borderColor='var(--border-color)'; document.getElementById('file-uploader').files = event.dataTransfer.files; uploadRefFile();">
+                    <div class="upload-icon">☁️</div>
+                    <div style="font-size:0.9rem; color:var(--text-muted);">Kéo và thả tệp âm thanh chất lượng cao vào đây (MP3, WAV, FLAC)</div>
+                    <input type="file" id="file-uploader" style="display:none" accept=".wav,.mp3,.ogg,.flac" onchange="uploadRefFile()">
+                </div>
+                <div id="upload-status" style="margin-top:16px; font-size:0.85rem; color:var(--accent-green); text-align:center;"></div>
+                <button class="btn-outline" style="margin-top:24px; width:100%; display:flex; justify-content:center; align-items:center; gap:8px;">🎤 Record New Sample</button>
+            </div>
+
+            <!-- Panel 2: Voice Analysis -->
             <div class="card">
-                <label class="form-label">2. Lưu thành Profile VoiceID</label>
-                <input type="text" id="save-clone-id" class="text-input" placeholder="Nhập ID không dấu (vd: sep_tong)" style="margin-bottom:10px;">
-                <input type="text" id="save-clone-file" class="text-input" placeholder="Tên file đã tải lên (vd: sep_tong.wav)" style="margin-bottom:10px;" readonly>
-                <button class="btn-blue" onclick="saveCloneToRegistry()">Lưu VoiceID</button>
+                <div class="card-title">2. Voice Analysis</div>
+                <div style="background:var(--bg-input); border-radius:var(--radius-md); padding:16px; text-align:center;">
+                    <div id="analysis-filename" style="font-size:0.85rem; color:var(--text-main); margin-bottom:16px; word-break: break-all;">Chưa có file nào</div>
+                    <div class="waveform-mock" style="height:60px; margin-bottom:16px; background-size: 8px 100%;"></div>
+                    <div style="display:flex; justify-content:center; gap:16px; color:var(--text-muted); font-size:0.8rem;">
+                        <span id="analysis-duration">Duration: 00:00</span>
+                        <span id="analysis-score" style="color:var(--accent-green);">Quality Score: N/A</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Panel 3: Cloning Settings -->
+            <div class="card" style="display:flex; flex-direction:column; justify-content:space-between;">
+                <div>
+                    <div class="card-title">3. Cloning Settings</div>
+                    <label class="form-label">Voice Name</label>
+                    <input type="text" id="save-clone-id" class="text-input" placeholder="e.g., Professional Narrator" style="margin-bottom:16px;">
+                    
+                    <label class="form-label">Add Labels (File đã tải lên)</label>
+                    <input type="text" id="save-clone-file" class="text-input" placeholder="Tên file đã tải lên" style="margin-bottom:16px;" readonly>
+                    
+                    <label class="form-label">Language</label>
+                    <select class="select-input"><option>Tiếng Việt</option><option>English</option></select>
+                </div>
+                <button class="btn-blue" onclick="saveCloneToRegistry()" style="margin-top:24px; width:100%; padding:16px; font-size:1.05rem;">Start Cloning</button>
+            </div>
+
+            <!-- Right Sidebar: My Cloned Voices -->
+            <div class="card" style="height: 100%; display: flex; flex-direction: column;">
+                <div class="card-title">My Cloned Voices</div>
+                <div id="cloned-voices-list" style="display:flex; flex-direction:column; gap:12px; overflow-y:auto; flex: 1;">
+                    <div class="empty-state" style="border:none; padding:20px 0;"><div class="empty-icon">👤</div><div>Chưa có clone voice nào.</div></div>
+                </div>
             </div>
         </div>
 
@@ -280,8 +390,27 @@ with open("output.wav", "wb") as f:
             const select = document.getElementById('voice-select');
             const dubSelect = document.getElementById('dub-voice-select');
             const optionsHtml = data.voices.map(v => `<option value="${v.id}">${v.display_name || v.id} (${v.type})</option>`).join('');
-            select.innerHTML = optionsHtml;
+            if (select) select.innerHTML = optionsHtml;
             if (dubSelect) dubSelect.innerHTML = optionsHtml;
+
+            // Render Cloned Voices
+            const cloneList = document.getElementById('cloned-voices-list');
+            if (cloneList) {
+                const clones = data.voices.filter(v => v.type === 'clone');
+                if (clones.length === 0) {
+                    cloneList.innerHTML = `<div class="empty-state" style="border:none; padding:20px 0;"><div class="empty-icon">👤</div><div>Chưa có clone voice nào.</div></div>`;
+                } else {
+                    cloneList.innerHTML = clones.map(v => `
+                        <div style="background:var(--bg-input); padding:16px; border-radius:var(--radius-md); display:flex; justify-content:space-between; align-items:center; border:1px solid var(--border-color);">
+                            <div>
+                                <div style="font-weight:600; color:white; font-size:0.95rem; margin-bottom:4px;">${escapeHtml(v.display_name || v.id)}</div>
+                                <div style="color:var(--accent-green); font-size:0.75rem;">Ready</div>
+                            </div>
+                            <button class="play-btn" style="width:32px; height:32px; background:var(--accent-green);">▶</button>
+                        </div>
+                    `).join('');
+                }
+            }
         } catch(e) { console.error(e); }
     }
 
@@ -327,17 +456,24 @@ with open("output.wav", "wb") as f:
             const timeStr = now.toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit', second:'2-digit'});
 
             const selectedVoiceName = document.getElementById('dub-voice-select').options[document.getElementById('dub-voice-select').selectedIndex].text;
+            const filename = `dubbing_${voiceId}_${Date.now()}.wav`;
 
             const item = document.createElement('div');
             item.className = 'history-item';
             item.innerHTML = `
-                <div class="history-item-meta">
-                    <span class="history-item-voice">${selectedVoiceName} (${mergeMode})</span>
-                    <span class="history-item-duration">⏰ ${durationSec}s | 📅 ${timeStr}</span>
+                <div class="history-meta">
+                    <div>
+                        <span class="history-title">${filename}</span>
+                        <span class="history-subtitle">🗣️ ${selectedVoiceName} (${mergeMode}) | ⏱️ ${durationSec}s | ${timeStr}</span>
+                    </div>
+                    <span class="status-tag status-success">Hoàn thành</span>
                 </div>
-                <audio controls src="${url}"></audio>
-                <div class="history-item-actions">
-                    <a href="${url}" download="dubbing_${voiceId}_${Date.now()}.wav" class="btn-blue" style="font-size:0.8rem; padding:6px 12px;">⬇ Tải xuống</a>
+                <div class="history-player">
+                    <button class="play-btn" onclick="const audio = this.nextElementSibling; if(audio.paused){audio.play();}else{audio.pause();}">▶</button>
+                    <audio src="${url}" style="display:none;" onplay="this.previousElementSibling.innerText='⏸'" onpause="this.previousElementSibling.innerText='▶'" onended="this.previousElementSibling.innerText='▶'" onloadedmetadata="this.nextElementSibling.nextElementSibling.innerText = new Date(this.duration * 1000).toISOString().substr(14, 5)"></audio>
+                    <div class="waveform-mock"></div>
+                    <span class="duration-text">00:00</span>
+                    <a href="${url}" download="${filename}" class="action-btn" title="Download" style="text-decoration:none;">⬇</a>
                 </div>
             `;
             document.getElementById('dub-history-list').prepend(item);
@@ -389,13 +525,18 @@ with open("output.wav", "wb") as f:
             item.className = 'history-item';
             item.innerHTML = `
                 <div class="history-meta">
-                    <span class="history-time">${timeStr} - ${dateStr} | 🗣️ ${voiceName} | ⏱️ ${duration}s</span>
-                    <span>${(blob.size / 1024).toFixed(1)} KB</span>
+                    <div>
+                        <span class="history-title">${filename}</span>
+                        <span class="history-subtitle">🗣️ ${voiceName} | ⏱️ ${duration}s | ${timeStr}</span>
+                    </div>
+                    <span class="status-tag status-success">Hoàn thành</span>
                 </div>
-                <div class="history-text">${escapeHtml(snippet)}</div>
-                <div class="history-controls">
-                    <audio src="${url}" controls></audio>
-                    <a class="history-download" href="${url}" download="${filename}">⬇️ Tải</a>
+                <div class="history-player">
+                    <button class="play-btn" onclick="const audio = this.nextElementSibling; if(audio.paused){audio.play();}else{audio.pause();}">▶</button>
+                    <audio src="${url}" style="display:none;" onplay="this.previousElementSibling.innerText='⏸'" onpause="this.previousElementSibling.innerText='▶'" onended="this.previousElementSibling.innerText='▶'" onloadedmetadata="this.nextElementSibling.nextElementSibling.innerText = new Date(this.duration * 1000).toISOString().substr(14, 5)"></audio>
+                    <div class="waveform-mock"></div>
+                    <span class="duration-text">00:00</span>
+                    <a href="${url}" download="${filename}" class="action-btn" title="Download" style="text-decoration:none;">⬇</a>
                 </div>
             `;
 
@@ -403,8 +544,7 @@ with open("output.wav", "wb") as f:
             list.insertBefore(item, list.firstChild);
 
             document.getElementById('empty-state').style.display = 'none';
-            document.getElementById('history-section').style.display = 'block';
-
+            // Play the audio automatically
             const audioInItem = item.querySelector('audio');
             audioInItem.play();
         } catch (e) {
@@ -422,16 +562,27 @@ with open("output.wav", "wb") as f:
     // Clone View Logic
     async function uploadRefFile() {
         const fileInput = document.getElementById('file-uploader');
-        if (!fileInput.files[0]) return alert("Chưa chọn file!");
+        if (!fileInput.files || !fileInput.files[0]) return;
         const formData = new FormData();
-        formData.append("file", fileInput.files[0]);
+        const file = fileInput.files[0];
+        formData.append("file", file);
+
+        document.getElementById('upload-status').innerText = "Đang tải lên...";
 
         try {
             const res = await fetch('/api/upload-ref', { method: 'POST', body: formData });
             const data = await res.json();
-            document.getElementById('upload-status').innerText = "Đã tải lên: " + data.filename;
+            document.getElementById('upload-status').innerText = "Tải lên thành công: " + file.name;
             document.getElementById('save-clone-file').value = data.filename;
+
+            // Update Voice Analysis UI Mock
+            if (document.getElementById('analysis-filename')) {
+                document.getElementById('analysis-filename').innerText = file.name;
+                document.getElementById('analysis-duration').innerText = "Duration: 00:15"; // Mock
+                document.getElementById('analysis-score').innerText = "Quality Score: Excellent (98%)";
+            }
         } catch (e) {
+            document.getElementById('upload-status').innerText = "";
             alert("Lỗi upload: " + e.message);
         }
     }
@@ -480,8 +631,17 @@ with open("output.wav", "wb") as f:
         }
     }
 
+    async function updateSrtUI() {
+        const fileInput = document.getElementById('srt-upload');
+        if (fileInput.files && fileInput.files[0]) {
+            document.getElementById('srt-progress-container').style.display = 'block';
+            document.getElementById('srt-filename-display').innerText = 'Đã tải lên: ' + fileInput.files[0].name;
+        }
+    }
+
     window.onload = () => {
         loadCatalog();
+        loadVoiceRegistryTable();
     };
 </script>
 </body>

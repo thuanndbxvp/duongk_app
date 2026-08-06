@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
       },
       {
         headers: {
-          'Set-Cookie': `access_token=${mockToken}; Path=/; HttpOnly; SameSite=Lax`,
+          'Set-Cookie': `sb-access-token=${mockToken}; Path=/; HttpOnly; SameSite=Lax`,
         },
       }
     );
