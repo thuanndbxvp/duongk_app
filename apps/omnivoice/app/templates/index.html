@@ -155,17 +155,10 @@
 
                 <div class="card" style="margin-bottom:0; background: rgba(0,0,0,0.2);">
                     <div class="card-title">Cài đặt giọng nói</div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
+                    <div style="margin-bottom: 24px;">
                         <div>
                             <label class="form-label">Chọn giọng</label>
                             <select id="voice-select" class="select-input"></select>
-                        </div>
-                        <div>
-                            <label class="form-label">Phong cách</label>
-                            <select id="instruct-style" class="select-input">
-                                <option value="">Bình thường</option>
-                                <option value="whisper">Thì thầm (Whisper)</option>
-                            </select>
                         </div>
                     </div>
 
@@ -259,13 +252,7 @@
                 <div class="card" style="margin-bottom:0; background: rgba(0,0,0,0.2);">
                     <div class="card-title">Dubbing Progress <span style="float:right; color:var(--text-muted); font-size:0.9rem; font-weight:normal;" id="dub-timer">00:00</span></div>
                     
-                    <div class="steps-tracker" id="dub-steps">
-                        <div class="step-item active" id="step-1"><div class="step-circle">1</div><div class="step-label">Chuẩn bị</div></div>
-                        <div class="step-item" id="step-2"><div class="step-circle">2</div><div class="step-label">Xử lý SRT</div></div>
-                        <div class="step-item" id="step-3"><div class="step-circle">3</div><div class="step-label">Tạo giọng nói</div></div>
-                        <div class="step-item" id="step-4"><div class="step-circle">4</div><div class="step-label">Hoàn tất</div></div>
-                    </div>
-                    
+
                     <button class="btn-blue" id="btn-dubbing" onclick="generateDubbing()" style="padding:16px; font-size:1.1rem; width:100%;">Bắt đầu lồng tiếng</button>
                 </div>
             </div>
