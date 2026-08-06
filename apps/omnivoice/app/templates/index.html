@@ -126,10 +126,10 @@
     <!-- SIDEBAR -->
     <div class="sidebar">
         <div class="logo"><div class="logo-box"></div> TTS Voice Studio</div>
-        <div class="nav-item active" data-view="tts">✨ Tạo giọng nói</div>
+        <div class="nav-item active" data-view="tts">✨ TTS</div>
         <div class="nav-item" data-view="dubbing">🎬 Lồng tiếng SRT</div>
         <div class="nav-item" data-view="clone">👤 Nhân bản giọng nói</div>
-        <div class="nav-item" data-view="registry">🎙️ Đa giọng</div>
+        <div class="nav-item" data-view="registry">🎙️ Tạo và quản lý giọng</div>
         <div class="nav-item" data-view="profile">⚙️ Profile</div>
     </div>
 
@@ -138,7 +138,7 @@
         <!-- 1. VIEW: TẠO GIỌNG NÓI -->
         <div id="view-tts" class="view-panel active tts-layout">
             <div class="page-header">
-                <div class="page-title">Create Voice</div>
+                <div class="page-title">Text to Speech</div>
             </div>
 
             <!-- Column 1 -->
@@ -165,49 +165,18 @@
                         <div class="emotion-btn" onclick="insertTag('[sigh]')"><span class="emotion-title">Thở dài</span><span class="emotion-sub">[sigh]</span></div>
                         <div class="emotion-btn" onclick="insertTag('[surprise-ah]')"><span class="emotion-title">Ngạc nhiên</span><span class="emotion-sub">[surprise-ah]</span></div>
                         <div class="emotion-btn" onclick="insertTag('[dissatisfaction-hnn]')"><span class="emotion-title">Khó chịu</span><span class="emotion-sub">[dissatisfaction-hnn]</span></div>
+                        <div class="emotion-btn" onclick="insertTag('[confirmation-en]')"><span class="emotion-title">Đồng ý</span><span class="emotion-sub">[confirmation-en]</span></div>
+                        <div class="emotion-btn" onclick="insertTag('[question-en]')"><span class="emotion-title">Hỏi (En)</span><span class="emotion-sub">[question-en]</span></div>
+                        <div class="emotion-btn" onclick="insertTag('[question-ah]')"><span class="emotion-title">Hỏi (Ah)</span><span class="emotion-sub">[question-ah]</span></div>
+                        <div class="emotion-btn" onclick="insertTag('[surprise-wa]')"><span class="emotion-title">Ồ (Wa)</span><span class="emotion-sub">[surprise-wa]</span></div>
                     </div>
 
-                    <label class="form-label" style="border-top: 1px solid var(--border-color); padding-top: 16px;">Voice Design (Instruct)</label>
-                    <div class="page-desc" style="margin-bottom: 12px; font-size: 0.8rem;">Thiết kế chất giọng (Dùng cho cả giọng gốc và giọng Clone)</div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
-                        <div>
-                            <label style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px; display: block;">Giới tính</label>
-                            <select id="instruct-gender" class="select-input" style="padding: 8px;">
-                                <option value="">Mặc định</option>
-                                <option value="female">Nữ (Female)</option>
-                                <option value="male">Nam (Male)</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px; display: block;">Độ tuổi</label>
-                            <select id="instruct-age" class="select-input" style="padding: 8px;">
-                                <option value="">Mặc định</option>
-                                <option value="child">Trẻ em (Child)</option>
-                                <option value="teenager">Thiếu niên (Teenager)</option>
-                                <option value="young adult">Thanh niên (Young Adult)</option>
-                                <option value="middle-aged">Trung niên (Middle-aged)</option>
-                                <option value="elderly">Người già (Elderly)</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px; display: block;">Cao độ</label>
-                            <select id="instruct-pitch" class="select-input" style="padding: 8px;">
-                                <option value="">Mặc định</option>
-                                <option value="very low pitch">Rất thấp</option>
-                                <option value="low pitch">Thấp</option>
-                                <option value="moderate pitch">Vừa</option>
-                                <option value="high pitch">Cao</option>
-                                <option value="very high pitch">Rất cao</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px; display: block;">Phong cách</label>
-                            <select id="instruct-style" class="select-input" style="padding: 8px;">
-                                <option value="">Bình thường</option>
-                                <option value="whisper">Thì thầm (Whisper)</option>
-                            </select>
-                        </div>
-                    </div>
+                    <label class="form-label" style="border-top: 1px solid var(--border-color); padding-top: 16px;">Phong cách (Style)</label>
+                    <div class="page-desc" style="margin-bottom: 12px; font-size: 0.8rem;">Ép phong cách nói (dành cho mọi giọng)</div>
+                    <select id="instruct-style" class="select-input" style="padding: 8px; margin-bottom: 16px;">
+                        <option value="">Bình thường</option>
+                        <option value="whisper">Thì thầm (Whisper)</option>
+                    </select>
 
                     <label class="form-label" style="border-top: 1px solid var(--border-color); padding-top: 16px;">Tốc độ (Speed) <span id="speed-value" style="float: right; color: var(--text-muted);">1.0</span></label>
                     <input type="range" id="speed-slider" min="0.5" max="2.0" step="0.1" value="1.0" style="width:100%; margin-bottom: 8px;" oninput="document.getElementById('speed-value').innerText = parseFloat(this.value).toFixed(1)">
@@ -361,8 +330,59 @@
 
         <!-- 3. VIEW: ĐA GIỌNG (REGISTRY) -->
         <div id="view-registry" class="view-panel single-layout">
-            <div class="page-title">🎙️ Đa giọng (Quản lý Voice Registry)</div>
-            <div class="page-desc">Danh sách toàn bộ các giọng đã được thiết kế và nhân bản trên hệ thống.</div>
+            <div class="page-title">🎙️ Tạo và quản lý giọng</div>
+            <div class="page-desc">Tạo giọng nói mới theo chỉ dẫn (Voice Design) và quản lý danh sách các giọng.</div>
+
+            <div class="card" style="margin-bottom: 24px;">
+                <div class="card-title">Tạo Voice Design (Từ Instruct)</div>
+                <div class="page-desc" style="margin-bottom: 16px; font-size: 0.8rem;">Tạo một nhân vật ảo với chất giọng riêng biệt.</div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+                    <div>
+                        <label class="form-label">Voice ID (Tên viết liền không dấu)</label>
+                        <input type="text" id="design-voice-id" class="text-input" placeholder="vd: co_giao_tre">
+                    </div>
+                    <div>
+                        <label class="form-label">Tên hiển thị</label>
+                        <input type="text" id="design-voice-name" class="text-input" placeholder="vd: Cô Giáo (Trẻ, Cao)">
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+                    <div>
+                        <label style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px; display: block;">Giới tính</label>
+                        <select id="design-gender" class="select-input" style="padding: 8px;">
+                            <option value="">Mặc định</option>
+                            <option value="female">Nữ (Female)</option>
+                            <option value="male">Nam (Male)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px; display: block;">Độ tuổi</label>
+                        <select id="design-age" class="select-input" style="padding: 8px;">
+                            <option value="">Mặc định</option>
+                            <option value="child">Trẻ em (Child)</option>
+                            <option value="teenager">Thiếu niên (Teenager)</option>
+                            <option value="young adult">Thanh niên (Young Adult)</option>
+                            <option value="middle-aged">Trung niên (Middle-aged)</option>
+                            <option value="elderly">Người già (Elderly)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px; display: block;">Cao độ</label>
+                        <select id="design-pitch" class="select-input" style="padding: 8px;">
+                            <option value="">Mặc định</option>
+                            <option value="very low pitch">Rất thấp</option>
+                            <option value="low pitch">Thấp</option>
+                            <option value="moderate pitch">Vừa</option>
+                            <option value="high pitch">Cao</option>
+                            <option value="very high pitch">Rất cao</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <button class="btn-blue" onclick="saveVoiceDesign()" style="width:100%; padding:12px;">Lưu Voice Design</button>
+            </div>
 
             <div class="card">
                 <button class="btn-blue" onclick="loadVoiceRegistryTable()" style="margin-bottom:20px;">↻ Tải lại danh sách</button>
@@ -531,13 +551,7 @@ with open("output.wav", "wb") as f:
         const speed = parseFloat(document.getElementById('speed-slider').value);
         
         const instructParts = [];
-        const gender = document.getElementById('instruct-gender').value;
-        const age = document.getElementById('instruct-age').value;
-        const pitch = document.getElementById('instruct-pitch').value;
         const style = document.getElementById('instruct-style').value;
-        if (gender) instructParts.push(gender);
-        if (age) instructParts.push(age);
-        if (pitch) instructParts.push(pitch);
         if (style) instructParts.push(style);
         const instruct = instructParts.join(", ");
 
@@ -652,6 +666,42 @@ with open("output.wav", "wb") as f:
             loadCatalog();
         } catch (e) {
             alert("Lỗi lưu: " + e.message);
+        }
+    }
+
+    // Registry Tab Logic
+    async function saveVoiceDesign() {
+        const id = document.getElementById('design-voice-id').value.trim();
+        const name = document.getElementById('design-voice-name').value.trim();
+        if (!id) return alert("Vui lòng nhập Voice ID");
+
+        const gender = document.getElementById('design-gender').value;
+        const age = document.getElementById('design-age').value;
+        const pitch = document.getElementById('design-pitch').value;
+        
+        const instructParts = [];
+        if (gender) instructParts.push(gender);
+        if (age) instructParts.push(age);
+        if (pitch) instructParts.push(pitch);
+        const instruct = instructParts.join(", ");
+
+        try {
+            const res = await fetch('/v1/voices', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    id: id,
+                    type: 'design',
+                    display_name: name || id,
+                    instruct: instruct
+                })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.detail?.message || "Lỗi lưu voice");
+            alert("Lưu Voice Design thành công!");
+            loadVoiceRegistryTable();
+        } catch(e) {
+            alert(e.message);
         }
     }
 
