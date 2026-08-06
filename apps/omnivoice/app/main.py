@@ -462,14 +462,17 @@ async def generate_dubbing(
     ref_prompt_key = None
     
     meta = registry.get(voice_id)
+    voices_dir = Path(__file__).resolve().parents[1] / "voices"
+
     if meta:
         if "ref_prompt_key" in meta:
             ref_prompt_key = meta["ref_prompt_key"]
         if "ref_audio_file" in meta:
-            ref_audio_path = str((Path(__file__).resolve().parents[1] / "voices" / meta["ref_audio_file"]).resolve())
+            ref_resolved = resolve_voice_file(voices_dir, meta["ref_audio_file"])
+            if ref_resolved:
+                ref_audio_path = str(ref_resolved.resolve())
     
-    if not ref_audio_path:
-        voices_dir = Path(__file__).resolve().parents[1] / "voices"
+    if not ref_audio_path and not ref_prompt_key:
         resolved = resolve_voice_file(voices_dir, voice_id)
         if resolved:
             ref_audio_path = str(resolved.resolve())
