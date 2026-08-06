@@ -835,6 +835,12 @@ def upsert_voice(req: _VoiceUpsertRequest, background_tasks: BackgroundTasks):
 
 @app.delete("/v1/voices/{voice_id}", status_code=204)
 def delete_voice(voice_id: str):
+    system_voices = {'ban_mai', 'lan_trinh', 'minhquan_vb', 'ngan_ha', 'ngoc_huyen', 'ngochuyen_vb', 'thao_trinh', 'tuong_vy'}
+    if voice_id in system_voices:
+        raise HTTPException(
+            status_code=403,
+            detail=f"Voice '{voice_id}' is a system voice and cannot be deleted."
+        )
     if not registry.delete(voice_id):
         raise HTTPException(
             status_code=404,

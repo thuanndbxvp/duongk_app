@@ -726,15 +726,22 @@ with open("output.wav", "wb") as f:
         try {
             const res = await fetch('/v1/catalog');
             const data = await res.json();
+            const systemVoices = ['ban_mai', 'lan_trinh', 'minhquan_vb', 'ngan_ha', 'ngoc_huyen', 'ngochuyen_vb', 'thao_trinh', 'tuong_vy'];
             const tbody = document.querySelector('#registry-table tbody');
-            tbody.innerHTML = data.voices.map(v => `
+            tbody.innerHTML = data.voices.map(v => {
+                const isSystem = systemVoices.includes(v.id);
+                const actionBtn = isSystem 
+                    ? `<span style="color:var(--text-muted); font-size:0.8rem; font-style:italic;">Hệ thống</span>`
+                    : `<button onclick="deleteVoice('${escapeHtml(v.id)}')" style="background:var(--danger); color:#fff; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-size:0.8rem;">Xóa</button>`;
+                return `
                 <tr>
                     <td><code>${escapeHtml(v.id)}</code></td>
                     <td>${escapeHtml(v.display_name || '')}</td>
                     <td>${escapeHtml(v.type || '')}</td>
-                    <td><button onclick="deleteVoice('${escapeHtml(v.id)}')" style="background:var(--danger); color:#fff; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-size:0.8rem;">Xóa</button></td>
+                    <td>${actionBtn}</td>
                 </tr>
-            `).join('');
+                `;
+            }).join('');
         } catch (e) { console.error(e); }
     }
 
