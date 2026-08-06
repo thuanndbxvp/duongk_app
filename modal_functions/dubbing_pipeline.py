@@ -311,11 +311,29 @@ def dub_srt(srt_text: str, output_key: str, merge_mode: str = "native", referenc
         
         samplerate = getattr(model.config, "samplerate", 24000)
         
-        # Generate audio for each subtitle
+        # Group subtitles into sentences to avoid fragmentation and hesitation
+        sentence_groups = []
+        current_group = []
+        for sub in subs:
+            current_group.append(sub)
+            text = sub.text.strip()
+            # If text ends with terminal punctuation, finalize the group
+            if text.endswith('.') or text.endswith('!') or text.endswith('?') or text.endswith(';'):
+                sentence_groups.append(current_group)
+                current_group = []
+        if current_group:
+            sentence_groups.append(current_group)
+            
+        # Generate audio for each sentence
         audio_segments = []
-        for i, sub in enumerate(subs):
+        for group in sentence_groups:
+            combined_text = " ".join([s.text.replace("\n", " ").strip() for s in group])
+            # If the combined text doesn't end with punctuation, append a period to force a natural stop
+            if not (combined_text.endswith('.') or combined_text.endswith('!') or combined_text.endswith('?')):
+                combined_text += "."
+                
             call_kwargs = {
-                "text": sub.text.replace("\n", " "),
+                "text": combined_text,
                 "language": "vi",
                 "generation_config": gen_cfg,
             }
@@ -331,8 +349,8 @@ def dub_srt(srt_text: str, output_key: str, merge_mode: str = "native", referenc
             if isinstance(audio_data, list) or isinstance(audio_data, tuple):
                 audio_data = audio_data[0]
             
-            start_time = sub.start.ordinal / 1000.0  # seconds
-            end_time = sub.end.ordinal / 1000.0
+            start_time = group[0].start.ordinal / 1000.0  # seconds
+            end_time = group[-1].end.ordinal / 1000.0
             duration_allowed = end_time - start_time
             
             audio_segments.append({
