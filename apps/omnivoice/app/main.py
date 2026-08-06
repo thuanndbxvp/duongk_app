@@ -369,7 +369,7 @@ async def generate_tts(request: TTSRequest):
                 s3.upload_file(ref_audio_path, os.environ.get("R2_BUCKET_UPLOADS", "ai86-uploads"), object_key)
                 ref_audio_url = f"{os.environ['R2_PUBLIC_CDN']}/{object_key}"
 
-            synth_fn = modal.Function.lookup("ai-dubbing-pipeline", "synthesize_voice")
+            synth_fn = modal.Function.from_name("ai-dubbing-pipeline", "synthesize_voice")
             output_key = f"omnivoice_renders/{uuid.uuid4().hex}.wav"
             
             result = synth_fn.remote(
@@ -844,7 +844,7 @@ async def tts_by_voice_id(voice_id: str, request: Request):
                 s3.upload_file(ref_audio_path, os.environ.get("R2_BUCKET_UPLOADS", "ai86-uploads"), object_key)
                 ref_audio_url = f"{os.environ['R2_PUBLIC_CDN']}/{object_key}"
 
-            synth_fn = modal.Function.lookup("ai-dubbing-pipeline", "synthesize_voice")
+            synth_fn = modal.Function.from_name("ai-dubbing-pipeline", "synthesize_voice")
             output_key = f"omnivoice_renders/{uuid.uuid4().hex}.wav"
             
             result = synth_fn.remote(
