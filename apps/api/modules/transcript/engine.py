@@ -11,8 +11,7 @@ from enum import Enum
 from typing import Optional, List, Dict, Any
 import httpx
 import openai
-
-
+from apps.api.services.routing import get_routing_config
 class TranscriptTier(Enum):
     YOUTUBE_API = 1      # youtube-transcript-api (FREE)
     SUPADATA = 2         # Supadata API ($0.001/min)
