@@ -379,7 +379,10 @@ async def generate_tts(request: TTSRequest):
                 instruct=instruct if not ref_audio_path else None
             )
             
-            req = urllib.request.Request(result["audio_url"])
+            req = urllib.request.Request(
+                result["audio_url"],
+                headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
+            )
             with urllib.request.urlopen(req) as response:
                 return response.read()
 
@@ -854,7 +857,10 @@ async def tts_by_voice_id(voice_id: str, request: Request):
                 instruct=instruct if not ref_audio_path else None
             )
             
-            req = urllib.request.Request(result["audio_url"])
+            req = urllib.request.Request(
+                result["audio_url"],
+                headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
+            )
             with urllib.request.urlopen(req) as response:
                 return response.read()
 
