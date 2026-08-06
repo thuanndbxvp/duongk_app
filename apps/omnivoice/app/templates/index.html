@@ -94,6 +94,7 @@
     <div class="sidebar">
         <div class="logo"><div class="logo-box"></div> TTS Voice Studio</div>
         <div class="nav-item active" data-view="tts">✨ Tạo giọng nói</div>
+        <div class="nav-item" data-view="dubbing">🎬 Lồng tiếng SRT</div>
         <div class="nav-item" data-view="clone">👤 Nhân bản giọng nói</div>
         <div class="nav-item" data-view="registry">🎙️ Đa giọng</div>
         <div class="nav-item" data-view="profile">⚙️ Profile</div>
@@ -148,7 +149,49 @@
             </div>
         </div>
 
-        <!-- 2. VIEW: NHÂN BẢN GIỌNG NÓI -->
+        <!-- 2. VIEW: LỒNG TIẾNG SRT -->
+        <div id="view-dubbing" class="view-panel tts-layout">
+            <div class="center-content">
+                <div class="page-title">🎬 Lồng tiếng SRT (Dubbing)</div>
+                <div class="page-desc">Đồng bộ giọng đọc với phụ đề SRT cho video.</div>
+
+                <div class="card">
+                    <label class="form-label">Tải lên phụ đề (.srt)</label>
+                    <input type="file" id="srt-upload" accept=".srt" class="file-input" style="width:100%; padding:10px; border:1px dashed var(--border-color); border-radius:var(--radius-md);">
+                    
+                    <label class="form-label" style="margin-top:20px;">Chế độ ghép nối (Merge Mode)</label>
+                    <select id="dub-merge-mode" class="select-input">
+                        <option value="native">Native (Tự nhiên, căn chuẩn timeline)</option>
+                        <option value="cascade">Cascade (Đọc nối tiếp không khoảng nghỉ)</option>
+                        <option value="fit">Fit (Ép tốc độ khớp 100% timeline)</option>
+                        <option value="strict">Strict (Cắt bỏ nếu đọc lố giờ)</option>
+                    </select>
+                </div>
+
+                <div class="card">
+                    <label class="form-label">Chế độ giọng</label>
+                    <select id="dub-voice-select" class="select-input"></select>
+                </div>
+            </div>
+
+            <div class="right-panel">
+                <div class="page-title">Lồng tiếng SRT</div>
+                <div class="page-desc">Âm thanh lồng tiếng sẽ được trả về dạng .wav</div>
+                <button class="btn-blue" id="btn-dubbing" onclick="generateDubbing()" style="padding:16px; font-size:1.1rem; margin-bottom:20px; width:100%;">🎬 Bắt đầu lồng tiếng</button>
+                <div class="result-box" id="dub-result-box" style="margin-bottom:20px;">
+                    <div class="empty-state" id="dub-empty-state">
+                        <div class="empty-icon">🎧</div>
+                        <div>Chưa có audio nào.</div>
+                    </div>
+                    <div class="history-section" id="dub-history-section" style="display: none;">
+                        <div class="history-header">Lịch sử Lồng tiếng</div>
+                        <div class="history-list" id="dub-history-list"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. VIEW: NHÂN BẢN GIỌNG NÓI -->
         <div id="view-clone" class="view-panel single-layout">
             <div class="page-title">👤 Nhân bản giọng nói</div>
             <div class="page-desc">Tải lên file audio gốc để hệ thống AI học và nhân bản giọng nói.</div>
@@ -235,8 +278,76 @@ with open("output.wav", "wb") as f:
             const res = await fetch('/v1/catalog');
             const data = await res.json();
             const select = document.getElementById('voice-select');
-            select.innerHTML = data.voices.map(v => `<option value="${v.id}">${v.display_name || v.id} (${v.type})</option>`).join('');
+            const dubSelect = document.getElementById('dub-voice-select');
+            const optionsHtml = data.voices.map(v => `<option value="${v.id}">${v.display_name || v.id} (${v.type})</option>`).join('');
+            select.innerHTML = optionsHtml;
+            if (dubSelect) dubSelect.innerHTML = optionsHtml;
         } catch(e) { console.error(e); }
+    }
+
+    async function generateDubbing() {
+        const btn = document.getElementById('btn-dubbing');
+        const srtFile = document.getElementById('srt-upload').files[0];
+        const voiceId = document.getElementById('dub-voice-select').value;
+        const mergeMode = document.getElementById('dub-merge-mode').value;
+
+        if (!srtFile) return alert("Vui lòng tải lên file phụ đề (.srt)!");
+        if (!voiceId) return alert("Chưa có voice nào trong catalog!");
+
+        btn.disabled = true;
+        btn.innerText = "🎬 Đang xử lý lồng tiếng (vui lòng đợi vài phút)...";
+        const startTime = Date.now();
+        
+        const formData = new FormData();
+        formData.append("srt_file", srtFile);
+        formData.append("voice_id", voiceId);
+        formData.append("merge_mode", mergeMode);
+
+        try {
+            const res = await fetch('/v1/dubbing', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (!res.ok) {
+                const err = await res.json();
+                throw new Error(err.detail || "Error from server");
+            }
+            
+            const blob = await res.blob();
+            const url = URL.createObjectURL(blob);
+            
+            document.getElementById('dub-empty-state').style.display = 'none';
+            document.getElementById('dub-history-section').style.display = 'block';
+            
+            const durationMs = Date.now() - startTime;
+            const durationSec = (durationMs / 1000).toFixed(1);
+            
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit', second:'2-digit'});
+
+            const selectedVoiceName = document.getElementById('dub-voice-select').options[document.getElementById('dub-voice-select').selectedIndex].text;
+
+            const item = document.createElement('div');
+            item.className = 'history-item';
+            item.innerHTML = `
+                <div class="history-item-meta">
+                    <span class="history-item-voice">${selectedVoiceName} (${mergeMode})</span>
+                    <span class="history-item-duration">⏰ ${durationSec}s | 📅 ${timeStr}</span>
+                </div>
+                <audio controls src="${url}"></audio>
+                <div class="history-item-actions">
+                    <a href="${url}" download="dubbing_${voiceId}_${Date.now()}.wav" class="btn-blue" style="font-size:0.8rem; padding:6px 12px;">⬇ Tải xuống</a>
+                </div>
+            `;
+            document.getElementById('dub-history-list').prepend(item);
+            
+        } catch(e) {
+            alert("Lỗi tạo dubbing: " + e.message);
+        } finally {
+            btn.disabled = false;
+            btn.innerText = "🎬 Bắt đầu lồng tiếng";
+        }
     }
 
     async function generateTTS() {
