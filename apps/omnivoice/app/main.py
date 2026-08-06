@@ -375,8 +375,7 @@ async def generate_tts(request: TTSRequest):
             result = synth_fn.remote(
                 text=text_to_gen,
                 output_key=output_key,
-                reference_audio_url=ref_audio_url,
-                instruct=instruct if not ref_audio_path else None
+                reference_audio_url=ref_audio_url
             )
             
             req = urllib.request.Request(result["audio_url"])
@@ -850,8 +849,7 @@ async def tts_by_voice_id(voice_id: str, request: Request):
             result = synth_fn.remote(
                 text=text_to_gen,
                 output_key=output_key,
-                reference_audio_url=ref_audio_url,
-                instruct=instruct if not ref_audio_path else None
+                reference_audio_url=ref_audio_url
             )
             
             req = urllib.request.Request(result["audio_url"])
