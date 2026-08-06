@@ -31,18 +31,17 @@
         /* MAIN CONTENT AREA */
         .main-wrapper { display: flex; flex-direction: column; min-height: 100vh; background-color: var(--bg-body); }
 
-        .view-panel { display: none; width: 100%; }
-        .view-panel.active { display: block; padding: 32px; }
+        .view-panel { display: none; width: 100%; padding: 32px; }
 
         /* LAYOUT CHO VIEW TTS (3 Cot) */
-        .tts-layout { display: grid; grid-template-columns: 1fr 340px 380px; gap: 24px; min-height: 100vh; align-items: start; }
+        .view-panel.active.tts-layout { display: grid; grid-template-columns: 1fr 340px 380px; gap: 24px; min-height: 100vh; align-items: start; }
         
         /* LAYOUT CHO DUBBING & CLONING (Khác nhau chút) */
-        .dubbing-layout { display: grid; grid-template-columns: 1fr 400px; gap: 24px; min-height: 100vh; align-items: start; }
-        .cloning-layout { display: grid; grid-template-columns: 1fr 1fr 1fr 280px; gap: 24px; min-height: 100vh; align-items: start; }
+        .view-panel.active.dubbing-layout { display: grid; grid-template-columns: 1fr 400px; gap: 24px; min-height: 100vh; align-items: start; }
+        .view-panel.active.cloning-layout { display: grid; grid-template-columns: 1fr 1fr 1fr 280px; gap: 24px; min-height: 100vh; align-items: start; }
 
         /* LAYOUT CHO CAC VIEW CON LAI (1 Cot rong) */
-        .single-layout { width: 100%; max-width: 1200px; margin: 0 auto; }
+        .view-panel.active.single-layout { display: block; max-width: 1200px; margin: 0 auto; }
 
         /* SHARED COMPONENTS */
         .page-header { grid-column: 1 / -1; margin-bottom: 8px; }
