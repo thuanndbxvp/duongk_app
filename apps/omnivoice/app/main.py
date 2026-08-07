@@ -395,9 +395,50 @@ async def generate_tts(request: TTSRequest):
                     ExpiresIn=3600
                 )
 
-            output_key = f"omnivoice_renders/{uuid.uuid4().hex}.wav"
+            if req_engine in ["openvoice", "beam", "beam_openvoice"]:
+                import requests
+                import base64
+                
+                beam_url = os.environ.get(
+                    "BEAM_OPENVOICE_URL",
+                    "https://voice-studio-engine-8a5063d-v1.app.beam.cloud"
+                )
+                beam_token = os.environ.get(
+                    "BEAM_OPENVOICE_TOKEN",
+                    "vLohAOVbqSRdYMOQWc1SiY4MxW5HSISjVeXk5btUjKii5MOrrLQWWStDNsBlc0KX3FnDtp71StD-S6bAOBrJEg=="
+                )
+                
+                payload = {"text": text_to_gen}
+                
+                # Check reference audio
+                if ref_audio_path and os.path.exists(ref_audio_path):
+                    with open(ref_audio_path, "rb") as f:
+                        payload["reference_audio_base64"] = base64.b64encode(f.read()).decode("utf-8")
+                elif ref_audio_url:
+                    payload["reference_audio_url"] = ref_audio_url
+                else:
+                    # Fallback default reference audio if none provided
+                    fallback_ref = Path(__file__).resolve().parents[1] / "voices" / "ngan_ha.wav"
+                    if fallback_ref.exists():
+                        with open(fallback_ref, "rb") as f:
+                            payload["reference_audio_base64"] = base64.b64encode(f.read()).decode("utf-8")
+                
+                headers = {
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {beam_token}"
+                }
+                
+                resp = requests.post(beam_url, json=payload, headers=headers, timeout=180)
+                if not resp.ok:
+                    raise Exception(f"Beam.cloud OpenVoice engine error ({resp.status_code}): {resp.text}")
+                
+                data = resp.json()
+                if data.get("status") != "success" or "audio_base64" not in data:
+                    raise Exception(f"Invalid response from Beam.cloud: {data}")
+                
+                return base64.b64decode(data["audio_base64"])
             
-            if req_engine == "omnivoice":
+            elif req_engine == "omnivoice":
                 synth_fn = modal.Function.from_name("ai-dubbing-pipeline", "synthesize_voice")
                 result = synth_fn.remote(
                     text=text_to_gen,
