@@ -362,7 +362,6 @@ async def generate_tts(request: TTSRequest):
 
     try:
         def _infer():
-            import modal
             import uuid
             import boto3
             
@@ -442,6 +441,7 @@ async def generate_tts(request: TTSRequest):
                 return base64.b64decode(data["audio_base64"])
             
             elif req_engine == "omnivoice":
+                import modal
                 synth_fn = modal.Function.from_name("ai-dubbing-pipeline", "synthesize_voice")
                 result = synth_fn.remote(
                     text=text_to_gen,
@@ -453,6 +453,7 @@ async def generate_tts(request: TTSRequest):
                 )
             else:
                 # Default / Primary: VieNeu-TTS v3 Turbo
+                import modal
                 synth_fn = modal.Function.from_name("ai-dubbing-pipeline", "synthesize_vieneu")
                 result = synth_fn.remote(
                     text=text_to_gen,
@@ -1103,7 +1104,6 @@ async def tts_by_voice_id(voice_id: str, request: Request):
 
     try:
         def _infer():
-            import modal
             import uuid
             import boto3
             
@@ -1131,6 +1131,7 @@ async def tts_by_voice_id(voice_id: str, request: Request):
             output_key = f"omnivoice_renders/{uuid.uuid4().hex}.wav"
             
             if engine == "omnivoice":
+                import modal
                 synth_fn = modal.Function.from_name("ai-dubbing-pipeline", "synthesize_voice")
                 result = synth_fn.remote(
                     text=text,
@@ -1140,6 +1141,7 @@ async def tts_by_voice_id(voice_id: str, request: Request):
                     speed=speed
                 )
             else:
+                import modal
                 synth_fn = modal.Function.from_name("ai-dubbing-pipeline", "synthesize_vieneu")
                 result = synth_fn.remote(
                     text=text,
