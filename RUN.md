@@ -44,26 +44,69 @@
 
 ---
 
-## 4. 🔄 Quy Trình Triển Khai (Deployment Runbook)
+## 4. 🔄 Quy Trình Push - Pull - Go-Live lên CPU VPS (Deployment Runbook)
 
-### A. Triển khai Web, API hoặc OmniVoice lên Production VPS:
+### 💡 Nguyên lý Go-Live trên Production:
+Trên CPU VPS (`161.248.4.99`), toàn bộ dịch vụ (`api`, `web`, `omnivoice`, `worker_*`) chạy dưới dạng **Docker containers độc lập** và source code đã được **bake trực tiếp vào Docker image** (không mount live code để đảm bảo an toàn & hiệu năng).
+Do đó, quy trình đưa code mới lên production **bắt buộc gồm 3 bước:**
+1. **Push**: Đẩy code từ máy Local lên GitHub repo (`main`).
+2. **Pull**: Kéo code mới nhất về thư mục `/opt/appdk` trên VPS.
+3. **Rebuild & Restart**: Chạy `docker compose build` và `up -d` để cập nhật container mà **không làm gián đoạn các service khác**.
+
+---
+
+### A. Cách 1: Tự động 1-Click bằng script `update.py` (Khuyên dùng):
+Chỉ cần mở terminal tại thư mục gốc dự án (`D:\appDK`) và chạy:
+
 ```powershell
-# 1. Commit và Push code lên nhánh main
+# Bước 1: Commit và Push code lên GitHub
 git add .
-git commit -m "feat/fix: mô tả thay đổi"
+git commit -m "feat/fix: mô tả nội dung vừa sửa"
 git push
 
-# 2. Kích hoạt build & deploy tự động lên VPS (tự động SSH & rebuild container liên quan)
-python update.py
+# Bước 2: Kích hoạt cập nhật tự động lên VPS:
+python update.py           # Mặc định: Rebuild container omnivoice (voice.ai86.click)
+python update.py api       # Rebuild container backend api (api.ai86.click)
+python update.py web       # Rebuild container frontend web (ai86.click)
+python update.py all       # Rebuild và khởi động lại toàn bộ services
 ```
 
-### B. Triển khai Modal GPU Pipeline (`modal_functions/`):
+---
+
+### B. Cách 2: Thao tác thủ công qua SSH (Khi cần debug trực tiếp):
+```bash
+# 1. SSH vào VPS:
+ssh deploy@161.248.4.99
+# Password: hJ%ExH;V_#|6
+
+# 2. Di chuyển vào thư mục dự án và kéo code mới:
+cd /opt/appdk
+git pull origin main
+
+# 3. Rebuild và chạy container tương ứng:
+# Rebuild riêng service omnivoice:
+docker compose -f docker-compose.prod.yml up -d --build omnivoice
+
+# Hoặc rebuild riêng api/web:
+docker compose -f docker-compose.prod.yml up -d --build api
+docker compose -f docker-compose.prod.yml up -d --build web
+
+# 4. Kiểm tra trạng thái container:
+docker compose -f docker-compose.prod.yml ps
+docker compose -f docker-compose.prod.yml logs -f --tail=50 omnivoice
+```
+
+---
+
+### C. Triển khai Modal GPU Pipeline (`modal_functions/`):
+Khi chỉnh sửa logic inference AI trong `modal_functions/dubbing_pipeline.py`:
 ```powershell
-# Deploy lại serverless function khi sửa modal_functions/dubbing_pipeline.py
 $env:PYTHONUTF8=1; modal deploy modal_functions/dubbing_pipeline.py
 ```
 
-### C. Xem Logs Container trên VPS:
+---
+
+### D. Xem Logs & Kiểm tra trạng thái từ xa:
 ```powershell
 # Xem log container OmniVoice (voice.ai86.click)
 python -c "import paramiko, sys; sys.stdout.reconfigure(encoding='utf-8'); ssh = paramiko.SSHClient(); ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy()); ssh.connect('161.248.4.99', username='deploy', password='hJ%ExH;V_#|6'); _, out, _ = ssh.exec_command('docker logs appdk-omnivoice-1 --tail 50'); print(out.read().decode('utf-8')); ssh.close()"
