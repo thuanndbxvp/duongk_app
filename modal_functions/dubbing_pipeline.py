@@ -4,8 +4,8 @@ import os
 # 1. Thiết lập môi trường (Image)
 pipeline_image = (
     modal.Image.debian_slim(python_version="3.10")
-    # Cài đặt FFmpeg ở cấp độ hệ điều hành
-    .apt_install("ffmpeg", "git", "curl")
+    # Cài đặt FFmpeg, espeak-ng ở cấp độ hệ điều hành
+    .apt_install("ffmpeg", "git", "curl", "espeak-ng")
     # Cài đặt các thư viện Python cần thiết
     .pip_install(
         "torch",
@@ -20,6 +20,7 @@ pipeline_image = (
         "yt-dlp",
         "pysrt",
         "librosa",
+        "vieneu",
         "omnivoice @ git+https://github.com/k2-fsa/OmniVoice.git@0.2.0"
     )
     .env({"HF_HOME": "/root/models/huggingface"})
@@ -251,6 +252,68 @@ def synthesize_voice(text: str, output_key: str, reference_audio_url: str = None
         return {"status": "ok", "audio_url": public_url}
 
 # ----------------------------------------------------
+# Function 2B: Synthesize Voice with VieNeu-TTS (v3-Turbo)
+# ----------------------------------------------------
+@app.function(
+    image=pipeline_image,
+    gpu="T4",
+    volumes={CACHE_DIR: model_volume},
+    secrets=[modal.Secret.from_name("r2-credentials")],
+    timeout=1200
+)
+def synthesize_vieneu(
+    text: str,
+    output_key: str,
+    reference_audio_url: str = None,
+    voice_preset: str = None,
+    speed: float = None,
+    denoise: bool = True
+) -> dict:
+    import subprocess
+    import tempfile
+    import os
+    import boto3
+    from vieneu import Vieneu
+    
+    with tempfile.TemporaryDirectory() as tmp:
+        ref_audio_path = None
+        if reference_audio_url:
+            ref_audio_path = f"{tmp}/ref.wav"
+            subprocess.run(["curl", "-sL", reference_audio_url, "-o", ref_audio_path], check=True)
+            
+        out_audio_path = f"{tmp}/output.wav"
+        
+        tts = Vieneu()
+        
+        infer_kwargs = {
+            "text": text,
+            "denoise": denoise if denoise is not None else True,
+        }
+        if ref_audio_path:
+            infer_kwargs["ref_audio"] = ref_audio_path
+        elif voice_preset:
+            infer_kwargs["voice"] = voice_preset
+            
+        if speed is not None:
+            infer_kwargs["speed"] = speed
+            
+        audio_data = tts.infer(**infer_kwargs)
+        tts.save(audio_data, out_audio_path)
+        
+        # Upload output to Cloudflare R2
+        s3 = boto3.client(
+            "s3",
+            endpoint_url=os.environ["R2_ENDPOINT"],
+            aws_access_key_id=os.environ["R2_ACCESS_KEY_ID"],
+            aws_secret_access_key=os.environ["R2_SECRET_ACCESS_KEY"],
+            region_name="auto",
+        )
+        s3.upload_file(out_audio_path, os.environ.get("R2_BUCKET_RENDERS", "appdk-renders"), output_key)
+        
+        public_url = f"https://cdn.ai86.click/{output_key}"
+        return {"status": "ok", "audio_url": public_url}
+
+# ----------------------------------------------------
 # Function 3: Render Final Video (FFmpeg)
 # ----------------------------------------------------
 @app.function(
@@ -456,6 +519,202 @@ def dub_srt(srt_text: str, output_key: str, merge_mode: str = "native", referenc
             region_name="auto",
         )
         s3.upload_file(out_audio_path, os.environ["R2_BUCKET_RENDERS"], output_key)
+        
+        public_url = f"https://cdn.ai86.click/{output_key}"
+        return {"status": "ok", "audio_url": public_url}
+
+# ----------------------------------------------------
+# Function 3B: SRT Dubbing with VieNeu-TTS (v3-Turbo)
+# ----------------------------------------------------
+@app.function(
+    image=pipeline_image,
+    gpu="T4",
+    volumes={CACHE_DIR: model_volume},
+    secrets=[modal.Secret.from_name("r2-credentials")],
+    timeout=1800
+)
+def dub_srt_vieneu(
+    srt_text: str,
+    output_key: str,
+    merge_mode: str = "native",
+    reference_audio_url: str = None,
+    voice_preset: str = None,
+    speed: float = None
+) -> dict:
+    import subprocess
+    import tempfile
+    import os
+    import boto3
+    import pysrt
+    import math
+    import re
+    import unicodedata
+    import soundfile as sf
+    from vieneu import Vieneu
+    
+    with tempfile.TemporaryDirectory() as tmp:
+        ref_audio_path = None
+        if reference_audio_url:
+            ref_audio_path = f"{tmp}/ref.wav"
+            subprocess.run(["curl", "-sL", reference_audio_url, "-o", ref_audio_path], check=True)
+            
+        srt_file_path = f"{tmp}/subs.srt"
+        with open(srt_file_path, "w", encoding="utf-8") as f:
+            f.write(srt_text)
+        subs = pysrt.open(srt_file_path)
+        
+        tts = Vieneu()
+        
+        def clean_text_for_tts(t):
+            t = unicodedata.normalize("NFC", t)
+            t = re.sub(r"<[^>]+>", " ", t)
+            t = re.sub(r"[\(\[].*?[\)\]]", " ", t)
+            t = re.sub(r"\.{2,}", ", ", t)
+            t = re.sub(r"\?{2,}", "? ", t)
+            t = re.sub(r"!{2,}", "! ", t)
+            t = re.sub(r"[~*#_\-`]+", " ", t)
+            t = re.sub(r"\s+[,;:?!]\s+", " ", t)
+            return " ".join(t.split())
+            
+        # Group subtitles into sentences
+        sentence_groups = []
+        current_group = []
+        for sub in subs:
+            current_group.append(sub)
+            text = sub.text.strip()
+            if text.endswith('.') or text.endswith('!') or text.endswith('?') or text.endswith(';'):
+                sentence_groups.append(current_group)
+                current_group = []
+        if current_group:
+            sentence_groups.append(current_group)
+            
+        audio_segments = []
+        detected_samplerate = 24000
+        
+        for idx, group in enumerate(sentence_groups):
+            combined_text = " ".join([s.text.replace("\n", " ").strip() for s in group])
+            combined_text = clean_text_for_tts(combined_text)
+            if not combined_text:
+                continue
+                
+            start_time = group[0].start.ordinal / 1000.0
+            end_time = group[-1].end.ordinal / 1000.0
+            target_duration = max(0.5, end_time - start_time)
+            
+            infer_kwargs = {
+                "text": combined_text,
+                "denoise": True
+            }
+            if ref_audio_path:
+                infer_kwargs["ref_audio"] = ref_audio_path
+            elif voice_preset:
+                infer_kwargs["voice"] = voice_preset
+            if speed is not None:
+                infer_kwargs["speed"] = speed
+                
+            seg_audio = tts.infer(**infer_kwargs)
+            seg_wav_path = f"{tmp}/seg_{idx}.wav"
+            tts.save(seg_audio, seg_wav_path)
+            
+            # Check duration & sample rate
+            try:
+                info = sf.info(seg_wav_path)
+                detected_samplerate = info.samplerate
+                audio_len = info.duration
+            except Exception:
+                audio_len = 1.0
+                
+            if merge_mode == "fit" and audio_len > target_duration and target_duration > 0:
+                speed_factor = min(2.0, audio_len / target_duration)
+                if speed_factor > 1.05:
+                    speed_file = f"{tmp}/speed_{idx}.wav"
+                    subprocess.run([
+                        "ffmpeg", "-y", "-i", seg_wav_path,
+                        "-filter:a", f"atempo={speed_factor}",
+                        speed_file
+                    ], check=True)
+                    seg_wav_path = speed_file
+            elif merge_mode == "strict" and audio_len > target_duration:
+                trimmed_file = f"{tmp}/trimmed_{idx}.wav"
+                subprocess.run([
+                    "ffmpeg", "-y", "-i", seg_wav_path,
+                    "-t", str(target_duration),
+                    trimmed_file
+                ], check=True)
+                seg_wav_path = trimmed_file
+                
+            audio_segments.append({
+                "file": seg_wav_path,
+                "start": start_time,
+                "duration": target_duration
+            })
+            
+        out_audio_path = f"{tmp}/final_dubbed.wav"
+        
+        if not audio_segments:
+            raise Exception("SRT file had no valid subtitle text")
+            
+        if merge_mode == "cascade":
+            concat_list = f"{tmp}/concat.txt"
+            with open(concat_list, "w", encoding="utf-8") as f:
+                for seg in audio_segments:
+                    f.write(f"file '{seg['file']}'\n")
+            subprocess.run([
+                "ffmpeg", "-y", "-f", "concat", "-safe", "0",
+                "-i", concat_list, "-c:a", "pcm_s16le", "-ar", str(detected_samplerate),
+                out_audio_path
+            ], check=True)
+        else:
+            total_duration = max(s["start"] + s["duration"] for s in audio_segments) + 3.0
+            base_silence = f"{tmp}/base_silence.wav"
+            subprocess.run([
+                "ffmpeg", "-y", "-f", "lavfi",
+                "-i", f"anullsrc=r={detected_samplerate}:cl=mono",
+                "-t", str(total_duration),
+                base_silence
+            ], check=True)
+            
+            MAX_INPUTS = 64
+            def merge_batch(batch_segments, out_file):
+                inputs = []
+                filter_parts = []
+                labels = []
+                for i, seg in enumerate(batch_segments):
+                    inputs.extend(["-i", seg["file"]])
+                    delay_ms = int(seg["start"] * 1000)
+                    filter_parts.append(f"[{i}:a]adelay={delay_ms}|{delay_ms},apad[a{i}]")
+                    labels.append(f"[a{i}]")
+                n = len(batch_segments)
+                filter_parts.append(f"{''.join(labels)}amix=inputs={n}:duration=longest:normalize=0[out]")
+                filter_graph = ";".join(filter_parts)
+                subprocess.run([
+                    "ffmpeg", "-y"
+                ] + inputs + [
+                    "-filter_complex", filter_graph,
+                    "-map", "[out]", "-c:a", "pcm_s16le", "-ar", str(detected_samplerate), out_file
+                ], check=True)
+                
+            valid_chunks = [{"file": base_silence, "start": 0.0}] + audio_segments
+            if len(valid_chunks) <= MAX_INPUTS:
+                merge_batch(valid_chunks, out_audio_path)
+            else:
+                intermediates = []
+                for i in range(0, len(valid_chunks), MAX_INPUTS):
+                    batch = valid_chunks[i:i + MAX_INPUTS]
+                    inter_file = f"{tmp}/inter_{i}.wav"
+                    merge_batch(batch, inter_file)
+                    intermediates.append({"file": inter_file, "start": 0.0})
+                merge_batch(intermediates, out_audio_path)
+                
+        # Upload to R2
+        s3 = boto3.client(
+            "s3",
+            endpoint_url=os.environ["R2_ENDPOINT"],
+            aws_access_key_id=os.environ["R2_ACCESS_KEY_ID"],
+            aws_secret_access_key=os.environ["R2_SECRET_ACCESS_KEY"],
+            region_name="auto",
+        )
+        s3.upload_file(out_audio_path, os.environ.get("R2_BUCKET_RENDERS", "appdk-renders"), output_key)
         
         public_url = f"https://cdn.ai86.click/{output_key}"
         return {"status": "ok", "audio_url": public_url}

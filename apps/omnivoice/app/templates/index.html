@@ -157,6 +157,15 @@
 
                 <div class="card" style="margin-bottom:0; background: rgba(0,0,0,0.2);">
                     <div class="card-title">Cài đặt giọng nói</div>
+                    
+                    <div style="margin-bottom: 16px;">
+                        <label class="form-label">Core Engine TTS</label>
+                        <select id="engine-select" class="select-input" style="border-color: rgba(139, 92, 246, 0.4); background: rgba(139, 92, 246, 0.08); font-weight: 600;">
+                            <option value="vieneu" selected>🌟 VieNeu-TTS v3 Turbo (Chuẩn Tiếng Việt, 48kHz - Khuyên dùng)</option>
+                            <option value="omnivoice">📻 OmniVoice (Legacy)</option>
+                        </select>
+                    </div>
+
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; align-items: center;">
                         <div>
                             <label class="form-label">Chọn giọng</label>
@@ -176,16 +185,16 @@
                     </div>
                     
                     <div id="emotion-panel" style="display: none;">
-                        <div class="page-desc" style="margin-bottom: 12px; font-size: 0.8rem;">Chèn biểu cảm trực tiếp vào câu nói</div>
+                        <div class="page-desc" style="margin-bottom: 12px; font-size: 0.8rem;">Chèn biểu cảm trực tiếp vào câu nói (tối ưu nhất trên VieNeu-TTS)</div>
                         <div class="emotion-chips" style="margin-bottom: 24px;">
-                            <div class="emotion-chip" onclick="insertTag('[laughter]')">Cười <span class="emotion-tag">[laughter]</span></div>
-                            <div class="emotion-chip" onclick="insertTag('[sigh]')">Thở dài <span class="emotion-tag">[sigh]</span></div>
-                            <div class="emotion-chip" onclick="insertTag('[surprise-ah]')">Ngạc nhiên <span class="emotion-tag">[surprise-ah]</span></div>
-                            <div class="emotion-chip" onclick="insertTag('[dissatisfaction-hnn]')">Khó chịu <span class="emotion-tag">[dissatisfaction-hnn]</span></div>
-                            <div class="emotion-chip" onclick="insertTag('[confirmation-en]')">Đồng ý <span class="emotion-tag">[confirmation-en]</span></div>
-                            <div class="emotion-chip" onclick="insertTag('[question-en]')">Hỏi (En) <span class="emotion-tag">[question-en]</span></div>
-                            <div class="emotion-chip" onclick="insertTag('[question-ah]')">Hỏi (Ah) <span class="emotion-tag">[question-ah]</span></div>
-                            <div class="emotion-chip" onclick="insertTag('[surprise-wa]')">Ồ (Wa) <span class="emotion-tag">[surprise-wa]</span></div>
+                            <div class="emotion-chip" onclick="insertTag('[cười]')">😄 Cười <span class="emotion-tag">[cười]</span></div>
+                            <div class="emotion-chip" onclick="insertTag('[thở dài]')">😮‍💨 Thở dài <span class="emotion-tag">[thở dài]</span></div>
+                            <div class="emotion-chip" onclick="insertTag('[hắng giọng]')">🗣️ Hắng giọng <span class="emotion-tag">[hắng giọng]</span></div>
+                            <div class="emotion-chip" onclick="insertTag('[ngạc nhiên]')">😲 Ngạc nhiên <span class="emotion-tag">[ngạc nhiên]</span></div>
+                            <div class="emotion-chip" onclick="insertTag('[thì thầm]')">🤫 Thì thầm <span class="emotion-tag">[thì thầm]</span></div>
+                            <div class="emotion-chip" onclick="insertTag('[tức giận]')">😡 Tức giận <span class="emotion-tag">[tức giận]</span></div>
+                            <div class="emotion-chip" onclick="insertTag('[laughter]')">Cười (En) <span class="emotion-tag">[laughter]</span></div>
+                            <div class="emotion-chip" onclick="insertTag('[sigh]')">Thở dài (En) <span class="emotion-tag">[sigh]</span></div>
                         </div>
                     </div>
                 </div>
@@ -231,7 +240,15 @@
                         <div style="font-size:0.8rem; color:var(--text-muted); margin-top:8px;" id="srt-filename-display">Đã tải lên: file.srt</div>
                     </div>
                     
-                    <div style="display:flex; gap:16px; margin-top:24px;">
+                    <div style="margin-top:20px; margin-bottom: 16px;">
+                        <label class="form-label">Core Engine Lồng Tiếng</label>
+                        <select id="dub-engine-select" class="select-input" style="border-color: rgba(139, 92, 246, 0.4); background: rgba(139, 92, 246, 0.08); font-weight: 600;">
+                            <option value="vieneu" selected>🌟 VieNeu-TTS v3 Turbo (Chuẩn Tiếng Việt, không vấp/lắp - Khuyên dùng)</option>
+                            <option value="omnivoice">📻 OmniVoice (Legacy)</option>
+                        </select>
+                    </div>
+
+                    <div style="display:flex; gap:16px;">
                         <div style="flex:1;">
                             <label class="form-label">Chế độ ghép nối (Merge Mode) <span title="Chế độ này giữ nguyên thời gian của phụ đề gốc, đảm bảo giọng nói khớp hoàn toàn với video." style="cursor:help; display:inline-block; margin-left:4px; color:var(--text-muted); font-size:1.1rem;">ⓘ</span></label>
                             <select id="dub-merge-mode" class="select-input">
@@ -478,6 +495,7 @@ with open("output.wav", "wb") as f:
         const srtFile = document.getElementById('srt-upload').files[0];
         const voiceId = document.getElementById('dub-voice-select').value;
         const mergeMode = document.getElementById('dub-merge-mode').value;
+        const engine = document.getElementById('dub-engine-select') ? document.getElementById('dub-engine-select').value : 'vieneu';
 
         if (!srtFile) return alert("Vui lòng tải lên file phụ đề (.srt)!");
         if (!voiceId) return alert("Chưa có voice nào trong catalog!");
@@ -499,6 +517,7 @@ with open("output.wav", "wb") as f:
         formData.append("srt_file", srtFile);
         formData.append("voice_id", voiceId);
         formData.append("merge_mode", mergeMode);
+        formData.append("engine", engine);
 
         try {
             const res = await fetch('/v1/dubbing', {
@@ -524,13 +543,14 @@ with open("output.wav", "wb") as f:
 
             const selectedVoiceName = document.getElementById('dub-voice-select').options[document.getElementById('dub-voice-select').selectedIndex].text;
             const filename = `dubbing_${voiceId}_${Date.now()}.wav`;
+            const engineLabel = engine === 'vieneu' ? '🌟 VieNeu-TTS' : '📻 OmniVoice';
 
             const item = document.createElement('div');
             item.className = 'history-item';
             item.innerHTML = `
                 <div class="history-meta">
                     <div>
-                        <span class="history-title">${filename}</span>
+                        <span class="history-title">${filename} <small style="color:var(--accent-blue); font-weight:bold;">[${engineLabel}]</small></span>
                         <span class="history-subtitle">🗣️ ${selectedVoiceName} (${mergeMode}) | ⏱️ ${durationSec}s | ${timeStr}</span>
                     </div>
                     <span class="stamp-success">Hoàn thành</span>
@@ -564,6 +584,7 @@ with open("output.wav", "wb") as f:
         const voiceId = voiceSelect ? voiceSelect.value : '';
         const speedInput = document.getElementById('speed-slider');
         const speed = speedInput ? parseFloat(speedInput.value) : 1.0;
+        const engine = document.getElementById('engine-select') ? document.getElementById('engine-select').value : 'vieneu';
         
         const instructEl = document.getElementById('instruct-style');
         const instruct = instructEl && instructEl.value ? instructEl.value.trim() : null;
@@ -577,7 +598,7 @@ with open("output.wav", "wb") as f:
         const startTime = Date.now();
 
         try {
-            const payload = { text, voice_id: voiceId, speed };
+            const payload = { text, voice_id: voiceId, speed, engine };
             if (instruct) payload.instruct = instruct;
 
             const res = await fetch('/v1/tts', {
@@ -600,13 +621,14 @@ with open("output.wav", "wb") as f:
             
             const duration = ((Date.now() - startTime) / 1000).toFixed(1);
             const voiceName = voiceSelect.options[voiceSelect.selectedIndex] ? voiceSelect.options[voiceSelect.selectedIndex].text : voiceId;
+            const engineLabel = engine === 'vieneu' ? '🌟 VieNeu-TTS' : '📻 OmniVoice';
 
             const item = document.createElement('div');
             item.className = 'history-item';
             item.innerHTML = `
                 <div class="history-meta">
                     <div>
-                        <span class="history-title">${filename}</span>
+                        <span class="history-title">${filename} <small style="color:var(--accent-blue); font-weight:bold;">[${engineLabel}]</small></span>
                         <span class="history-subtitle">🗣️ ${voiceName} | ⏱️ ${duration}s | ${timeStr}</span>
                     </div>
                     <span class="stamp-success">Hoàn thành</span>

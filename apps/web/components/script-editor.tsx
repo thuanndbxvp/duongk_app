@@ -1,13 +1,20 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ScriptRegenerateDialog } from '@/components/script-regenerate-dialog';
 import { ScriptVersionDropdown } from '@/components/script-version-dropdown';
+import { ScriptDiffModal } from '@/components/script-diff-modal';
 
 interface ScriptData {
   hook: string;
   body: string;
   cta: string;
+}
+
+interface Version {
+  version: number;
+  content: string;
+  created_at: string;
 }
 
 interface Props {
@@ -19,6 +26,15 @@ interface Props {
 
 export function ScriptEditor({ script, scriptId, currentVersion = 1, onVersionChange }: Props) {
   const [showRegenerate, setShowRegenerate] = useState(false);
+  const [versions, setVersions] = useState<Version[]>([]);
+
+  useEffect(() => {
+    if (!scriptId) return;
+    fetch(`/api/scripts/${scriptId}/versions`)
+      .then(r => r.json())
+      .then(d => setVersions(d.versions || []))
+      .catch(() => {});
+  }, [scriptId]);
 
   return (
     <div className="space-y-6">
@@ -30,12 +46,17 @@ export function ScriptEditor({ script, scriptId, currentVersion = 1, onVersionCh
             currentVersion={currentVersion}
             onVersionChange={onVersionChange || (() => {})}
           />
-          <button
-            onClick={() => setShowRegenerate(true)}
-            className="px-3 py-1.5 rounded-lg gradient-bg text-white text-xs font-medium"
-          >
-            🔄 Regenerate
-          </button>
+          <div className="flex gap-2">
+            {versions.length >= 2 && (
+              <ScriptDiffModal versions={versions} onSelect={onVersionChange} />
+            )}
+            <button
+              onClick={() => setShowRegenerate(true)}
+              className="px-3 py-1.5 rounded-lg gradient-bg text-white text-xs font-medium"
+            >
+              🔄 Regenerate
+            </button>
+          </div>
         </div>
       )}
 

@@ -33,13 +33,19 @@ class StyleBibleUpdate(BaseModel):
 
 
 class StyleBibleResponse(BaseModel):
-    """Style bible response."""
+    """Style bible response — includes all fields for frontend consumption."""
     id: UUID
     owner_id: UUID
     name: str
     description: str
     version: int
     is_active: bool
+    # Visual elements
+    visual_palette: Optional[dict] = Field(default_factory=dict)
+    lens_preference: Optional[str] = ""
+    motion_style: Optional[str] = ""
+    negative_prompt: Optional[str] = ""
+    # Timestamps
     created_at: datetime
     updated_at: datetime
 

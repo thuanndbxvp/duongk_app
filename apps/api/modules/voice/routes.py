@@ -82,10 +82,12 @@ async def synthesize_voice(req: VoiceSynthesizeRequest, user_id: str = Depends(g
     ref_audio_url = res.data[0]["sample_audio_url"]
     
     output_key = f"voice_renders/{user_id}/{str(uuid.uuid4())}.wav"
+    engine = (req.engine or "vieneu").lower()
+    fn_name = "synthesize_vieneu" if engine == "vieneu" else "synthesize_voice"
     
     import modal
     try:
-        synth_fn = modal.Function.lookup("ai-dubbing-pipeline", "synthesize_voice")
+        synth_fn = modal.Function.lookup("ai-dubbing-pipeline", fn_name)
         # Gọi đồng bộ .remote() - user sẽ đợi phản hồi
         result = synth_fn.remote(text=req.text, reference_audio_url=ref_audio_url, output_key=output_key)
         return {"data": result}

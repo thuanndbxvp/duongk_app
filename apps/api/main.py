@@ -23,7 +23,7 @@ from apps.api.modules.script.routes import router as script_router
 from apps.api.routers.users import router as user_router
 from apps.api.routers.credits import router as credits_router
 from apps.api.routers.projects import router as projects_router
-from apps.api.modules.voice.routes import router as voice_router
+# NOTE: modules/voice/routes.py deprecated — replaced by routers/voice_profiles.py
 from apps.api.routers.assistants import router as assistants_router
 from apps.api.routers.jobs import router as jobs_router
 from apps.api.routers.analysis import router as analysis_api_router
@@ -41,7 +41,11 @@ from apps.api.routers.admin_mfa import router as admin_mfa_router
 from apps.api.routers.admin_analytics import router as admin_analytics_router
 from apps.api.routers.admin_dashboard import router as admin_dashboard_router
 from apps.api.routers.assets import router as assets_router, scene_router as scenes_router
+# NOTE: routers/voice.py has prefix=/api/projects — for /api/projects/{id}/voice/*
 from apps.api.routers.voice import router as voice_router
+# NEW: Tier 1 P0 fixes
+from apps.api.routers.voice_profiles import router as voice_profiles_router
+from apps.api.routers.channel_collector import router as channel_collector_router
 from apps.api.routers.render import router as render_router
 from apps.api.routers.thumbnail import router as thumbnail_router
 from apps.api.routers.channel_intel import router as channel_intel_router
@@ -67,6 +71,7 @@ app.include_router(script_router)
 app.include_router(user_router)
 app.include_router(credits_router)
 app.include_router(projects_router)
+# routers/voice.py: /api/projects/{id}/voice/*
 app.include_router(voice_router)
 app.include_router(assistants_router)
 app.include_router(jobs_router)
@@ -85,7 +90,9 @@ app.include_router(admin_analytics_router)
 app.include_router(admin_dashboard_router)
 app.include_router(assets_router)
 app.include_router(scenes_router)
-app.include_router(voice_router)
+# NEW: Tier 1 P0 fixes
+app.include_router(voice_profiles_router)  # /api/voices/*
+app.include_router(channel_collector_router)  # /api/channel-collector/*
 app.include_router(render_router)
 app.include_router(thumbnail_router)
 app.include_router(channel_intel_router)

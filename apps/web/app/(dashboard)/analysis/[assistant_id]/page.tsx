@@ -20,11 +20,27 @@ export default async function AnalysisPage({
   if (asstRes.status === 404) notFound();
   const assistant = await asstRes.json();
 
-  // Fetch analysis
-  const res = await apiFetch(`/api/analysis/${assistant_id}`, {}, token);
+  // Fetch 6 analysis sub-endpoints in parallel (Phase 2 fix)
+  const [nlpRes, llmRes, detRes, insRes, thumbRes, outRes] = await Promise.all([
+    apiFetch(`/api/analysis/${assistant_id}/nlp`, {}, token),
+    apiFetch(`/api/analysis/${assistant_id}/llm`, {}, token),
+    apiFetch(`/api/analysis/${assistant_id}/deterministic`, {}, token),
+    apiFetch(`/api/analysis/${assistant_id}/insights`, {}, token),
+    apiFetch(`/api/analysis/${assistant_id}/thumbnail`, {}, token),
+    apiFetch(`/api/analysis/${assistant_id}/output`, {}, token),
+  ]);
+
+  const [nlp, llm, deterministic, insights, thumbnail, output] = await Promise.all([
+    nlpRes.ok ? nlpRes.json() : null,
+    llmRes.ok ? llmRes.json() : null,
+    detRes.ok ? detRes.json() : null,
+    insRes.ok ? insRes.json() : null,
+    thumbRes.ok ? thumbRes.json() : null,
+    outRes.ok ? outRes.json() : null,
+  ]);
 
   // Empty state if not analyzed yet
-  if (res.status === 404) {
+  if (!nlp && !llm && !deterministic && !insights && !thumbnail && !output) {
     return (
       <main className="container mx-auto p-8 max-w-3xl">
         <Link
@@ -47,15 +63,7 @@ export default async function AnalysisPage({
     );
   }
 
-  if (!res.ok) {
-    return (
-      <main className="container mx-auto p-8">
-        <p className="text-red-400">Failed to load analysis.</p>
-      </main>
-    );
-  }
-
-  const data = await res.json();
+  const data = { nlp, llm, deterministic, insights, thumbnail, output };
 
   return (
     <main className="container mx-auto p-8 max-w-6xl">
@@ -65,7 +73,7 @@ export default async function AnalysisPage({
       >
         ← Quay lại Assistant
       </Link>
-      
+
       <div className="flex items-center justify-between mt-4 mb-6">
         <h1 className="text-3xl font-bold">
           Deep Analysis: {assistant.channel_name}

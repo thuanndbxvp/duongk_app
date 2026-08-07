@@ -213,6 +213,7 @@ async def get_favicon():
 
 class TTSRequest(BaseModel):
     text: str
+    engine: str | None = "vieneu"  # "vieneu" (default) or "omnivoice"
     voice_id: str | None = None
     language: str | None = "vi"
     emotion: str | None = "normal"
@@ -224,9 +225,6 @@ class TTSRequest(BaseModel):
     guidance_scale: float | None = 2.0
     denoise: bool | None = True
     postprocess_output: bool | None = True
-    # NEW (Phase 2 / omnivoice 0.2.0)
-    # Truyen vao OmniVoiceGenerationConfig.pad_duration / fade_duration.
-    # Default VN-friendly: 0.15s pad + 0.05s fade-in/out de narration khong bi pop/clip.
     pad_duration: float | None = None  # giay lang pad dau/cuoi
     fade_duration: float | None = None  # giay fade-in/out
 
@@ -254,9 +252,9 @@ def version():
     """Report server + omnivoice version (Phase 3 / B3.4)."""
     omnivoice_path = "N/A (Modal version)"
     return {
-        "server_version": "1.1.0",
+        "server_version": "1.2.0",
         "server_name": "omnivoice-api-server",
-        "omnivoice_version": "Modal",
+        "omnivoice_version": "Modal (VieNeu-TTS + OmniVoice)",
         "omnivoice_path": str(omnivoice_path),
         "omnivoice_pinned_tag": "Modal",
         "model_loaded": True,
@@ -265,18 +263,12 @@ def version():
 
 @app.post("/v1/tts")
 async def generate_tts(request: TTSRequest):
-    """Generates audio/wav stream from text utilizing OmniVoice."""
+    """Generates audio/wav stream from text utilizing VieNeu-TTS or OmniVoice."""
     global model
-    # Phase 3.5: request-id de trace 1 request qua log/multi-instance.
     request_id = uuid.uuid4().hex[:12]
 
-    # Phase 3.fix: validate input TRUOC khi check model (uu tien 400 hon 503).
-    # Ly do: neu user gui text rong (loi client), tra 400 de ro rang,
-    # thay vi 503 lam user tuong server hong.
     if not request.text.strip():
         raise HTTPException(status_code=400, detail="Text field cannot be empty")
-
-    # Model check removed
 
     # 1. Resolve Voice Cloning (Reference Audio and Prompt Cache)
     ref_audio_path = None
@@ -351,28 +343,28 @@ async def generate_tts(request: TTSRequest):
             text_to_gen = f"[{emo}] {text_to_gen}"
             logger.info("Prepended emotion tag '%s' to text prompt", emo)
 
-    # 4. Validate params (BEFORE try block de HTTPException 422 khong bi nuot boi except Exception)
+    # 4. Validate params
     if request.pad_duration is not None and request.pad_duration < 0:
         raise HTTPException(status_code=422, detail="pad_duration phai >= 0")
     if request.fade_duration is not None and request.fade_duration < 0:
         raise HTTPException(status_code=422, detail="fade_duration phai >= 0")
 
     # 5. Perform inference asynchronously in a threadpool executor
+    req_engine = (request.engine or "vieneu").lower()
     logger.info(
-        "[req=%s] Generating speech: language=%s voice_id=%s text_len=%d",
+        "[req=%s] Generating speech: engine=%s language=%s voice_id=%s text_len=%d",
         request_id,
+        req_engine,
         request.language,
         request.voice_id,
         len(text_to_gen),
     )
-    loop = asyncio.get_running_loop()
 
     try:
         def _infer():
             import modal
             import uuid
             import boto3
-            import urllib.request
             
             ref_audio_url = None
             ref_prompt_url = None
@@ -385,37 +377,49 @@ async def generate_tts(request: TTSRequest):
                 region_name="auto",
             )
             
+            bucket_uploads = os.environ.get("R2_BUCKET_UPLOADS", "appdk-uploads")
+            bucket_renders = os.environ.get("R2_BUCKET_RENDERS", "appdk-renders")
+            
             if ref_prompt_key:
-                bucket = os.environ.get("R2_BUCKET_UPLOADS", "appdk-uploads")
                 ref_prompt_url = s3.generate_presigned_url(
                     'get_object',
-                    Params={'Bucket': bucket, 'Key': ref_prompt_key},
+                    Params={'Bucket': bucket_uploads, 'Key': ref_prompt_key},
                     ExpiresIn=3600
                 )
             elif ref_audio_path:
                 object_key = f"omnivoice_tmp/{uuid.uuid4().hex}.wav"
-                bucket = os.environ.get("R2_BUCKET_UPLOADS", "appdk-uploads")
-                s3.upload_file(ref_audio_path, bucket, object_key)
+                s3.upload_file(ref_audio_path, bucket_uploads, object_key)
                 ref_audio_url = s3.generate_presigned_url(
                     'get_object',
-                    Params={'Bucket': bucket, 'Key': object_key},
+                    Params={'Bucket': bucket_uploads, 'Key': object_key},
                     ExpiresIn=3600
                 )
 
-            synth_fn = modal.Function.from_name("ai-dubbing-pipeline", "synthesize_voice")
             output_key = f"omnivoice_renders/{uuid.uuid4().hex}.wav"
             
-            result = synth_fn.remote(
-                text=text_to_gen,
-                output_key=output_key,
-                reference_audio_url=ref_audio_url,
-                reference_prompt_url=ref_prompt_url,
-                instruct=instruct,
-                speed=request.speed
-            )
+            if req_engine == "omnivoice":
+                synth_fn = modal.Function.from_name("ai-dubbing-pipeline", "synthesize_voice")
+                result = synth_fn.remote(
+                    text=text_to_gen,
+                    output_key=output_key,
+                    reference_audio_url=ref_audio_url,
+                    reference_prompt_url=ref_prompt_url,
+                    instruct=instruct,
+                    speed=request.speed
+                )
+            else:
+                # Default / Primary: VieNeu-TTS v3 Turbo
+                synth_fn = modal.Function.from_name("ai-dubbing-pipeline", "synthesize_vieneu")
+                result = synth_fn.remote(
+                    text=text_to_gen,
+                    output_key=output_key,
+                    reference_audio_url=ref_audio_url,
+                    voice_preset=request.voice_id if not ref_audio_url else None,
+                    speed=request.speed,
+                    denoise=request.denoise if request.denoise is not None else True
+                )
             
-            # Use boto3 to download instead of CDN to avoid 404 mapping issues
-            import boto3
+            # Fetch rendered object directly from R2
             s3_down = boto3.client(
                 "s3",
                 endpoint_url=os.environ["R2_ENDPOINT"],
@@ -423,13 +427,10 @@ async def generate_tts(request: TTSRequest):
                 aws_secret_access_key=os.environ["R2_SECRET_ACCESS_KEY"],
                 region_name="auto",
             )
-            # Fetch object from R2 directly (object_key is same as output_key)
-            audio_obj = s3_down.get_object(Bucket=os.environ.get("R2_BUCKET_RENDERS", "appdk-renders"), Key=output_key)
+            audio_obj = s3_down.get_object(Bucket=bucket_renders, Key=output_key)
             return audio_obj["Body"].read()
 
-        # Tier 2 Hotfix: thay loop.run_in_executor(None, _infer) bằng helper có lock+timeout.
         audio_data = await _run_inference_serialized(_infer, request_id)
-
         buffer = io.BytesIO(audio_data)
 
         logger.info(
@@ -450,10 +451,12 @@ from fastapi import Form
 async def generate_dubbing(
     srt_file: UploadFile = File(...),
     voice_id: str = Form(...),
+    engine: str = Form("vieneu"),
     merge_mode: str = Form("native"),
+    speed: float = Form(1.0),
     instruct: str = Form(None)
 ):
-    """Generates dubbed audio from an SRT file using OmniVoice."""
+    """Generates dubbed audio from an SRT file using VieNeu-TTS or OmniVoice."""
     global model
     request_id = uuid.uuid4().hex[:12]
     
@@ -479,9 +482,11 @@ async def generate_dubbing(
         if resolved:
             ref_audio_path = str(resolved.resolve())
 
+    req_engine = (engine or "vieneu").lower()
     logger.info(
-        "[req=%s] Dubbing SRT: voice_id=%s merge_mode=%s",
+        "[req=%s] Dubbing SRT: engine=%s voice_id=%s merge_mode=%s",
         request_id,
+        req_engine,
         voice_id,
         merge_mode,
     )
@@ -501,33 +506,46 @@ async def generate_dubbing(
             region_name="auto",
         )
         
-        bucket = os.environ.get("R2_BUCKET_UPLOADS", "appdk-uploads")
+        bucket_uploads = os.environ.get("R2_BUCKET_UPLOADS", "appdk-uploads")
+        bucket_renders = os.environ.get("R2_BUCKET_RENDERS", "appdk-renders")
+        
         if ref_prompt_key:
             ref_prompt_url = s3.generate_presigned_url(
                 'get_object',
-                Params={'Bucket': bucket, 'Key': ref_prompt_key},
+                Params={'Bucket': bucket_uploads, 'Key': ref_prompt_key},
                 ExpiresIn=3600
             )
         elif ref_audio_path:
             object_key = f"omnivoice_tmp/{uuid.uuid4().hex}.wav"
-            s3.upload_file(ref_audio_path, bucket, object_key)
+            s3.upload_file(ref_audio_path, bucket_uploads, object_key)
             ref_audio_url = s3.generate_presigned_url(
                 'get_object',
-                Params={'Bucket': bucket, 'Key': object_key},
+                Params={'Bucket': bucket_uploads, 'Key': object_key},
                 ExpiresIn=3600
             )
 
-        dub_fn = modal.Function.from_name("ai-dubbing-pipeline", "dub_srt")
         output_key = f"omnivoice_renders/{uuid.uuid4().hex}.wav"
         
-        result = dub_fn.remote(
-            srt_text=srt_text,
-            output_key=output_key,
-            merge_mode=merge_mode,
-            reference_audio_url=ref_audio_url,
-            reference_prompt_url=ref_prompt_url,
-            instruct=instruct if not (ref_audio_path or ref_prompt_key) else None
-        )
+        if req_engine == "omnivoice":
+            dub_fn = modal.Function.from_name("ai-dubbing-pipeline", "dub_srt")
+            result = dub_fn.remote(
+                srt_text=srt_text,
+                output_key=output_key,
+                merge_mode=merge_mode,
+                reference_audio_url=ref_audio_url,
+                reference_prompt_url=ref_prompt_url,
+                instruct=instruct if not (ref_audio_path or ref_prompt_key) else None
+            )
+        else:
+            dub_fn = modal.Function.from_name("ai-dubbing-pipeline", "dub_srt_vieneu")
+            result = dub_fn.remote(
+                srt_text=srt_text,
+                output_key=output_key,
+                merge_mode=merge_mode,
+                reference_audio_url=ref_audio_url,
+                voice_preset=voice_id if not ref_audio_url else None,
+                speed=speed
+            )
         
         if result.get("status") != "ok":
             raise Exception(result.get("message", "Unknown error in dubbing pipeline"))
@@ -539,7 +557,7 @@ async def generate_dubbing(
             aws_secret_access_key=os.environ["R2_SECRET_ACCESS_KEY"],
             region_name="auto",
         )
-        audio_obj = s3_down.get_object(Bucket=os.environ.get("R2_BUCKET_RENDERS", "appdk-renders"), Key=output_key)
+        audio_obj = s3_down.get_object(Bucket=bucket_renders, Key=output_key)
         return audio_obj["Body"].read()
 
     try:
@@ -961,10 +979,6 @@ async def tts_by_voice_id(voice_id: str, request: Request):
     Body: {"text": "...", "language": "..."}  (language optional, override)
     Returns: audio/wav stream
     """
-    global model
-    if model is None:
-        raise HTTPException(status_code=503, detail="TTS Model is not loaded yet")
-
     meta = registry.get(voice_id)
     if not meta:
         raise HTTPException(
@@ -983,6 +997,9 @@ async def tts_by_voice_id(voice_id: str, request: Request):
     text = (body.get("text") or "").strip()
     if not text:
         raise HTTPException(status_code=400, detail="text field is required and cannot be empty")
+
+    engine = (body.get("engine") or "vieneu").lower()
+    speed = body.get("speed")
 
     # Override language (neu client truyen)
     language = body.get("language") or meta.get("language", "vi")
@@ -1015,41 +1032,50 @@ async def tts_by_voice_id(voice_id: str, request: Request):
             import modal
             import uuid
             import boto3
-            import urllib.request
             
             ref_audio_url = None
-            if ref_audio_path:
-                s3 = boto3.client(
-                    "s3",
-                    endpoint_url=os.environ["R2_ENDPOINT"],
-                    aws_access_key_id=os.environ["R2_ACCESS_KEY_ID"],
-                    aws_secret_access_key=os.environ["R2_SECRET_ACCESS_KEY"],
-                    region_name="auto",
-                )
-                object_key = f"omnivoice_tmp/{uuid.uuid4().hex}.wav"
-                s3.upload_file(ref_audio_path, os.environ.get("R2_BUCKET_UPLOADS", "appdk-uploads"), object_key)
-                ref_audio_url = f"{os.environ['R2_PUBLIC_CDN']}/{object_key}"
-
-            synth_fn = modal.Function.from_name("ai-dubbing-pipeline", "synthesize_voice")
-            output_key = f"omnivoice_renders/{uuid.uuid4().hex}.wav"
+            bucket_uploads = os.environ.get("R2_BUCKET_UPLOADS", "appdk-uploads")
+            bucket_renders = os.environ.get("R2_BUCKET_RENDERS", "appdk-renders")
             
-            result = synth_fn.remote(
-                text=text,
-                output_key=output_key,
-                reference_audio_url=ref_audio_url,
-                instruct=instruct if not ref_audio_path else None
-            )
-            
-            # Use boto3 to download instead of CDN to avoid 404 mapping issues
-            import boto3
-            s3_down = boto3.client(
+            s3 = boto3.client(
                 "s3",
                 endpoint_url=os.environ["R2_ENDPOINT"],
                 aws_access_key_id=os.environ["R2_ACCESS_KEY_ID"],
                 aws_secret_access_key=os.environ["R2_SECRET_ACCESS_KEY"],
                 region_name="auto",
             )
-            audio_obj = s3_down.get_object(Bucket=os.environ.get("R2_BUCKET_RENDERS", "appdk-renders"), Key=output_key)
+
+            if ref_audio_path:
+                object_key = f"omnivoice_tmp/{uuid.uuid4().hex}.wav"
+                s3.upload_file(ref_audio_path, bucket_uploads, object_key)
+                ref_audio_url = s3.generate_presigned_url(
+                    'get_object',
+                    Params={'Bucket': bucket_uploads, 'Key': object_key},
+                    ExpiresIn=3600
+                )
+
+            output_key = f"omnivoice_renders/{uuid.uuid4().hex}.wav"
+            
+            if engine == "omnivoice":
+                synth_fn = modal.Function.from_name("ai-dubbing-pipeline", "synthesize_voice")
+                result = synth_fn.remote(
+                    text=text,
+                    output_key=output_key,
+                    reference_audio_url=ref_audio_url,
+                    instruct=instruct if not ref_audio_path else None,
+                    speed=speed
+                )
+            else:
+                synth_fn = modal.Function.from_name("ai-dubbing-pipeline", "synthesize_vieneu")
+                result = synth_fn.remote(
+                    text=text,
+                    output_key=output_key,
+                    reference_audio_url=ref_audio_url,
+                    voice_preset=voice_id if not ref_audio_url else None,
+                    speed=speed
+                )
+            
+            audio_obj = s3.get_object(Bucket=bucket_renders, Key=output_key)
             return audio_obj["Body"].read()
 
         audio_data = await _run_inference_serialized(_infer, request_id)
