@@ -20,21 +20,14 @@ class ProjectContext:
 async def build_project_context(
     supabase: Client,
     project_id: str,
-    rag_service=None,
     query: str = "",
 ) -> ProjectContext:
     """
-    Build consolidated ProjectContext from DB + optional RAG.
+    Build consolidated ProjectContext from DB + optional channel DNA.
 
-    Args:
-        supabase: Supabase admin client
-        project_id: UUID of the project
-        rag_service: Optional RAGService instance for channel DNA retrieval
-        query: Query topic for RAG retrieval
-
-    Returns:
-        ProjectContext with brief, optional channel DNA, and RAG context.
+    CLEANED: Removed RAG retrieval. Now uses direct brief + persona context.
     """
+
     ctx = ProjectContext(project_id=project_id)
 
     # 1. Fetch latest brief
@@ -71,24 +64,8 @@ async def build_project_context(
         if assistant_rows.data:
             ctx.channel_dna = assistant_rows.data
 
-    # 4. RAG retrieval if rag_service is provided
-    if rag_service and query:
-        try:
-            # For clone_channel: retrieve from assistant's DNA chunks
-            assistant_id = project_rows.data.get('channel_assistant_id') if project_rows.data else None
-            if assistant_id:
-                result = await rag_service.retrieve_context(
-                    assistant_id=assistant_id,
-                    query=query,
-                    top_k=10,
-                )
-                ctx.rag_context = result.get('context_text', '')
-            else:
-                # Blank mode: no RAG, just use brief as context
-                ctx.rag_context = _build_blank_context(ctx.brief_payload, query)
-        except Exception:
-            # Graceful degradation — use blank fallback
-            ctx.rag_context = _build_blank_context(ctx.brief_payload, query)
+    # 4. Build context from brief (CLEANED: no RAG)
+    ctx.rag_context = _build_blank_context(ctx.brief_payload, query)
 
     return ctx
 

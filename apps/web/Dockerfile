@@ -37,4 +37,7 @@ EXPOSE 3000
 ENV PORT 3000
 ENV HOSTNAME "0.0.0.0"
 
+# ─── Sharp for image optimization ───
+RUN npm install sharp
+
 CMD ["node", "server.js"]

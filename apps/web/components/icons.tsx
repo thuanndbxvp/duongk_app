@@ -158,3 +158,43 @@ export const IconShield = (p: IconProps) => (
     <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
   </svg>
 );
+
+export const IconPalette = (p: IconProps) => (
+  <svg {...base(p)}>
+    <circle cx="12" cy="12" r="10" />
+    <circle cx="12" cy="8" r="2" fill="currentColor" stroke="none" />
+    <circle cx="8" cy="14" r="2" fill="currentColor" stroke="none" />
+    <circle cx="16" cy="14" r="2" fill="currentColor" stroke="none" />
+  </svg>
+);
+
+export const IconLayers = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="M12 2 2 7l10 5 10-5-10-5Z" />
+    <path d="m2 17 10 5 10-5" />
+    <path d="m2 12 10 5 10-5" />
+  </svg>
+);
+
+export const IconPlug = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="M12 22v-5" />
+    <path d="M9 8V2" />
+    <path d="M15 8V2" />
+    <path d="M18 8H6a2 2 0 0 0-2 2v3a6 6 0 0 0 12 0v-3a2 2 0 0 0-2-2Z" />
+  </svg>
+);
+
+export const IconSettings = (p: IconProps) => (
+  <svg {...base(p)}>
+    <circle cx="12" cy="12" r="3" />
+    <path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83" />
+  </svg>
+);
+
+export const IconCode = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="m16 18 6-6-6-6" />
+    <path d="m8 6-6 6 6 6" />
+  </svg>
+);

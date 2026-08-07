@@ -11,19 +11,11 @@ load_dotenv()
 # OpenAPI custom schema
 from apps.api.openapi import custom_openapi_schema
 
-# Import routers
-from apps.api.modules.module_1 import router as module_1_router
-from apps.api.modules.module_2a import router as module_2a_router
-from apps.api.modules.transcript.routes import router as transcript_router
-from apps.api.modules.analysis.routes import router as analysis_router
-from apps.api.modules.nlp.routes import router as nlp_router
-from apps.api.modules.llm.routes import router as llm_router
-from apps.api.modules.rag.routes import router as rag_router
+# Import routers (CLEANED: removed dead modules - rag, llm, nlp, analysis, transcript, module_1, module_2a)
 from apps.api.modules.script.routes import router as script_router
 from apps.api.routers.users import router as user_router
 from apps.api.routers.credits import router as credits_router
 from apps.api.routers.projects import router as projects_router
-# NOTE: modules/voice/routes.py deprecated — replaced by routers/voice_profiles.py
 from apps.api.routers.assistants import router as assistants_router
 from apps.api.routers.jobs import router as jobs_router
 from apps.api.routers.analysis import router as analysis_api_router
@@ -41,7 +33,7 @@ from apps.api.routers.admin_mfa import router as admin_mfa_router
 from apps.api.routers.admin_analytics import router as admin_analytics_router
 from apps.api.routers.admin_dashboard import router as admin_dashboard_router
 from apps.api.routers.assets import router as assets_router, scene_router as scenes_router
-# NOTE: routers/voice.py has prefix=/api/projects — for /api/projects/{id}/voice/*
+# routers/voice.py: /api/projects/{id}/voice/*
 from apps.api.routers.voice import router as voice_router
 # NEW: Tier 1 P0 fixes
 from apps.api.routers.voice_profiles import router as voice_profiles_router
@@ -52,6 +44,9 @@ from apps.api.routers.channel_intel import router as channel_intel_router
 from apps.api.routers.style_bible import router as style_bible_router
 from apps.api.routers.batch import router as batch_router
 from apps.api.routers.character_lab import router as character_lab_router
+# NEW: Async Tasks (no Celery)
+from apps.api.routers.subtitles import router as subtitles_router
+from apps.api.routers.scripts import router as scripts_router
 
 sentry_sdk.init(dsn=os.getenv("SENTRY_DSN"))
 app = FastAPI(title="YouTube AI SaaS")
@@ -59,14 +54,7 @@ app = FastAPI(title="YouTube AI SaaS")
 # Register IP whitelist middleware (Phase 9)
 app.add_middleware(IPWhitelistMiddleware)
 
-# Include routers
-app.include_router(module_1_router)
-app.include_router(module_2a_router)
-app.include_router(transcript_router)
-app.include_router(analysis_router)
-app.include_router(nlp_router)
-app.include_router(llm_router)
-app.include_router(rag_router)
+# Include routers (CLEANED: removed dead module routers)
 app.include_router(script_router)
 app.include_router(user_router)
 app.include_router(credits_router)
@@ -99,6 +87,9 @@ app.include_router(channel_intel_router)
 app.include_router(style_bible_router)
 app.include_router(batch_router)
 app.include_router(character_lab_router)
+# NEW: Async Tasks (no Celery)
+app.include_router(subtitles_router)  # /api/projects/{id}/subtitles/*
+app.include_router(scripts_router)  # /api/scripts/*
 
 # Override default OpenAPI schema
 app.openapi = lambda: custom_openapi_schema(app)
@@ -118,18 +109,15 @@ async def _debug_exception_handler(request: Request, exc: Exception):
         )
     return JSONResponse(status_code=500, content={'detail': 'Internal Server Error'})
 
-
 @app.get("/", include_in_schema=False)
 async def root():
     """Redirect root to API docs."""
     return RedirectResponse(url="/docs")
 
-
 @app.get("/openapi.json", include_in_schema=False)
 async def openapi_json():
     """Return raw OpenAPI spec as JSON."""
     return app.openapi()
-
 
 @app.get("/redoc", include_in_schema=False)
 async def redoc():

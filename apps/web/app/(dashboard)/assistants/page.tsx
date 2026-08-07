@@ -19,23 +19,24 @@ interface Assistant {
   created_at: string;
 }
 
-export default async function AssistantsPage() {
-  const token = await getAccessToken();
-  if (!token) redirect('/login');
-
-  let assistants: Assistant[] = [];
-  let fetchError: string | null = null;
+async function getAssistants(token: string): Promise<{ data: Assistant[]; error: string | null }> {
   try {
     const response = await apiFetch('/api/assistants', {}, token);
     if (response.ok) {
       const data = await response.json();
-      assistants = Array.isArray(data) ? data : [];
-    } else {
-      fetchError = `Backend ${response.status}: ${response.statusText || 'request failed'}`;
+      return { data: Array.isArray(data) ? data : [], error: null };
     }
+    return { data: [], error: `Backend error: ${response.status}` };
   } catch (err) {
-    fetchError = err instanceof Error ? err.message : 'Network error';
+    return { data: [], error: 'Cannot connect to backend. Make sure FastAPI is running on port 8001.' };
   }
+}
+
+export default async function AssistantsPage() {
+  const token = await getAccessToken();
+  if (!token) redirect('/login');
+
+  const { data: assistants, error } = await getAssistants(token);
 
   return (
     <div className="space-y-8 animate-fade-up">
@@ -60,13 +61,27 @@ export default async function AssistantsPage() {
         </Link>
       </div>
 
-      {fetchError ? (
-        <div className="px-4 py-3 rounded-xl bg-[rgba(248,113,113,0.08)] border border-[rgba(248,113,113,0.2)] text-sm text-[var(--danger)]">
-          Không tải được danh sách assistants: {fetchError}
+      {/* Error State */}
+      {error && (
+        <div className="p-6 rounded-2xl glass border border-[var(--danger)]/30 bg-[var(--danger)]/5">
+          <h3 className="font-semibold text-[var(--danger)] mb-2">Connection Error</h3>
+          <p className="text-sm text-[var(--fg-secondary)]">{error}</p>
+          <div className="mt-4 p-4 rounded-xl bg-black/20 text-xs font-mono">
+            <p className="text-[var(--fg-tertiary)]">Troubleshooting:</p>
+            <ol className="mt-2 space-y-1 text-[var(--fg-secondary)] list-decimal list-inside">
+              <li>Kiểm tra FastAPI đang chạy: <code className="text-[var(--brand-300)]">npm run dev:api</code></li>
+              <li>Kiểm tra port 8001 không bị chiếm</li>
+              <li>Kiểm tra Supabase credentials trong .env</li>
+            </ol>
+          </div>
         </div>
-      ) : assistants.length === 0 ? (
-        <EmptyState />
-      ) : (
+      )}
+
+      {/* Loading/Empty State */}
+      {!error && assistants.length === 0 && <EmptyState />}
+
+      {/* Grid */}
+      {assistants.length > 0 && (
         <>
           <div className="flex items-center justify-between">
             <p className="text-sm text-[var(--fg-tertiary)]">

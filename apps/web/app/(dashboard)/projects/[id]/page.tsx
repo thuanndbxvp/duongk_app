@@ -26,6 +26,7 @@ export default function ProjectWorkspacePage() {
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [activeTab, setActiveTab] = useState('brief');
 
   useEffect(() => {
     fetch(`/api/projects/${id}`)
@@ -57,6 +58,14 @@ export default function ProjectWorkspacePage() {
       </div>
     );
   }
+  
+  const TABS = [
+    { id: 'brief', label: 'Brief', href: `/projects/${id}` },
+    { id: 'subtitles', label: 'Subtitles', href: `/projects/${id}/subtitles` },
+    { id: 'render-config', label: 'Render Config', href: `/projects/${id}/render-config` },
+    { id: 'timeline', label: 'Timeline Debug', href: `/projects/${id}/timeline-debug` },
+  ];
+
   return (
     <div className="max-w-4xl mx-auto space-y-8 animate-fade-up">
       <div className="space-y-2">
@@ -76,6 +85,24 @@ export default function ProjectWorkspacePage() {
         <p className="text-[var(--fg-secondary)] text-sm">
           Created: {new Date(project.created_at).toLocaleDateString('vi-VN')}
         </p>
+      </div>
+
+      {/* Project Tabs */}
+      <div className="flex items-center gap-1 border-b border-[var(--glass-border)]">
+        {TABS.map((tab) => (
+          <a
+            key={tab.id}
+            href={tab.href}
+            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === tab.id
+                ? 'border-[var(--brand-500)] text-white'
+                : 'border-transparent text-[var(--fg-secondary)] hover:text-white hover:border-[var(--brand-500)]/50'
+            }`}
+            onClick={() => setActiveTab(tab.id)}
+          >
+            {tab.label}
+          </a>
+        ))}
       </div>
 
       {project.brief && (

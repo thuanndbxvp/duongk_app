@@ -11,6 +11,8 @@ const ADMIN_NAV = [
   { href: '/admin/pricing', label: 'Pricing', icon: IconShield, enabled: false },
   { href: '/admin/api-keys', label: 'API Keys', icon: IconShield, enabled: true },
   { href: '/admin/routing', label: 'Routing', icon: IconChannels, enabled: true },
+  { href: '/admin/routing/estimate', label: 'Cost Estimator', icon: IconChannels, enabled: true },
+  { href: '/admin/usage', label: 'API Usage', icon: IconChannels, enabled: true },
   { href: '/admin/alerts', label: 'Alerts', icon: IconAlert, enabled: true },
   { href: '/admin/audit-logs', label: 'Audit Logs', icon: IconShield, enabled: true },
   { href: '/admin/security/mfa', label: 'Security', icon: IconShield, enabled: true },

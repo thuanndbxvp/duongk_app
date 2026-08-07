@@ -1,5 +1,5 @@
 """
-Rate limit middleware for FastAPI — Phase 07.
+Rate limit & CORS middleware for FastAPI — Phase 07, updated Round 4.
 """
 from __future__ import annotations
 import time
@@ -49,19 +49,28 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 
 
 class CORSAllowListMiddleware(BaseHTTPMiddleware):
-    """CORS middleware with allowlist from env."""
+    """
+    CORS middleware với allowlist từ env.
+    ⚠️ Round 4: Giờ chạy sau Caddy reverse proxy nên restrict origin về domain production.
+    """
 
     def __init__(self, app, allowed_origins: list[str] | None = None):
         super().__init__(app)
         import os
-        origins_env = os.environ.get("CORS_ALLOWED_ORIGINS", "*")
+        # Default: chỉ cho phép domain production để secure hơn
+        # Override bằng CORS_ALLOWED_ORIGINS env var (comma-separated)
+        default_origins = "https://ai86.click,https://www.ai86.click,https://api.ai86.click,https://voice.ai86.click"
+        origins_env = os.environ.get("CORS_ALLOWED_ORIGINS", default_origins)
         self.allowed = allowed_origins or [o.strip() for o in origins_env.split(",") if o.strip()]
 
     async def dispatch(self, request: Request, call_next):
         response = await call_next(request)
         origin = request.headers.get("origin", "")
-        if "*" in self.allowed or origin in self.allowed:
-            response.headers["Access-Control-Allow-Origin"] = origin if origin else "*"
+        
+        # Kiểm tra origin có trong allowlist không
+        if origin in self.allowed or "*" in self.allowed:
+            response.headers["Access-Control-Allow-Origin"] = origin if origin else self.allowed[0] if self.allowed else "*"
             response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, PATCH, DELETE, OPTIONS"
-            response.headers["Access-Control-Allow-Headers"] = "Authorization, Content-Type"
+            response.headers["Access-Control-Allow-Headers"] = "Authorization, Content-Type, X-User-ID"
+            response.headers["Access-Control-Allow-Credentials"] = "true"
         return response
