@@ -401,7 +401,7 @@ async def generate_tts(request: TTSRequest):
                 
                 beam_url = os.environ.get(
                     "BEAM_OPENVOICE_URL",
-                    "https://voice-studio-engine-8a5063d-v6.app.beam.cloud"
+                    "https://voice-studio-engine-8a5063d-v7.app.beam.cloud"
                 )
                 beam_token = os.environ.get(
                     "BEAM_OPENVOICE_TOKEN",
