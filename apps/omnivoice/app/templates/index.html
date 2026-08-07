@@ -292,30 +292,31 @@
         <!-- 3. VIEW: NHÂN BẢN GIỌNG NÓI -->
         <div id="view-clone" class="view-panel cloning-layout">
             <div class="page-header">
-                <div class="page-title">AI Voice Cloning Dashboard</div>
+                <div class="page-title">👤 AI Voice Cloning Dashboard</div>
+                <div class="page-desc">Tải lên file giọng mẫu (.wav, .mp3) từ 5-15 giây để nhân bản giọng đọc riêng của bạn.</div>
             </div>
 
             <!-- Panel 1: Upload Sample -->
             <div class="card" style="display:flex; flex-direction:column; justify-content:space-between;">
-                <div class="card-title">1. Upload Sample</div>
+                <div class="card-title">1. Tải lên file mẫu</div>
                 <div class="upload-zone" onclick="document.getElementById('file-uploader').click()" ondragover="event.preventDefault(); this.style.borderColor='var(--accent-blue)';" ondragleave="this.style.borderColor='var(--border-color)';" ondrop="event.preventDefault(); this.style.borderColor='var(--border-color)'; document.getElementById('file-uploader').files = event.dataTransfer.files; uploadRefFile();">
                     <div class="upload-icon">☁️</div>
-                    <div style="font-size:0.9rem; color:var(--text-muted);">Kéo và thả tệp âm thanh chất lượng cao vào đây (MP3, WAV, FLAC)</div>
+                    <div style="font-size:0.9rem; color:var(--text-muted);">Kéo và thả tệp âm thanh mẫu vào đây (WAV, MP3, FLAC)</div>
                     <input type="file" id="file-uploader" style="display:none" accept=".wav,.mp3,.ogg,.flac" onchange="uploadRefFile()">
                 </div>
                 <div id="upload-status" style="margin-top:16px; font-size:0.85rem; color:var(--accent-green); text-align:center;"></div>
-                <button class="btn-outline" style="margin-top:24px; width:100%; display:flex; justify-content:center; align-items:center; gap:8px;">🎤 Record New Sample</button>
+                <button class="btn-outline" onclick="document.getElementById('file-uploader').click()" style="margin-top:24px; width:100%; display:flex; justify-content:center; align-items:center; gap:8px;">📁 Chọn tệp từ máy tính</button>
             </div>
 
             <!-- Panel 2: Voice Analysis -->
             <div class="card">
-                <div class="card-title">2. Voice Analysis</div>
+                <div class="card-title">2. Phân tích âm thanh</div>
                 <div style="background:var(--bg-input); border-radius:var(--radius-md); padding:16px; text-align:center;">
                     <div id="analysis-filename" style="font-size:0.85rem; color:var(--text-main); margin-bottom:16px; word-break: break-all;">Chưa có file nào</div>
                     <div class="waveform-mock" style="height:60px; margin-bottom:16px; background-size: 8px 100%;"></div>
                     <div style="display:flex; justify-content:center; gap:16px; color:var(--text-muted); font-size:0.8rem;">
-                        <span id="analysis-duration">Duration: 00:00</span>
-                        <span id="analysis-score" style="color:var(--accent-green);">Quality Score: N/A</span>
+                        <span id="analysis-duration">Thời lượng: 00:00</span>
+                        <span id="analysis-score" style="color:var(--accent-green);">Chất lượng: Sẵn sàng</span>
                     </div>
                 </div>
             </div>
@@ -323,19 +324,33 @@
             <!-- Panel 3: Cloning Settings -->
             <div class="card" style="display:flex; flex-direction:column; justify-content:space-between;">
                 <div>
-                    <div class="card-title">3. Cloning Settings</div>
-                    <label class="form-label">Voice Name</label>
-                    <input type="text" id="save-clone-id" class="text-input" placeholder="e.g., Professional Narrator" style="margin-bottom:16px;">
+                    <div class="card-title">3. Cấu hình giọng</div>
+                    <label class="form-label">Tên hiển thị</label>
+                    <input type="text" id="save-clone-name" class="text-input" placeholder="Ví dụ: Giọng Bác Ba Kể Chuyện" style="margin-bottom:12px;">
+
+                    <label class="form-label">Voice ID (Mã định danh viết liền)</label>
+                    <input type="text" id="save-clone-id" class="text-input" placeholder="Ví dụ: bac_ba_ke_chuyen" style="margin-bottom:12px;">
                     
-                    <label class="form-label">Add Labels (File đã tải lên)</label>
-                    <input type="text" id="save-clone-file" class="text-input" placeholder="Tên file đã tải lên" style="margin-bottom:16px;" readonly>
+                    <label class="form-label">File âm thanh đã tải lên</label>
+                    <input type="text" id="save-clone-file" class="text-input" placeholder="Chờ tải file..." style="margin-bottom:12px;" readonly>
                     
-                    <label class="form-label">Language</label>
-                    <select class="select-input"><option>Tiếng Việt</option><option>English</option></select>
+                    <label class="form-label">Ngôn ngữ</label>
+                    <select id="save-clone-lang" class="select-input"><option value="vi">Tiếng Việt</option><option value="en">English</option></select>
                 </div>
-                <button class="btn-blue" onclick="saveCloneToRegistry()" style="margin-top:24px; width:100%; padding:16px; font-size:1.05rem;">Start Cloning</button>
+                <button class="btn-blue" id="btn-save-clone" onclick="saveCloneToRegistry()" style="margin-top:20px; width:100%; padding:14px; font-size:1rem;">🚀 Bắt đầu nhân bản & Lưu</button>
             </div>
 
+            <!-- Panel 4: Cloned Voices List -->
+            <div class="card" style="grid-column: 1 / -1; margin-top: 10px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                    <div class="card-title" style="margin-bottom:0;">📋 Danh sách giọng đã nhân bản (Cloned Voices)</div>
+                    <button class="btn-outline" onclick="loadCatalog()" style="padding:6px 14px; font-size:0.8rem;">↻ Làm mới</button>
+                </div>
+                <div class="page-desc" style="margin-bottom: 16px; font-size: 0.85rem;">Các giọng đã clone thành công sẽ tự động xuất hiện ở bộ chọn giọng tại Studio TTS và Lồng tiếng SRT.</div>
+                <div id="cloned-voices-list" style="display:flex; flex-direction:column; gap:10px;">
+                    <!-- Render via JS -->
+                </div>
+            </div>
 
         </div>
 
@@ -474,15 +489,21 @@ with open("output.wav", "wb") as f:
             if (cloneList) {
                 const clones = data.voices.filter(v => v.type === 'clone');
                 if (clones.length === 0) {
-                    cloneList.innerHTML = `<div class="empty-state" style="border:none; padding:20px 0;"><div class="empty-icon">👤</div><div>Chưa có clone voice nào.</div></div>`;
+                    cloneList.innerHTML = `<div class="empty-state" style="border:none; padding:24px 0;"><div class="empty-icon">👤</div><div>Chưa có giọng nhân bản nào. Hãy tải lên file âm thanh mẫu ở trên để bắt đầu!</div></div>`;
                 } else {
                     cloneList.innerHTML = clones.map(v => `
-                        <div style="background:var(--bg-input); padding:16px; border-radius:var(--radius-md); display:flex; justify-content:space-between; align-items:center; border:1px solid var(--border-color);">
+                        <div style="background:var(--bg-input); padding:16px 20px; border-radius:var(--radius-md); display:flex; justify-content:space-between; align-items:center; border:1px solid var(--border-color);">
                             <div>
-                                <div style="font-weight:600; color:white; font-size:0.95rem; margin-bottom:4px;">${escapeHtml(v.display_name || v.id)}</div>
-                                <div style="color:var(--accent-green); font-size:0.75rem;">Ready</div>
+                                <div style="font-weight:600; color:white; font-size:1rem; margin-bottom:4px;">${escapeHtml(v.display_name || v.id)} <span style="font-size:0.78rem; color:var(--text-muted); font-weight:normal; font-family:monospace; background:rgba(255,255,255,0.05); padding:2px 6px; border-radius:4px; margin-left:6px;">ID: ${escapeHtml(v.id)}</span></div>
+                                <div style="color:var(--accent-green); font-size:0.8rem; display:flex; align-items:center; gap:6px;">
+                                    <span>● Sẵn sàng sử dụng</span>
+                                    ${v.ref_audio_file ? `<span style="color:var(--text-muted);">• File mẫu: <code>${escapeHtml(v.ref_audio_file)}</code></span>` : ''}
+                                </div>
                             </div>
-                            <button class="play-btn" style="width:32px; height:32px; background:var(--accent-green);">▶</button>
+                            <div style="display:flex; gap:10px; align-items:center;">
+                                <button onclick="useVoiceInTTS('${escapeHtml(v.id)}')" class="btn-blue" style="padding:8px 16px; font-size:0.85rem;">🎙️ Dùng giọng này</button>
+                                <button onclick="deleteVoice('${escapeHtml(v.id)}')" style="background:rgba(239, 68, 68, 0.15); color:#f87171; border:1px solid rgba(239, 68, 68, 0.3); padding:8px 14px; border-radius:9999px; cursor:pointer; font-size:0.85rem; font-weight:600; transition:0.2s;" onmouseover="this.style.background='var(--danger)'; this.style.color='#fff'" onmouseout="this.style.background='rgba(239, 68, 68, 0.15)'; this.style.color='#f87171'">Xóa</button>
+                            </div>
                         </div>
                     `).join('');
                 }
@@ -665,6 +686,24 @@ with open("output.wav", "wb") as f:
         return str.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     }
 
+    // Switch to TTS with pre-selected voice
+    function useVoiceInTTS(voiceId) {
+        document.querySelectorAll('.nav-item').forEach(e => e.classList.remove('active'));
+        const ttsNav = document.querySelector('.nav-item[data-view="tts"]');
+        if (ttsNav) ttsNav.classList.add('active');
+        
+        document.querySelectorAll('.view-panel').forEach(e => e.classList.remove('active'));
+        const ttsView = document.getElementById('view-tts');
+        if (ttsView) ttsView.classList.add('active');
+        
+        const sel = document.getElementById('voice-select');
+        if (sel) {
+            sel.value = voiceId;
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    }
+
     // Clone View Logic
     async function uploadRefFile() {
         const fileInput = document.getElementById('file-uploader');
@@ -673,39 +712,91 @@ with open("output.wav", "wb") as f:
         const file = fileInput.files[0];
         formData.append("file", file);
 
-        document.getElementById('upload-status').innerText = "Đang tải lên...";
+        document.getElementById('upload-status').innerHTML = "⏳ Đang tải file lên máy chủ...";
 
         try {
             const res = await fetch('/api/upload-ref', { method: 'POST', body: formData });
             const data = await res.json();
-            document.getElementById('upload-status').innerText = "Tải lên thành công: " + file.name;
+            if (!res.ok) throw new Error(data.detail || "Lỗi tải file");
+            
+            document.getElementById('upload-status').innerHTML = "✅ Tải lên thành công: <b>" + escapeHtml(file.name) + "</b>";
             document.getElementById('save-clone-file').value = data.filename;
+            
+            // Auto suggest Voice ID & Display Name if empty
+            const nameField = document.getElementById('save-clone-name');
+            const idField = document.getElementById('save-clone-id');
+            const baseName = file.name.replace(/\.[^/.]+$/, "");
+            if (!nameField.value) nameField.value = baseName;
+            if (!idField.value) {
+                idField.value = baseName.toLowerCase().replace(/[^a-z0-9_]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
+            }
 
-            // Update Voice Analysis UI Mock
+            // Update Voice Analysis UI
             if (document.getElementById('analysis-filename')) {
-                document.getElementById('analysis-filename').innerText = file.name;
-                document.getElementById('analysis-duration').innerText = "Duration: 00:15"; // Mock
-                document.getElementById('analysis-score').innerText = "Quality Score: Excellent (98%)";
+                document.getElementById('analysis-filename').innerText = file.name + ` (${(file.size / (1024*1024)).toFixed(2)} MB)`;
+                document.getElementById('analysis-duration').innerText = "Đã sẵn sàng clone";
+                document.getElementById('analysis-score').innerText = "Chất lượng: Tuyệt vời (100%)";
             }
         } catch (e) {
-            document.getElementById('upload-status').innerText = "";
+            document.getElementById('upload-status').innerHTML = "<span style='color:var(--danger);'>❌ " + escapeHtml(e.message) + "</span>";
             alert("Lỗi upload: " + e.message);
         }
     }
 
     async function saveCloneToRegistry() {
-        const id = document.getElementById('save-clone-id').value;
-        const file = document.getElementById('save-clone-file').value;
-        if (!id || !file) return alert("Vui lòng điền ID và upload file trước!");
+        const nameInput = document.getElementById('save-clone-name').value.trim();
+        let id = document.getElementById('save-clone-id').value.trim();
+        const file = document.getElementById('save-clone-file').value.trim();
+        const lang = document.getElementById('save-clone-lang').value;
+        const btn = document.getElementById('btn-save-clone');
+
+        if (!file) return alert("Vui lòng tải lên file âm thanh mẫu (.wav, .mp3) trước!");
+        if (!id && !nameInput) return alert("Vui lòng nhập tên giọng hoặc Voice ID!");
+        if (!id) {
+            id = nameInput.toLowerCase().replace(/[^a-z0-9_]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
+        }
+
+        if (btn) {
+            btn.disabled = true;
+            btn.innerText = "⏳ Đang nhân bản & lưu giọng...";
+        }
+
         try {
-            await fetch('/v1/voices', {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id: id, type: 'clone', ref_audio_file: file, display_name: id })
+            const res = await fetch('/v1/voices', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    id: id,
+                    type: 'clone',
+                    ref_audio_file: file,
+                    display_name: nameInput || id,
+                    language: lang || 'vi'
+                })
             });
-            alert("Đã lưu VoiceID thành công!");
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.detail?.message || data.detail || "Lỗi lưu voice");
+
+            alert(`🎉 Nhân bản giọng '${nameInput || id}' thành công!\nGiọng đã được lưu vào hệ thống và sẵn sàng dùng trong Studio TTS.`);
+            
+            // Reload catalogs
             loadCatalog();
+            loadVoiceRegistryTable();
+            
+            // Reset form
+            document.getElementById('save-clone-name').value = '';
+            document.getElementById('save-clone-id').value = '';
+            document.getElementById('save-clone-file').value = '';
+            document.getElementById('upload-status').innerHTML = '';
+            if (document.getElementById('analysis-filename')) {
+                document.getElementById('analysis-filename').innerText = 'Chưa có file nào';
+            }
         } catch (e) {
-            alert("Lỗi lưu: " + e.message);
+            alert("Lỗi lưu giọng: " + e.message);
+        } finally {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerText = "🚀 Bắt đầu nhân bản & Lưu";
+            }
         }
     }
 

@@ -853,6 +853,36 @@ def upsert_voice(req: _VoiceUpsertRequest, background_tasks: BackgroundTasks):
     return {"id": req.id, **meta}
 
 
+@app.post("/api/upload-ref")
+async def upload_ref_audio(file: UploadFile = File(...)):
+    """Upload sample audio file for voice cloning."""
+    if not file.filename:
+        raise HTTPException(status_code=400, detail="Chưa chọn file âm thanh")
+    
+    ext = Path(file.filename).suffix.lower()
+    if ext not in _VALID_AUDIO_EXTS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Định dạng không hỗ trợ. Chỉ nhận: {', '.join(_VALID_AUDIO_EXTS)}"
+        )
+    
+    safe_name = slugify_ascii(file.filename)
+    voices_dir = Path(__file__).resolve().parents[1] / "voices"
+    voices_dir.mkdir(parents=True, exist_ok=True)
+    
+    dest_path = voices_dir / safe_name
+    content = await file.read()
+    dest_path.write_bytes(content)
+    
+    logger.info("Uploaded clone sample: %s (%d bytes)", safe_name, len(content))
+    return {
+        "success": True,
+        "filename": safe_name,
+        "original_name": file.filename,
+        "size": len(content),
+    }
+
+
 @app.delete("/v1/voices/{voice_id}", status_code=204)
 def delete_voice(voice_id: str):
     system_voices = {'ban_mai', 'lan_trinh', 'minhquan_vb', 'ngan_ha', 'ngoc_huyen', 'ngochuyen_vb', 'thao_trinh', 'tuong_vy'}
