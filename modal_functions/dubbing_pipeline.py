@@ -10,6 +10,7 @@ pipeline_image = (
     .pip_install(
         "torch",
         "torchaudio",
+        "torchcodec",
         "faster-whisper",
         "moviepy", 
         "soundfile", 
@@ -273,6 +274,26 @@ def synthesize_vieneu(
     import tempfile
     import os
     import boto3
+    import torch
+    import soundfile as sf
+    import torchaudio
+    
+    # Safe audio loading patch to prevent torchcodec issues
+    _orig_load = getattr(torchaudio, "load", None)
+    def _safe_load(filepath, *args, **kwargs):
+        try:
+            return _orig_load(filepath, *args, **kwargs)
+        except Exception:
+            data, sr = sf.read(filepath)
+            tensor = torch.from_numpy(data).float()
+            if tensor.ndim == 1:
+                tensor = tensor.unsqueeze(0)
+            else:
+                tensor = tensor.t()
+            return tensor, sr
+
+    torchaudio.load = _safe_load
+    
     from vieneu import Vieneu
     
     with tempfile.TemporaryDirectory() as tmp:
@@ -550,6 +571,25 @@ def dub_srt_vieneu(
     import re
     import unicodedata
     import soundfile as sf
+    import torch
+    import torchaudio
+    
+    # Safe audio loading patch to prevent torchcodec issues
+    _orig_load = getattr(torchaudio, "load", None)
+    def _safe_load(filepath, *args, **kwargs):
+        try:
+            return _orig_load(filepath, *args, **kwargs)
+        except Exception:
+            data, sr = sf.read(filepath)
+            tensor = torch.from_numpy(data).float()
+            if tensor.ndim == 1:
+                tensor = tensor.unsqueeze(0)
+            else:
+                tensor = tensor.t()
+            return tensor, sr
+
+    torchaudio.load = _safe_load
+    
     from vieneu import Vieneu
     
     with tempfile.TemporaryDirectory() as tmp:
