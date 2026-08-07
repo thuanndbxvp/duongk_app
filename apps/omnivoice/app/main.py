@@ -401,14 +401,17 @@ async def generate_tts(request: TTSRequest):
                 
                 beam_url = os.environ.get(
                     "BEAM_OPENVOICE_URL",
-                    "https://voice-studio-engine-8a5063d-v1.app.beam.cloud"
+                    "https://voice-studio-engine-8a5063d-v2.app.beam.cloud"
                 )
                 beam_token = os.environ.get(
                     "BEAM_OPENVOICE_TOKEN",
                     "vLohAOVbqSRdYMOQWc1SiY4MxW5HSISjVeXk5btUjKii5MOrrLQWWStDNsBlc0KX3FnDtp71StD-S6bAOBrJEg=="
                 )
                 
-                payload = {"text": text_to_gen}
+                payload = {
+                    "text": text_to_gen,
+                    "language": request.language or "vi"
+                }
                 
                 # Check reference audio
                 if ref_audio_path and os.path.exists(ref_audio_path):
