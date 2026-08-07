@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { CancelRenderButton } from '@/components/cancel-render-button';
 
 interface Props {
   projectId: string;
@@ -100,6 +101,9 @@ export function VideoPreview({ projectId }: Props) {
                 'bg-gray-500/20 text-gray-400'
               }`}>{job.status}</span>
             </div>
+            {(job.status === 'running' || job.status === 'pending') && (
+              <CancelRenderButton projectId={projectId} jobId={job.id} status={job.status} onCancelled={fetchExports} />
+            )}
             {job.status === 'running' && (
               <div className="h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
                 <div className="h-full gradient-bg transition-all" style={{ width: `${(job.progress || 0) * 100}%` }} />

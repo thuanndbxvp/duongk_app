@@ -32,3 +32,22 @@ celery_app.conf.update(
 
 # Auto-discover tasks in the worker directory
 celery_app.autodiscover_tasks(['apps.worker.tasks'])
+# ============================================================
+# Config watcher: auto-start on worker boot (Hidden Features P1)
+# ============================================================
+from celery.signals import worker_ready
+import logging
+
+logger = logging.getLogger(__name__)
+
+
+@worker_ready.connect
+def start_config_watcher(**kwargs):
+    """Start config watcher background thread on worker boot."""
+    try:
+        from apps.worker.services.config_watcher import start_watcher
+        start_watcher()
+        logger.info("[config_watcher] Started on worker boot")
+    except Exception as e:
+        logger.warning(f"[config_watcher] Failed to start: {e}")
+

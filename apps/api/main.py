@@ -1,7 +1,8 @@
-from fastapi import FastAPI
-from fastapi.responses import RedirectResponse
+from fastapi import FastAPI, Request
+from fastapi.responses import RedirectResponse, JSONResponse
 import sentry_sdk
 import os
+import traceback
 from dotenv import load_dotenv
 
 # Load .env file for local development
@@ -94,6 +95,22 @@ app.include_router(character_lab_router)
 
 # Override default OpenAPI schema
 app.openapi = lambda: custom_openapi_schema(app)
+
+@app.exception_handler(Exception)
+async def _debug_exception_handler(request: Request, exc: Exception):
+    """Print full stacktrace to stderr and return JSON with detail (dev only)."""
+    traceback.print_exc()
+    if os.getenv('ENV', '').lower() == 'development' or os.getenv('SUPABASE_DEV_MODE', '').lower() == 'true':
+        return JSONResponse(
+            status_code=500,
+            content={
+                'detail': 'Internal Server Error',
+                'type': exc.__class__.__name__,
+                'message': str(exc),
+            },
+        )
+    return JSONResponse(status_code=500, content={'detail': 'Internal Server Error'})
+
 
 @app.get("/", include_in_schema=False)
 async def root():
