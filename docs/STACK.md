@@ -41,15 +41,16 @@ User Browser
 
 ### 1. CPU VPS (Ubuntu 24.04)
 - **Vai trò:** SaaS core, orchestration, KHÔNG chạy AI/render nặng
-- **Chạy:** Next.js + FastAPI + Celery worker (light) + Redis + Caddy
+- **Chạy:** Next.js + FastAPI + Celery worker (light) + Redis + Caddy + OmniVoice
 - **KHÔNG chạy:** LLM inference, FFmpeg render, Whisper — những cái này phải push sang GPU VPS hoặc Modal
-- **Deploy:** Docker Compose, quản lý bằng `docker-compose.yml`
-- **Path chuẩn:** `/home/deploy/myapp/`
+- **Deploy:** Docker Compose, quản lý bằng `docker-compose.prod.yml`
+- **Path chuẩn:** `/opt/appdk/`
+- **IP:** `161.248.4.99`
 
-### 2. GPU VPS
-- **Vai trò:** Heavy compute worker riêng
-- **Chạy:** FFmpeg render (h264_nvenc), Whisper transcript, ML inference, optional local LLM
-- **Giao tiếp với CPU VPS:** qua private network / API endpoint riêng / message queue
+### 2. GPU VPS / Serverless Modal
+- **Vai trò:** Heavy compute worker & AI Inference
+- **Chạy:** FFmpeg render (h264_nvenc), Whisper transcript, OmniVoice TTS & Dubbing (`modal_functions/dubbing_pipeline.py`)
+- **Giao tiếp với CPU VPS:** qua Modal SDK / private network / message queue
 - **KHÔNG chạy:** web/API/auth — những cái đó ở CPU VPS
 
 ### 3. Supabase managed
@@ -67,9 +68,9 @@ User Browser
 - **Ưu điểm chính:** Egress MIỄN PHÍ
 - **API:** S3-compatible (dùng `boto3`)
 - **Buckets:**
-  - `myapp-uploads` — user upload input
-  - `myapp-renders` — video output từ render pipeline
-  - `myapp-cache` — thumbnail, preview (TTL 7 ngày)
+  - `ai86-uploads` — user upload input
+  - `appdk-renders` — video/audio output từ render pipeline
+  - `ai86-cache` — thumbnail, preview (TTL 7 ngày)
 
 - **CDN:** custom domain `cdn.ai86.click` cho public serving
 
@@ -140,114 +141,119 @@ User Browser
 ---
 
 ## Cấu trúc monorepo
-
-```
-/apps
-  /web                     # Next.js 15 (BFF pattern)
-  /api                     # FastAPI (không có LLM key trong env)
-  /worker                  # Celery worker (đọc key từ Vault qua key_resolver)
-  /admin                   # Admin panel (route /admin/* trong apps/web)
-/packages
-  /shared-types            # Pydantic → TypeScript auto-gen
-  /prompts                 # LLM prompt templates
-  /formulas                # Pure Python statistics
-  /nlp                     # Tokenizer, sentiment, readability
-/supabase
-  /migrations              # SQL migrations (versioned)
-  /policies                # RLS policies
-  /seed                    # Test data + routing config seed
-/modal_functions           # Modal.com serverless GPU functions (optional)
-/docs
-  /audit
-  /plans
-```
-
----
-
-## Environment variables (chỉ hạ tầng, KHÔNG có LLM keys)
-
-```bash
-# Supabase
-SUPABASE_URL=
-SUPABASE_ANON_KEY=
-SUPABASE_SERVICE_ROLE_KEY=
-SUPABASE_JWT_SECRET=
-
-# Cloudflare R2
-R2_ACCESS_KEY_ID=
-R2_SECRET_ACCESS_KEY=
-R2_ENDPOINT=
-R2_BUCKET_UPLOADS=
-R2_BUCKET_RENDERS=
-R2_BUCKET_CACHE=
-R2_PUBLIC_CDN=
-
-# Redis
-REDIS_URL=redis://redis:6379/0
-
-# App
-DOMAIN=
-NEXT_PUBLIC_APP_URL=
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
-
-# GPU VPS (nếu tự host)
-GPU_WORKER_URL=
-GPU_WORKER_TOKEN=
-
-# ============ KHÔNG THÊM VÀO ĐÂY ============
-# ❌ OPENAI_API_KEY
-# ❌ GEMINI_API_KEY
-# ❌ GROQ_API_KEY
-# ❌ ELEVENLABS_API_KEY
-# ❌ COHERE_API_KEY
-# Các key AI provider quản lý qua Admin Panel + Supabase Vault
-# ============================================
-```
-
----
-
-## Anti-patterns (KHÔNG làm)
-
-- ❌ Chạy FFmpeg/Whisper trên CPU VPS chính
-- ❌ Thêm API key AI provider vào `.env`
-- ❌ Hardcode `os.environ.get('OPENAI_API_KEY')` trong code
-- ❌ Build WebSocket riêng thay vì Supabase Realtime
-- ❌ Cho browser gọi trực tiếp FastAPI (phải qua BFF)
-- ❌ Self-host Supabase / Postgres (giữ managed)
-- ❌ Lưu media output trên VPS local (phải dùng R2)
-- ❌ Hardcode provider preference trong worker (phải qua `service_routing_config`)
-- ❌ Skip RLS policy khi tạo bảng mới có `user_id`
-- ❌ Polling job status (dùng Realtime)
-
----
-
-## Khi AI làm task mới, checklist bắt buộc:
-
-- [ ] Task này thuộc CPU VPS hay GPU VPS?
-- [ ] Có cần API key mới không? Nếu có → thêm qua Admin Panel, KHÔNG env
-- [ ] Có cần routing feature mới không? Nếu có → thêm vào `service_routing_config`
-- [ ] Có RLS policy cho bảng mới không?
-- [ ] Realtime subscription hay polling?
-- [ ] File output đi R2 hay local disk?
-- [ ] Credit hold/commit/release đầy đủ chưa?
-
-
-Quy trình:
-
-
-ssh deploy@161.248.4.99
-pass :
-hJ%ExH;V_#|6
-
-cd /opt/duongk
-
-# Build images lần đầu (sẽ mất ~5-10 phút)
-docker compose -f docker-compose.prod.yml build
-
-# Khởi động
-docker compose -f docker-compose.prod.yml up -d
-
-# Kiểm tra
-docker compose -f docker-compose.prod.yml ps
-docker compose -f docker-compose.prod.yml logs -f --tail=50
+ 
+ ```
+ /apps
+   /web                     # Next.js 15 (BFF pattern)
+   /api                     # FastAPI (REST API, không có LLM key trong env)
+   /worker                  # Celery worker (đọc key từ Vault qua key_resolver)
+   /omnivoice               # Voice Studio (voice.ai86.click, port 8088, catalog & UI)
+   /admin                   # Admin panel (route /admin/* trong apps/web)
+ /packages
+   /shared-types            # Pydantic → TypeScript auto-gen
+   /prompts                 # LLM prompt templates
+   /formulas                # Pure Python statistics
+   /nlp                     # Tokenizer, sentiment, readability
+ /supabase
+   /migrations              # SQL migrations (versioned)
+   /policies                # RLS policies
+   /seed                    # Test data + routing config seed
+ /modal_functions           # Modal.com serverless GPU functions (dubbing_pipeline.py)
+ /docs
+   /audit
+   /plans
+ ```
+ 
+ ---
+ 
+ ## Environment variables (chỉ hạ tầng, KHÔNG có LLM keys)
+ 
+ ```bash
+ # Supabase
+ SUPABASE_URL=
+ SUPABASE_ANON_KEY=
+ SUPABASE_SERVICE_ROLE_KEY=
+ SUPABASE_JWT_SECRET=
+ 
+ # Cloudflare R2
+ R2_ACCESS_KEY_ID=
+ R2_SECRET_ACCESS_KEY=
+ R2_ENDPOINT=
+ R2_BUCKET_UPLOADS=ai86-uploads
+ R2_BUCKET_RENDERS=appdk-renders
+ R2_BUCKET_CACHE=ai86-cache
+ R2_PUBLIC_CDN=https://cdn.ai86.click
+ 
+ # Redis
+ REDIS_URL=redis://redis:6379/0
+ 
+ # App
+ DOMAIN=ai86.click
+ NEXT_PUBLIC_APP_URL=https://ai86.click
+ NEXT_PUBLIC_SUPABASE_URL=
+ NEXT_PUBLIC_SUPABASE_ANON_KEY=
+ 
+ # GPU VPS / Modal
+ GPU_WORKER_URL=
+ GPU_WORKER_TOKEN=
+ 
+ # ============ KHÔNG THÊM VÀO ĐÂY ============
+ # ❌ OPENAI_API_KEY
+ # ❌ GEMINI_API_KEY
+ # ❌ GROQ_API_KEY
+ # ❌ ELEVENLABS_API_KEY
+ # ❌ COHERE_API_KEY
+ # Các key AI provider quản lý qua Admin Panel + Supabase Vault
+ # ============================================
+ ```
+ 
+ ---
+ 
+ ## Anti-patterns (KHÔNG làm)
+ 
+ - ❌ Chạy FFmpeg/Whisper trên CPU VPS chính
+ - ❌ Thêm API key AI provider vào `.env`
+ - ❌ Hardcode `os.environ.get('OPENAI_API_KEY')` trong code
+ - ❌ Build WebSocket riêng thay vì Supabase Realtime
+ - ❌ Cho browser gọi trực tiếp FastAPI (phải qua BFF)
+ - ❌ Self-host Supabase / Postgres (giữ managed)
+ - ❌ Lưu media output trên VPS local (phải dùng R2)
+ - ❌ Hardcode provider preference trong worker (phải qua `service_routing_config`)
+ - ❌ Skip RLS policy khi tạo bảng mới có `user_id`
+ - ❌ Polling job status (dùng Realtime)
+ 
+ ---
+ 
+ ## Khi AI làm task mới, checklist bắt buộc:
+ 
+ - [ ] Task này thuộc CPU VPS hay GPU VPS?
+ - [ ] Có cần API key mới không? Nếu có → thêm qua Admin Panel, KHÔNG env
+ - [ ] Có cần routing feature mới không? Nếu có → thêm vào `service_routing_config`
+ - [ ] Có RLS policy cho bảng mới không?
+ - [ ] Realtime subscription hay polling?
+ - [ ] File output đi R2 hay local disk?
+ - [ ] Credit hold/commit/release đầy đủ chưa?
+ 
+ ---
+ 
+ ## Quy trình Triển khai (Deployment Workflow)
+ 
+ Xem hướng dẫn thao tác chi tiết tại [RUN.md](file:///D:/appDK/RUN.md).
+ 
+ ### 1. Tự động qua script (Recommended):
+ ```powershell
+ git add . && git commit -m "feat/fix: update" && git push
+ python update.py
+ ```
+ 
+ ### 2. Thao tác thủ công qua SSH:
+ ```bash
+ ssh deploy@161.248.4.99
+ # pass: hJ%ExH;V_#|6
+ 
+ cd /opt/appdk
+ git pull origin main
+ docker compose -f docker-compose.prod.yml up -d --build
+ docker compose -f docker-compose.prod.yml ps
+ docker compose -f docker-compose.prod.yml logs -f --tail=50
+ ```
