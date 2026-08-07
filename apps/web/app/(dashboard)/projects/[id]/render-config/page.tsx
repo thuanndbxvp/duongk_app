@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Select } from '@/components/select';
@@ -96,6 +96,33 @@ interface Project {
   };
 }
 
+// Inline FormSelect wraps react-hook-form Controller around the presentational
+// <Select> component, which uses a value/onChange(string) signature.
+function FormSelect<T extends Record<string, any>>({
+  name,
+  control,
+  options,
+}: {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  control: any;
+  name: string;
+  options: { value: string; label: string }[];
+}) {
+  return (
+    <Controller
+      name={name as any}
+      control={control}
+      render={({ field, fieldState }) => (
+        <Select
+          value={(field.value ?? '') as string}
+          onChange={(v) => field.onChange(v)}
+          options={options}
+        />
+      )}
+    />
+  );
+}
+
 // =============================================================================
 // Main Component
 // =============================================================================
@@ -110,6 +137,7 @@ export default function RenderConfigPage() {
 
   const {
     register,
+    control,
     handleSubmit,
     watch,
     reset,
@@ -201,8 +229,9 @@ export default function RenderConfigPage() {
         <SectionCard title="Video Output" icon="🎬">
           <div className="grid sm:grid-cols-2 gap-4">
             <FormField label="Resolution" error={errors.resolution?.message}>
-              <Select
-                {...register('resolution')}
+              <FormSelect
+                name="resolution"
+                control={control}
                 options={[
                   { value: '1920x1080', label: '1920x1080 (Full HD)' },
                   { value: '1280x720', label: '1280x720 (HD)' },
@@ -213,8 +242,9 @@ export default function RenderConfigPage() {
             </FormField>
 
             <FormField label="Frame Rate" error={errors.frame_rate?.message}>
-              <Select
-                {...register('frame_rate')}
+              <FormSelect
+                name="frame_rate"
+                control={control}
                 options={[
                   { value: '24', label: '24 fps (Cinematic)' },
                   { value: '30', label: '30 fps (Standard)' },
@@ -224,8 +254,9 @@ export default function RenderConfigPage() {
             </FormField>
 
             <FormField label="Aspect Ratio" error={errors.aspect_ratio?.message}>
-              <Select
-                {...register('aspect_ratio')}
+              <FormSelect
+                name="aspect_ratio"
+                control={control}
                 options={[
                   { value: '16:9', label: '16:9 (Landscape)' },
                   { value: '9:16', label: '9:16 (Vertical/TikTok)' },
@@ -236,8 +267,9 @@ export default function RenderConfigPage() {
             </FormField>
 
             <FormField label="Quality Preset" error={errors.quality_preset?.message}>
-              <Select
-                {...register('quality_preset')}
+              <FormSelect
+                name="quality_preset"
+                control={control}
                 options={[
                   { value: 'fast', label: 'Fast (Smaller file)' },
                   { value: 'medium', label: 'Medium (Balanced)' },
@@ -266,8 +298,9 @@ export default function RenderConfigPage() {
         <SectionCard title="Encoding" icon="⚙️">
           <div className="grid sm:grid-cols-2 gap-4">
             <FormField label="Video Codec" error={errors.codec?.message}>
-              <Select
-                {...register('codec')}
+              <FormSelect
+                name="codec"
+                control={control}
                 options={[
                   { value: 'h264', label: 'H.264 (Most compatible)' },
                   { value: 'h265', label: 'H.265/HEVC (Better compression)' },
@@ -278,8 +311,9 @@ export default function RenderConfigPage() {
             </FormField>
 
             <FormField label="Bitrate" error={errors.bitrate?.message}>
-              <Select
-                {...register('bitrate')}
+              <FormSelect
+                name="bitrate"
+                control={control}
                 options={[
                   { value: 'low', label: 'Low (~2 Mbps)' },
                   { value: 'medium', label: 'Medium (~5 Mbps)' },
@@ -290,8 +324,9 @@ export default function RenderConfigPage() {
             </FormField>
 
             <FormField label="Audio Codec" error={errors.audio_codec?.message}>
-              <Select
-                {...register('audio_codec')}
+              <FormSelect
+                name="audio_codec"
+                control={control}
                 options={[
                   { value: 'aac', label: 'AAC (Recommended)' },
                   { value: 'opus', label: 'Opus (Web optimized)' },
@@ -301,8 +336,9 @@ export default function RenderConfigPage() {
             </FormField>
 
             <FormField label="Audio Bitrate" error={errors.audio_bitrate?.message}>
-              <Select
-                {...register('audio_bitrate')}
+              <FormSelect
+                name="audio_bitrate"
+                control={control}
                 options={[
                   { value: '128k', label: '128 kbps' },
                   { value: '192k', label: '192 kbps' },
@@ -328,8 +364,9 @@ export default function RenderConfigPage() {
 
             {useGpu && (
               <FormField label="GPU Encoder" error={errors.gpu_encoder?.message}>
-                <Select
-                  {...register('gpu_encoder')}
+                <FormSelect
+                  name="gpu_encoder"
+                  control={control}
                   options={[
                     { value: 'nvenc', label: 'NVENC (NVIDIA GPU)' },
                     { value: 'vaapi', label: 'VAAPI (Linux Intel/AMD)' },
@@ -357,8 +394,9 @@ export default function RenderConfigPage() {
             {watch('watermark_enabled') && (
               <div className="grid sm:grid-cols-2 gap-4">
                 <FormField label="Position" error={errors.watermark_position?.message}>
-                  <Select
-                    {...register('watermark_position')}
+                  <FormSelect
+                    name="watermark_position"
+                    control={control}
                     options={[
                       { value: 'top-left', label: 'Top Left' },
                       { value: 'top-right', label: 'Top Right' },

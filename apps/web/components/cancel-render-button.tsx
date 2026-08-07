@@ -34,7 +34,8 @@ export function CancelRenderButton({ projectId, jobId, status, onCancelled }: Pr
           const statusRes = await fetch(`/api/jobs/${jobId}`);
           const job = await statusRes.json();
           if (job.status === 'cancelled') {
-            clearInterval(pollRef.current);
+            if (pollRef.current) clearInterval(pollRef.current);
+            pollRef.current = null;
             setResult('cancelled');
             setIsLoading(false);
             onCancelled?.();
@@ -42,7 +43,10 @@ export function CancelRenderButton({ projectId, jobId, status, onCancelled }: Pr
         } catch { /* continue polling */ }
       }, 2000);
       setTimeout(() => {
-        if (pollRef.current) clearInterval(pollRef.current);
+        if (pollRef.current) {
+          clearInterval(pollRef.current);
+          pollRef.current = null;
+        }
         if (!result) setIsLoading(false);
       }, 30000);
     } catch (e) {

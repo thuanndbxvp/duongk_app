@@ -255,7 +255,7 @@ export default function RoutingEstimatePage() {
                   ${estimate.estimated_cost_usd.toFixed(4)}
                 </p>
                 <p className="text-xs text-[var(--fg-tertiary)] mt-1">
-                  {estimate.calls} call{estimate.calls > 1 ? 's' : ''}
+                  {estimate.calls ?? 0} call{(estimate.calls ?? 0) > 1 ? 's' : ''}
                   {estimate.input_tokens && ` · ${estimate.input_tokens.toLocaleString()} input tokens`}
                   {estimate.output_tokens && ` · ${estimate.output_tokens.toLocaleString()} output tokens`}
                 </p>

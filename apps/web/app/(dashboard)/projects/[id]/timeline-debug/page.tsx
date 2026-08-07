@@ -466,7 +466,11 @@ export default function TimelineDebugPage() {
                   <textarea
                     value={selectedSceneData.visual?.content || ''}
                     onChange={(e) => updateScene(selectedSceneData.id, {
-                      visual: { ...selectedSceneData.visual, content: e.target.value }
+                      visual: {
+                        type: (selectedSceneData.visual?.type ?? 'text') as 'text' | 'image' | 'video' | 'slideshow',
+                        content: e.target.value,
+                        asset_url: selectedSceneData.visual?.asset_url,
+                      }
                     })}
                     rows={3}
                     className="w-full px-3 py-2 rounded-lg bg-[var(--surface)] border border-[var(--glass-border)] resize-none"
