@@ -14,7 +14,7 @@ export function CancelRenderButton({ projectId, jobId, status, onCancelled }: Pr
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<'cancelled' | 'refunded' | null>(null);
-  const pollRef = useRef<ReturnType<typeof setInterval>>();
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   if (status !== 'running' && status !== 'pending') return null;
   if (result) return <span className="text-xs text-green-400">✅ {result === 'refunded' ? 'Đã hủy + refund credits' : 'Đã hủy'}</span>;

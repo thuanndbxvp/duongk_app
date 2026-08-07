@@ -26,6 +26,8 @@ function countItems(obj: unknown): number {
   return 0;
 }
 
+type TabDef = { id: string; label: string; count?: number };
+
 export function AnalysisTabs({ data }: Props) {
   const [activeTab, setActiveTab] = useState('overview');
 
@@ -37,18 +39,20 @@ export function AnalysisTabs({ data }: Props) {
     thumbnail: countItems(data.thumbnail),
   };
 
+  const tabs: TabDef[] = [
+    { id: 'overview', label: 'Tổng quan' },
+    { id: 'deterministic', label: 'Deterministic', count: counts.deterministic },
+    { id: 'nlp', label: 'NLP', count: counts.nlp },
+    { id: 'llm', label: 'LLM', count: counts.llm },
+    { id: 'insights', label: 'Insights', count: counts.insights },
+    { id: 'thumbnail', label: 'Thumbnail', count: counts.thumbnail },
+  ];
+
   return (
     <>
       <div className="border-b border-gray-200 mb-6">
         <div className="flex space-x-1 overflow-x-auto">
-          {[
-            { id: 'overview', label: 'Tổng quan' },
-            { id: 'deterministic', label: 'Deterministic', count: counts.deterministic },
-            { id: 'nlp', label: 'NLP', count: counts.nlp },
-            { id: 'llm', label: 'LLM', count: counts.llm },
-            { id: 'insights', label: 'Insights', count: counts.insights },
-            { id: 'thumbnail', label: 'Thumbnail', count: counts.thumbnail },
-          ].map((tab) => (
+          {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
@@ -59,7 +63,7 @@ export function AnalysisTabs({ data }: Props) {
               }`}
             >
               {tab.label}
-              {tab.count > 0 && (
+              {(tab.count ?? 0) > 0 && (
                 <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-semibold ${
                   activeTab === tab.id
                     ? 'bg-blue-600 text-white'
@@ -76,12 +80,12 @@ export function AnalysisTabs({ data }: Props) {
       <div>
         {activeTab === 'overview' && <OverviewTab data={data} />}
         {activeTab === 'deterministic' && (
-          <DeterministicTab outputs={data.deterministic || {}} />
+          <DeterministicTab outputs={(data.deterministic ?? {}) as any} />
         )}
-        {activeTab === 'nlp' && <NLPTab outputs={data.nlp || {}} />}
-        {activeTab === 'llm' && <LLMTab outputs={data.llm || {}} />}
-        {activeTab === 'insights' && <InsightsTab outputs={data.insights || {}} />}
-        {activeTab === 'thumbnail' && <ThumbnailTab outputs={data.thumbnail || {}} />}
+        {activeTab === 'nlp' && <NLPTab outputs={(data.nlp ?? {}) as any} />}
+        {activeTab === 'llm' && <LLMTab outputs={(data.llm ?? {}) as any} />}
+        {activeTab === 'insights' && <InsightsTab outputs={(data.insights ?? {}) as any} />}
+        {activeTab === 'thumbnail' && <ThumbnailTab outputs={(data.thumbnail ?? {}) as any} />}
       </div>
     </>
   );

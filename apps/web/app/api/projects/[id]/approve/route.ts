@@ -2,13 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { apiFetch } from '@/lib/api-client';
 import { getAccessToken } from '@/lib/auth';
 
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const token = await getAccessToken();
   if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const body = await req.json();
   const response = await apiFetch(
-    `/api/projects/${params.id}/approve`,
+    `/api/projects/${id}/approve`,
     { method: 'POST', body: JSON.stringify(body) },
     token
   );
