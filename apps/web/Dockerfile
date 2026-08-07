@@ -16,7 +16,7 @@ RUN npm install --no-audit --no-fund
 COPY apps/web ./
 
 ENV NEXT_TELEMETRY_DISABLED 1
-RUN npm run build
+RUN npm run build && npm install --no-save sharp
 
 # ─── Stage 2: runner (production) ───
 FROM node:20-alpine AS runner
@@ -31,13 +31,12 @@ RUN addgroup --system --gid 1001 nodejs \
 COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/apps/web/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/node_modules/sharp ./node_modules/sharp
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/node_modules/@img ./node_modules/@img
 
 USER nextjs
 EXPOSE 3000
 ENV PORT 3000
 ENV HOSTNAME "0.0.0.0"
-
-# ─── Sharp for image optimization ───
-RUN npm install sharp
 
 CMD ["node", "server.js"]
