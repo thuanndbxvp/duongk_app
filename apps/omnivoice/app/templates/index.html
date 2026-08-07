@@ -185,16 +185,16 @@
                     </div>
                     
                     <div id="emotion-panel" style="display: none;">
-                        <div class="page-desc" style="margin-bottom: 12px; font-size: 0.8rem;">Chèn biểu cảm trực tiếp vào câu nói (tối ưu nhất trên VieNeu-TTS)</div>
-                        <div class="emotion-chips" style="margin-bottom: 24px;">
-                            <div class="emotion-chip" onclick="insertTag('[cười]')">😄 Cười <span class="emotion-tag">[cười]</span></div>
-                            <div class="emotion-chip" onclick="insertTag('[thở dài]')">😮‍💨 Thở dài <span class="emotion-tag">[thở dài]</span></div>
-                            <div class="emotion-chip" onclick="insertTag('[hắng giọng]')">🗣️ Hắng giọng <span class="emotion-tag">[hắng giọng]</span></div>
-                            <div class="emotion-chip" onclick="insertTag('[ngạc nhiên]')">😲 Ngạc nhiên <span class="emotion-tag">[ngạc nhiên]</span></div>
-                            <div class="emotion-chip" onclick="insertTag('[thì thầm]')">🤫 Thì thầm <span class="emotion-tag">[thì thầm]</span></div>
-                            <div class="emotion-chip" onclick="insertTag('[tức giận]')">😡 Tức giận <span class="emotion-tag">[tức giận]</span></div>
-                            <div class="emotion-chip" onclick="insertTag('[laughter]')">Cười (En) <span class="emotion-tag">[laughter]</span></div>
-                            <div class="emotion-chip" onclick="insertTag('[sigh]')">Thở dài (En) <span class="emotion-tag">[sigh]</span></div>
+                        <div class="page-desc" style="margin-bottom: 12px; font-size: 0.8rem;">Chèn biểu cảm trực tiếp vào câu nói:</div>
+                        <div class="emotion-chips" style="margin-bottom: 12px;">
+                            <div class="emotion-chip" onclick="insertTag('[cười]')" title="Dành cho VieNeu-TTS">😄 Cười <span class="emotion-tag">[cười]</span></div>
+                            <div class="emotion-chip" onclick="insertTag('[thở dài]')" title="Dành cho VieNeu-TTS">😮‍💨 Thở dài <span class="emotion-tag">[thở dài]</span></div>
+                            <div class="emotion-chip" onclick="insertTag('[hắng giọng]')" title="Dành cho VieNeu-TTS">🗣️ Hắng giọng <span class="emotion-tag">[hắng giọng]</span></div>
+                            <div class="emotion-chip" onclick="insertTag('[laughter]')" title="Dành cho OmniVoice">Cười (OmniVoice) <span class="emotion-tag">[laughter]</span></div>
+                            <div class="emotion-chip" onclick="insertTag('[sigh]')" title="Dành cho OmniVoice">Thở dài (OmniVoice) <span class="emotion-tag">[sigh]</span></div>
+                        </div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted); line-height: 1.4; background: rgba(255,255,255,0.03); padding: 8px 12px; border-radius: 8px; margin-bottom: 20px;">
+                            ⚠️ <strong>Lưu ý:</strong> VieNeu-TTS chỉ hỗ trợ 3 thẻ tiếng Việt chính thức: <code>[cười]</code>, <code>[thở dài]</code>, <code>[hắng giọng]</code>. Các từ ngữ khác đặt trong ngoặc vuông (như <code>[ngạc nhiên]</code>, <code>[thì thầm]</code>) sẽ bị mô hình đọc thành chữ.
                         </div>
                     </div>
                 </div>
