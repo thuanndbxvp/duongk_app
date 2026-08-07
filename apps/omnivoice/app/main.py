@@ -386,7 +386,7 @@ async def generate_tts(request: TTSRequest):
             )
             
             if ref_prompt_key:
-                bucket = os.environ.get("R2_BUCKET_UPLOADS", "ai86-uploads")
+                bucket = os.environ.get("R2_BUCKET_UPLOADS", "appdk-uploads")
                 ref_prompt_url = s3.generate_presigned_url(
                     'get_object',
                     Params={'Bucket': bucket, 'Key': ref_prompt_key},
@@ -394,7 +394,7 @@ async def generate_tts(request: TTSRequest):
                 )
             elif ref_audio_path:
                 object_key = f"omnivoice_tmp/{uuid.uuid4().hex}.wav"
-                bucket = os.environ.get("R2_BUCKET_UPLOADS", "ai86-uploads")
+                bucket = os.environ.get("R2_BUCKET_UPLOADS", "appdk-uploads")
                 s3.upload_file(ref_audio_path, bucket, object_key)
                 ref_audio_url = s3.generate_presigned_url(
                     'get_object',
@@ -501,7 +501,7 @@ async def generate_dubbing(
             region_name="auto",
         )
         
-        bucket = os.environ.get("R2_BUCKET_UPLOADS", "ai86-uploads")
+        bucket = os.environ.get("R2_BUCKET_UPLOADS", "appdk-uploads")
         if ref_prompt_key:
             ref_prompt_url = s3.generate_presigned_url(
                 'get_object',
@@ -784,7 +784,7 @@ def _cache_prompt_background(voice_id: str, ref_audio_path: str):
             region_name="auto",
         )
         wav_key = f"omnivoice_refs/{uuid.uuid4().hex}.wav"
-        bucket = os.environ.get("R2_BUCKET_UPLOADS", "ai86-uploads")
+        bucket = os.environ.get("R2_BUCKET_UPLOADS", "appdk-uploads")
         s3.upload_file(str(ref_audio_path), bucket, wav_key)
         
         presigned_url = s3.generate_presigned_url(
@@ -1027,7 +1027,7 @@ async def tts_by_voice_id(voice_id: str, request: Request):
                     region_name="auto",
                 )
                 object_key = f"omnivoice_tmp/{uuid.uuid4().hex}.wav"
-                s3.upload_file(ref_audio_path, os.environ.get("R2_BUCKET_UPLOADS", "ai86-uploads"), object_key)
+                s3.upload_file(ref_audio_path, os.environ.get("R2_BUCKET_UPLOADS", "appdk-uploads"), object_key)
                 ref_audio_url = f"{os.environ['R2_PUBLIC_CDN']}/{object_key}"
 
             synth_fn = modal.Function.from_name("ai-dubbing-pipeline", "synthesize_voice")

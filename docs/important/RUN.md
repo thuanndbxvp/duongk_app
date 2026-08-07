@@ -2,7 +2,7 @@
 
 > **MỤC ĐÍCH FILE NÀY**: Dành cho bất kỳ **AI Coding Assistant** hoặc **Developer** mới nào join dự án. Đọc file này để nắm ngay cách chạy, kiểm thử, vận hành và triển khai hệ thống mà không làm gãy kiến trúc.
 >
-> 📖 *Để hiểu sâu về kiến trúc tổng thể, sơ đồ dữ liệu và quy chuẩn kỹ thuật, xem thêm:* [docs/STACK.md](file:///D:/appDK/docs/STACK.md)
+> 📖 *Để hiểu sâu về kiến trúc tổng thể, sơ đồ dữ liệu và quy chuẩn kỹ thuật, xem thêm:* [STACK.md](file:///D:/appDK/docs/important/STACK.md)
 
 ---
 
@@ -17,7 +17,10 @@
   - **CPU VPS (Production)**: `161.248.4.99` (Ubuntu 24.04, Docker Compose tại `/opt/appdk`).
   - **Serverless GPU**: Modal.com (`ai-dubbing-pipeline`).
   - **Database & Auth**: Supabase Managed (Postgres 15 + RLS + Realtime).
-  - **Object Storage**: Cloudflare R2 (S3-compatible, Egress Free).
+  - **Object Storage (Cloudflare R2)**:
+    - `appdk-uploads`: Chứa file audio/video mẫu, input của người dùng.
+    - `appdk-renders`: Chứa audio output TTS, file lồng tiếng SRT dubbing.
+    - `appdk-cache`: Chứa cache tạm, thumbnail, preview.
 
 ---
 
@@ -38,7 +41,7 @@
 
 1. ❌ **KHÔNG BAO GIỜ nhét LLM/AI Provider API Keys vào `.env`**: Mọi key (OpenAI, Gemini, Groq, Cohere...) được lưu trong bảng `api_provider_keys` (Supabase Vault) và đọc qua `key_resolver`.
 2. ❌ **KHÔNG chạy AI nặng hoặc FFmpeg Encode trên CPU VPS**: CPU VPS chỉ làm web/API/orchestration. Việc nặng chuyển sang Modal GPU hoặc GPU worker.
-3. ❌ **KHÔNG lưu media/render lâu dài trên ổ cứng local của VPS**: Luôn đẩy lên Cloudflare R2 (`ai86-uploads`, `appdk-renders`).
+3. ❌ **KHÔNG lưu media/render lâu dài trên ổ cứng local của VPS**: Luôn đẩy lên Cloudflare R2 (`appdk-uploads`, `appdk-renders`, `appdk-cache`).
 4. ❌ **KHÔNG xóa các giọng hệ thống (`is_system = true`)**: Các voice gốc (`ban_mai`, `thao_trinh`, `ngoc_huyen`, `lan_trinh`, `tuong_vy`, `ngan_ha`, `minhquan_vb`, `ngochuyen_vb`) được bảo vệ ở cả Backend lẫn UI.
 5. ❌ **KHÔNG khóa cứng seed (`torch.manual_seed`) khi sinh TTS giọng clone**: Khóa seed lặp lại sẽ gây lỗi lặp từ / nói lắp (autoregressive hallucinations).
 

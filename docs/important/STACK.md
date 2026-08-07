@@ -29,9 +29,9 @@ User Browser
     │    └── Optional: local LLM (Ollama/vLLM)
     │
     └──► [Cloudflare R2]              ← Object storage (egress FREE)
-         ├── myapp-uploads
-         ├── myapp-renders
-         ├── myapp-cache
+         ├── appdk-uploads
+         ├── appdk-renders
+         └── appdk-cache
 
 ```
 
@@ -67,10 +67,10 @@ User Browser
 - **Vai trò:** Object storage cho mọi media/output
 - **Ưu điểm chính:** Egress MIỄN PHÍ
 - **API:** S3-compatible (dùng `boto3`)
-- **Buckets:**
-  - `ai86-uploads` — user upload input
-  - `appdk-renders` — video/audio output từ render pipeline
-  - `ai86-cache` — thumbnail, preview (TTL 7 ngày)
+- **Buckets (Chính xác theo Cloudflare R2):**
+  - `appdk-uploads` — user upload input & reference audio
+  - `appdk-renders` — video/audio output từ render pipeline & TTS
+  - `appdk-cache` — thumbnail, preview (TTL 7 ngày)
 
 - **CDN:** custom domain `cdn.ai86.click` cho public serving
 
@@ -179,9 +179,9 @@ User Browser
  R2_ACCESS_KEY_ID=
  R2_SECRET_ACCESS_KEY=
  R2_ENDPOINT=
- R2_BUCKET_UPLOADS=ai86-uploads
+ R2_BUCKET_UPLOADS=appdk-uploads
  R2_BUCKET_RENDERS=appdk-renders
- R2_BUCKET_CACHE=ai86-cache
+ R2_BUCKET_CACHE=appdk-cache
  R2_PUBLIC_CDN=https://cdn.ai86.click
  
  # Redis
@@ -238,7 +238,7 @@ User Browser
  
  ## Quy trình Triển khai (Deployment Workflow)
  
- Xem hướng dẫn thao tác chi tiết tại [RUN.md](file:///D:/appDK/RUN.md).
+ Xem hướng dẫn thao tác chi tiết tại [RUN.md] cùng thư mục \docs\important\.
  
  ### 1. Tự động qua script (Recommended):
  ```powershell
