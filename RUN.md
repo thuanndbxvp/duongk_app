@@ -48,10 +48,29 @@
 
 ### 💡 Nguyên lý Go-Live trên Production:
 Trên CPU VPS (`161.248.4.99`), toàn bộ dịch vụ (`api`, `web`, `omnivoice`, `worker_*`) chạy dưới dạng **Docker containers độc lập** và source code đã được **bake trực tiếp vào Docker image** (không mount live code để đảm bảo an toàn & hiệu năng).
-Do đó, quy trình đưa code mới lên production **bắt buộc gồm 3 bước:**
-1. **Push**: Đẩy code từ máy Local lên GitHub repo (`main`).
-2. **Pull**: Kéo code mới nhất về thư mục `/opt/appdk` trên VPS.
-3. **Rebuild & Restart**: Chạy `docker compose build` và `up -d` để cập nhật container mà **không làm gián đoạn các service khác**.
+
+```
+[Máy Local (D:\appDK)]       [GitHub: main]              [CPU VPS: 161.248.4.99]
+        │                           │                               │
+ 1. git push ──────────────────────►│                               │
+                                    │ 2. python update.py ─────────►│ (SSH tự động)
+                                    │                               │ 3. cd /opt/appdk && git pull
+                                    │                               │ 4. docker compose up -d --build <service>
+                                    │                               │ 5. Container cập nhật & Go-Live!
+```
+
+---
+
+### 📌 Bảng Tra Cứu: Sửa File Nào ➔ Chạy Lệnh Gì?
+
+| Khu vực vừa sửa code | Service liên quan | Lệnh Go-Live cần chạy |
+|---|---|---|
+| `apps/omnivoice/` (Web UI, catalog, TTS API) | `omnivoice` (`voice.ai86.click`) | `python update.py` *(hoặc `python update.py omnivoice`)* |
+| `apps/api/` (FastAPI backend endpoints) | `api` (`api.ai86.click`) | `python update.py api` |
+| `apps/web/` (Giao diện Next.js chính) | `web` (`ai86.click`) | `python update.py web` |
+| `apps/worker/` (Celery background tasks) | `worker_*` (ML, high, io, normal) | `python update.py all` |
+| `modal_functions/` (Serverless GPU model) | Modal.com Cloud | `$env:PYTHONUTF8=1; modal deploy modal_functions/dubbing_pipeline.py` |
+| `supabase/migrations/` | Supabase Postgres DB | Chạy SQL trên Supabase Dashboard / Migration CLI |
 
 ---
 
